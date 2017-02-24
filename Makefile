@@ -1,6 +1,6 @@
 # Makefile
 # Loosely based on https://stackoverflow.com/questions/1484817/how-do-i-make-a-simple-makefile-for-gcc-on-linux
-TARGET = main
+TARGET = sim
 CC = gcc
 CFLAGS = -Wall -Wextra -pedantic -Wshadow -m64 -std=c11 -Wpointer-arith -masm=intel -save-temps -fverbose-asm -Wstrict-prototypes -Wmissing-prototypes
 # -Wall -Wextra -pedantic: stricter warnings
