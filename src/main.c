@@ -4,6 +4,7 @@
 
 #include "main.h"
 
+bool debug = false;
 bool verbose = false;
 
 int main(int argc, char *argv[]) {
@@ -11,12 +12,20 @@ int main(int argc, char *argv[]) {
     // Validate args, if they exist
     if (argc == 1) {
         printf("Nothing to execute.\nUsage:\n");
-        printf("    sim [-v] asm.s\n");
+        printf("    sim [options] infile\n\n");
+        printf("    Options:\n");
+        printf("    -d: Enable debug mode\n");
+        printf("    -v: Enable verbose output\n");
+        printf("\n");
         return 0; // exit without errors
     } else {
         // Stone-age command-line argument parsing
         for (i=0; i<argc-2; ++i) {
             switch (argv[i+1][1]) { // add command line option flags here
+                case 'd': // -d: debug
+                    printf("Debug mode enabled.\n");
+                    debug = true;
+                    break;
                 case 'v': // -v: verbose
                     printf("Verbose output enabled.\n");
                     verbose = true;
