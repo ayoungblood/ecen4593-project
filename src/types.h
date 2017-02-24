@@ -50,4 +50,69 @@ typedef enum FunctCodes {
     SRL = 0x02
 } funct_t;
 
+// Enumerate all "operations" (R/J/I type instruction action)
+// See http://alumni.cs.ucr.edu/~vladimir/cs161/mips.html
+// These are used internally to represent operations between stages
+typedef enum Operations {
+    // Arithmetic and logical
+    ADD,
+    ADDU,
+    ADDI,
+    ADDIU,
+    AND,
+    ANDI,
+    DIV,
+    DIVU,
+    MULT,
+    MULTU,
+    NOR,
+    OR,
+    ORI,
+    SLL,
+    SLLV,
+    SRA,
+    SRAV,
+    SRL,
+    SRLV,
+    SUB,
+    SUBU,
+    XOR,
+    XORI,
+    // Constant-manipulating
+    LHI,
+    LLO,
+    // Comparison
+    SLT,
+    SLTU,
+    SLTI,
+    SLTIU,
+    // Branch
+    BEQ,
+    BTGZ,
+    BLEZ,
+    BNE,
+    // Jump
+    J,
+    JAL,
+    JALR,
+    JR,
+    // Load
+    LB,
+    LBU,
+    LH,
+    LHU,
+    LW,
+    // Store
+    SB,
+    SH,
+    SW,
+    // Data movement
+    MFHI,
+    MFLO,
+    MTHI,
+    MTLO,
+    // Exception/interrupt
+    TRAP
+} operation_t;
+
 #endif /* TYPES_H */
