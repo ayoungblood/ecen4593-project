@@ -1,0 +1,11 @@
+sudo: required
+dist: trusty
+before_install:
+script:
+- make
+deploy:
+  provider: releases
+  skip_cleanup: true
+  on:
+    tags: true
+notifications:
