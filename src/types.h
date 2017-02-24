@@ -2,6 +2,9 @@
  * Internal types for the simulator
  */
 
+#ifndef TYPES_H
+#define TYPES_H
+
 #include <stdint.h>
 
 // Represents a 32-bit instruction
@@ -46,3 +49,5 @@ typedef enum FunctCodes {
     SLL = 0x00,
     SRL = 0x02
 } funct_t;
+
+#endif /* TYPES_H */
