@@ -9,7 +9,7 @@ typedef struct {
     int regRd;
     int immed;
     int pcNext;
-    int inst;
+    operation_t op;
     int shamt;
 
 } reg_id_ex_t;
