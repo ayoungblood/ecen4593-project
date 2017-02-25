@@ -14,40 +14,105 @@ typedef uint32_t pc_t;
 
 // Mapping opcode values to mnemonic
 typedef enum OpCodes {
-    RTYPE = 0x0,
-    ADDI = 0x8,
-    ADDIU = 0x9,
-    ANDI = 0xc,
-    BEQ = 0x4,
-    BNE = 0x5,
-    J = 0x2,
-    JAL = 0x3,
-    LBU = 0x24,
-    LHU = 0x25,
-    LL = 0x30,
-    LUI = 0xf,
-    LW = 0x23,
-    ORI = 0xd,
-    SLTI = 0xa,
-    SLTIU = 0xb,
-    SB = 0x28,
-    SC = 0x38,
-    SH = 0x29,
-    SW = 0x2b
+    OPC_RTYPE   = 0x00,
+    OPC_ADDI    = 0x08,
+    OPC_ADDIU   = 0x09,
+    OPC_ANDI    = 0x0c,
+    OPC_BEQ     = 0x04,
+    OPC_BNE     = 0x05,
+    OPC_J       = 0x02,
+    OPC_JAL     = 0x03,
+    OPC_LBU     = 0x24,
+    OPC_LHU     = 0x25,
+    OPC_LL      = 0x30,
+    OPC_LUI     = 0x0f,
+    OPC_LW      = 0x23,
+    OPC_ORI     = 0x0d,
+    OPC_SLTI    = 0x0a,
+    OPC_SLTIU   = 0x0b,
+    OPC_SB      = 0x28,
+    OPC_SC      = 0x38,
+    OPC_SH      = 0x29,
+    OPC_SW      = 0x2b
 } opcode_t;
 
 // Mapping funct values to mnemonic (R-type, opcode=0x0)
 typedef enum FunctCodes {
-    ADD = 0x20,
-    ADDU = 0x21,
-    AND = 0x24,
-    JR = 0x8,
-    NOR = 0x27,
-    OR = 0x25,
-    SLT = 0x2a,
-    SLTU = 0x2b,
-    SLL = 0x00,
-    SRL = 0x02
+    FNC_ADD     = 0x20,
+    FNC_ADDU    = 0x21,
+    FNC_AND     = 0x24,
+    FNC_JR      = 0x08,
+    FNC_NOR     = 0x27,
+    FNC_OR      = 0x25,
+    FNC_SLT     = 0x2a,
+    FNC_SLTU    = 0x2b,
+    FNC_SLL     = 0x00,
+    FNC_SRL     = 0x02
 } funct_t;
+
+// Enumerate all "operations" (R/J/I type instruction action)
+// See http://alumni.cs.ucr.edu/~vladimir/cs161/mips.html
+// These are used internally to represent operations between stages
+typedef enum Operations {
+    // Arithmetic and logical
+    OPR_ADD,
+    OPR_ADDU,
+    OPR_ADDI,
+    OPR_ADDIU,
+    OPR_AND,
+    OPR_ANDI,
+    OPR_DIV,    // Probably not supported
+    OPR_DIVU,   // Probably not supported
+    OPR_MULT,
+    OPR_MULTU,
+    OPR_NOR,
+    OPR_OR,
+    OPR_ORI,
+    OPR_SLL,
+    OPR_SLLV,
+    OPR_SRA,
+    OPR_SRAV,
+    OPR_SRL,
+    OPR_SRLV,
+    OPR_SUB,
+    OPR_SUBU,
+    OPR_XOR,
+    OPR_XORI,
+    // Constant-manipulating
+    OPR_LHI,
+    OPR_LLO,
+    // Comparison
+    OPR_SLT,
+    OPR_SLTU,
+    OPR_SLTI,
+    OPR_SLTIU,
+    // Branch
+    OPR_BEQ,
+    OPR_BTGZ,
+    OPR_BLEZ,
+    OPR_BNE,
+    // Jump
+    OPR_J,
+    OPR_JAL,
+    OPR_JALR,
+    OPR_JR,
+    // Load
+    OPR_LB,
+    OPR_LBU,
+    OPR_LH,
+    OPR_LHU,
+    OPR_LW,
+    // Store
+    OPR_SB,
+    OPR_SH,
+    OPR_SW,
+    // Data movement
+    OPR_MFHI,
+    OPR_MFLO,
+    OPR_MTHI,
+    OPR_MTLO,
+    // Exception/interrupt
+    OPR_TRAP
+} operation_t;
 
 #endif /* TYPES_H */
