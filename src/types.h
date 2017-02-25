@@ -2,8 +2,8 @@
  * Internal types for the simulator
  */
 
-#ifndef TYPES_H
-#define TYPES_H
+#ifndef _TYPES_H
+#define _TYPES_H
 
 #include <stdint.h>
 
@@ -11,6 +11,8 @@
 typedef uint32_t inst_t;
 // Represents a 32-bit program counter
 typedef uint32_t pc_t;
+// Represents a single word (32b) of memory, with ambiguous signedness
+typedef uint32_t word_t;
 
 // Mapping opcode values to mnemonic
 typedef enum OpCodes {
@@ -115,4 +117,4 @@ typedef enum Operations {
     OPR_TRAP
 } operation_t;
 
-#endif /* TYPES_H */
+#endif /* _TYPES_H */
