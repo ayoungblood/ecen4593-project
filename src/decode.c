@@ -1,5 +1,5 @@
-/*
-*  src/decode.c
+/*  src/decode.c
+*   Decode instruction stage of the CPU
 */
 #include <stdio.h>
 #include "decode.h"
@@ -69,6 +69,10 @@ int decode( inst_t instr , pc_t  pc , reg_id_ex_t * id_ex ) {
         id_ex->regRs = ( instr & 0x03E00000 ) >> 21;
         id_ex->regRt = ( instr & 0x001F0000 ) >> 16;
         id_ex->immed = ( instr & 0x0000FFFF );
+        //Sign Extension of immediate field
+        if( ( id_ex->immed & 0x00008000 ) != 0 ){
+            id_ex->immed |= 0xFFFF0000;
+        }
         switch(opCode){
             case OPC_ADDI:
                 id_ex->op = OPR_ADDI;

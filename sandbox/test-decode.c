@@ -6,7 +6,7 @@
 //    gcc ../src/decode.o -o test-decode test-decode.c
 
 int main(int argc, char *argv[]){
-    inst_t inst = 0x36510064;
+    inst_t inst = 0x2271ff9c;
     pc_t pc = 0;
     reg_id_ex_t * id_ex = malloc(sizeof(reg_id_ex_t));
 
