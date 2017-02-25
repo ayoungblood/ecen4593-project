@@ -1,4 +1,4 @@
-/* main.h
+/* src/main.h
  * Top-level simulator header
  */
 

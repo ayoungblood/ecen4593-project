@@ -1,5 +1,8 @@
-# Project target
+# .gitignore
+
+# Project targets
 sim
+test/alu-test
 
 # Object files
 *.o

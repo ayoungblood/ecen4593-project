@@ -1,4 +1,4 @@
-/* main.c
+/* src/main.c
  * Top-level simulator source
  */
 
