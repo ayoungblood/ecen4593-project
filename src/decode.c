@@ -14,6 +14,7 @@ int decode( inst_t instr , pc_t  pc , reg_id_ex_t * id_ex ) {
         //RType instruction
         id_ex->regRs = ( instr & RS_MASK ) >> RS_SHIFT;
         id_ex->regRt = ( instr & RT_MASK ) >> RT_SHIFT;
+        //TODO: Get register values from register file
         id_ex->regRd = ( instr & RD_MASK ) >> RD_SHIFT;
         id_ex->shamt = ( instr & SH_MASK ) >> SH_SHIFT;
         id_ex->pcNext = pc;
@@ -50,6 +51,7 @@ int decode( inst_t instr , pc_t  pc , reg_id_ex_t * id_ex ) {
             case FNC_SRL:
                 id_ex->op = OPR_SRL;
                 break;
+            //TODO: Add MULT, DIV, NOP, and other instructions
             default:
                 printf("Illegal instruction funct code: 0x%02x\n", funct);
         }
@@ -68,6 +70,7 @@ int decode( inst_t instr , pc_t  pc , reg_id_ex_t * id_ex ) {
         //I type
         id_ex->regRs = ( instr & RS_MASK ) >> RS_SHIFT;
         id_ex->regRt = ( instr & RT_MASK ) >> RT_SHIFT;
+        //TODO: Get register values from register file
         id_ex->immed = ( instr & IM_MASK );
         //Sign Extension of immediate field
         if( ( id_ex->immed & BIT15 ) != 0 ){

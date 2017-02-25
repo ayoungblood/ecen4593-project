@@ -132,11 +132,16 @@ typedef struct ID_EX_REG{
     int pcNext;
     operation_t op;
     int shamt;
+    int regRsVal;
+    int regRtVal;
 } reg_id_ex_t;
 
 //EX/MEM pipeline register
 typedef struct EX_MEM_REG {
     int pcNext;
+    int aluResult;
+    int regRtVal;
+    int wbReg;
 } reg_ex_mem_t;
 
 
