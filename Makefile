@@ -12,7 +12,7 @@ CFLAGS = -Wall -Wextra -pedantic -Wshadow -m64 -std=c11 -Wpointer-arith -masm=in
 # --Wstrict-prototypes -Wmissing-prototypes: be strict about function prototypes
 LIBS =
 
-.PHONY: clean
+.PHONY: test clean
 .PRECIOUS: $(TARGET) $(OBJECTS)
 
 # Get all the header files and object files
@@ -30,7 +30,7 @@ $(TARGET): $(OBJECTS)
 all: $(TARGET)
 
 test: $(OBJECTS)
-		$(CC) -Wall $(LIBS) -o test/alu-test test/alu-test.c
+		$(CC) src/alu.o -Wall $(LIBS) -o test/alu-test test/alu-test.c
 		test/alu-test
 
 clean:
@@ -38,3 +38,4 @@ clean:
 		-rm -f src/*.o
 		-rm -f *.gch src/*.gch
 		-rm -f $(TARGET)
+		-rm -f test/alu-test
