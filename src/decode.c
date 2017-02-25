@@ -57,13 +57,77 @@ int decode( inst_t instr , pc_t  pc , reg_id_ex_t * id_ex ) {
     else if( opCode == OPC_J || opCode == OPC_JAL ){
         //J type 
         id_ex->immed = ( instr & 0x03FFFFFF ); 
-        
+        if( opCode == OPC_J ){
+            id_ex->op = OPR_J;
+        }
+        else {
+            id_ex->op = OPR_JAL;   
+        }
     }
     else {
         //I type
         id_ex->regRs = ( instr & 0x03E00000 ) >> 21;
         id_ex->regRt = ( instr & 0x001F0000 ) >> 16;
         id_ex->immed = ( instr & 0x0000FFFF );
+        switch(opCode){
+            case OPC_ADDI:
+                id_ex->op = OPR_ADDI;
+                break;
+            case OPC_ADDIU:
+                id_ex->op = OPR_ADDIU;
+                break;
+            case OPC_ANDI:
+                id_ex->op = OPR_ANDI;
+                break;
+            case OPC_BEQ:
+                id_ex->op = OPR_BEQ;
+                break;
+            case OPC_BNE:
+                id_ex->op = OPR_BNE;
+                break;
+            case OPC_LBU:
+                id_ex->op = OPR_LBU;
+                break;
+            case OPC_LHU:
+                id_ex->op = OPR_LHU;
+                break;
+            case OPC_LL:
+                //id_ex->op = OPR_LL;
+                printf("Unknown opcode OPC_LL");
+                break;
+            case OPC_LUI:
+                printf("Unknown opcode OPC_LUI");
+                //id_ex->op = OPR_LUI;
+                break;
+            case OPC_LW:
+                id_ex->op = OPR_LW;
+                break;
+            case OPC_ORI:
+                id_ex->op = OPR_ORI;
+                break;
+            case OPC_SLTI:
+                id_ex->op = OPR_SLTI;
+                break;
+            case OPC_SLTIU:
+                id_ex->op = OPR_SLTIU;
+                break;
+            case OPC_SB:
+                id_ex->op = OPR_SB;
+                break;
+            case OPC_SC:
+                printf("Unknown opcode OPC_SC");
+                //id_ex->op = OPR_SC;
+                break;
+            case OPC_SH:
+                id_ex->op = OPR_SH;
+                break;
+            case OPC_SW:
+                id_ex->op = OPR_SW;
+                break;
+            default:
+                printf("Illegal I type instruction 0x%02x\n", opCode);
+
+        }
     }
 
     return opCode;
