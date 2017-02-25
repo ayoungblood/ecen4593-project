@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "decode.h"
+#include "../src/decode.h"
 
-void main(int argc, char *argv[]){
+// Compile with
+//    gcc ../src/decode.o -o test-decode test-decode.c
+
+int main(int argc, char *argv[]){
     inst_t inst = 0x36510064;
     pc_t pc = 0;
     reg_id_ex_t * id_ex = malloc(sizeof(reg_id_ex_t));
@@ -13,6 +16,7 @@ void main(int argc, char *argv[]){
     printf("rd: %d\n", id_ex->regRd);
     printf("shamt: %d\n", id_ex->shamt);
     printf("pc: %d\n", id_ex->pcNext);
-    printf("immed: %d\n", id_ex->immed); 
+    printf("immed: %d\n", id_ex->immed);
     printf("op: %d\n", id_ex->op);
+    return 0;
 }
