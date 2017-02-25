@@ -12,7 +12,7 @@ int alu(operation_t operation, word_t op_rs, word_t op_rt, word_t *result, bool 
         case OPR_ADD:
             // rd <= rs + rt
             xs = (int32_t)op_rs + (int32_t)op_rt;
-            if (!OVERFLOW(xs)) {
+            if (!OVERFLOW(op_rs,op_rt,xs)) {
                 *result = (int32_t)(xs & 0xffffffff);
             } else {
                 return 1;
