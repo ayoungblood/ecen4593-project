@@ -29,6 +29,10 @@ $(TARGET): $(OBJECTS)
 
 all: $(TARGET)
 
+test: $(OBJECTS)
+		$(CC) -Wall $(LIBS) -o test/alu-test test/alu-test.c
+		test/alu-test
+
 clean:
 		-rm -f *.bc *.i *.s
 		-rm -f src/*.o
