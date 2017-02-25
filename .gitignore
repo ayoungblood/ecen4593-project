@@ -1,3 +1,6 @@
+# Project target
+sim
+
 # Object files
 *.o
 *.ko
@@ -31,3 +34,8 @@
 # Debug files
 *.dSYM/
 *.su
+
+# Other intermediate and assembly files
+*.bc
+*.i
+*.s
