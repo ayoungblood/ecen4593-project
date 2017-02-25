@@ -2,20 +2,40 @@
  * Top-level simulator source
  */
 
-#include <stdio.h>
+#include "main.h"
 
-#include "types.h"
-#include "decode.h"
+bool verbose = false;
 
 int main(int argc, char *argv[]) {
+    int i;
+    // Validate args, if they exist
+    if (argc == 1) {
+        printf("Nothing to execute.\nUsage:\n");
+        printf("    sim [-v] asm.s\n");
+        return 0; // exit without errors
+    } else {
+        // Stone-age command-line argument parsing
+        for (i=0; i<argc-2; ++i) {
+            switch (argv[i+1][1]) { // add command line option flags here
+                case 'v': // -v: verbose
+                    printf("Verbose output enabled.\n");
+                    verbose = true;
+                    break;
+                default:
+                    printf("Option not recognized: %c\n",argv[i+1][1]);
+                    break;
+            }
+        }
+    }
+    // Read in the assembly file to program space
+    // The assembly file is always the last argument to the simulator
+    FILE *asm_fp = fopen(argv[argc-1], "r");
+    if (!asm_fp) {
+        printf("Unable to open assembly file. Exiting..\n");
+        return 1; // exit with errors
+    }
+    // @TODO parse file and start simulation
 
-    inst_t inst = 0x01000000;
-    pc_t pc = 0x40000000;
-    reg_id_ex_t * id_ex;
-
-    int rv = decode(inst, pc, id_ex);
-    print("%d", rv);
-
-    printf("Hello World!\n");
-    return 0;
+    fclose(asm_fp); // close the file
+    return 0; // exit without errors
 }

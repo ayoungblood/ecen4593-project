@@ -1,8 +1,7 @@
 /*
 *   src/decode.h
 */
-
-#include <stdint.h>
+#include "types.h"
 
 typedef struct {
     int regRs;
@@ -11,7 +10,8 @@ typedef struct {
     int immed;
     int pcNext;
     int inst;
-    
+    int shamt;
+
 } reg_id_ex_t;
 
 int decode( inst_t , pc_t , reg_id_ex_t * );
