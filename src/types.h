@@ -117,4 +117,27 @@ typedef enum Operations {
     OPR_TRAP
 } operation_t;
 
+
+//Pipeline register struct typedefs
+
+//Currently no IF/ID struct, as the only two fields are the instruction and pcnext
+//May implement later if needed
+
+//ID/EX pipeline register
+typedef struct ID_EX_REG{
+    int regRs;
+    int regRt;
+    int regRd;
+    int immed;
+    int pcNext;
+    operation_t op;
+    int shamt;
+} reg_id_ex_t;
+
+//EX/MEM pipeline register
+typedef struct EX_MEM_REG {
+    int pcNext;
+} reg_ex_mem_t;
+
+
 #endif /* _TYPES_H */

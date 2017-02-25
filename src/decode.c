@@ -8,17 +8,17 @@
 int decode( inst_t instr , pc_t  pc , reg_id_ex_t * id_ex ) {
 
     //Determine the if R type instruction
-    opcode_t opCode = ( instr & 0xFC000000 ) >> 26;
+    opcode_t opCode = ( instr & OP_MASK ) >> OP_SHIFT;
     
     if ( opCode == OPC_RTYPE ) {
         //RType instruction
-        id_ex->regRs = ( instr & 0x03E00000 ) >> 21;
-        id_ex->regRt = ( instr & 0x001F0000 ) >> 16;
-        id_ex->regRd = ( instr & 0x0000F800 ) >> 11;
-        id_ex->shamt = ( instr & 0x000007C0 ) >> 6;
+        id_ex->regRs = ( instr & RS_MASK ) >> RS_SHIFT;
+        id_ex->regRt = ( instr & RT_MASK ) >> RT_SHIFT;
+        id_ex->regRd = ( instr & RD_MASK ) >> RD_SHIFT;
+        id_ex->shamt = ( instr & SH_MASK ) >> SH_SHIFT;
         id_ex->pcNext = pc;
         //Instruction function decoding
-        funct_t funct = ( instr & 0x00000003F );
+        funct_t funct = ( instr & FC_MASK );
         switch(funct){
             case FNC_ADD:
                 id_ex->op = OPR_ADD;
@@ -56,7 +56,7 @@ int decode( inst_t instr , pc_t  pc , reg_id_ex_t * id_ex ) {
     }
     else if( opCode == OPC_J || opCode == OPC_JAL ){
         //J type 
-        id_ex->immed = ( instr & 0x03FFFFFF ); 
+        id_ex->immed = ( instr & AD_MASK ); 
         if( opCode == OPC_J ){
             id_ex->op = OPR_J;
         }
@@ -66,12 +66,12 @@ int decode( inst_t instr , pc_t  pc , reg_id_ex_t * id_ex ) {
     }
     else {
         //I type
-        id_ex->regRs = ( instr & 0x03E00000 ) >> 21;
-        id_ex->regRt = ( instr & 0x001F0000 ) >> 16;
-        id_ex->immed = ( instr & 0x0000FFFF );
+        id_ex->regRs = ( instr & RS_MASK ) >> RS_SHIFT;
+        id_ex->regRt = ( instr & RT_MASK ) >> RT_SHIFT;
+        id_ex->immed = ( instr & IM_MASK );
         //Sign Extension of immediate field
-        if( ( id_ex->immed & 0x00008000 ) != 0 ){
-            id_ex->immed |= 0xFFFF0000;
+        if( ( id_ex->immed & BIT15 ) != 0 ){
+            id_ex->immed |= EXT_16_32;
         }
         switch(opCode){
             case OPC_ADDI:
