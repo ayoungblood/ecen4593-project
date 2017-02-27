@@ -6,6 +6,7 @@
 #define _TYPES_H
 
 #include <stdint.h>
+#include <stdbool.h>
 
 // Represents a 32-bit instruction
 typedef uint32_t inst_t;
@@ -125,23 +126,28 @@ typedef enum Operations {
 
 //ID/EX pipeline register
 typedef struct ID_EX_REG{
-    int regRs;
-    int regRt;
-    int regRd;
-    int immed;
-    int pcNext;
-    operation_t op;
-    int shamt;
-    int regRsVal;
-    int regRtVal;
+    int regRs;          //Register file number for Rs
+    int regRt;          //Register file number for Rt
+    int regRd;          //Register file number for Rd
+    int immed;          //Sign extended immediate 16 value
+    int pcNext;         //The address where the NEXT instruction is located
+    operation_t op;     //ALU operation, Memory Operation (decoded)
+    int shamt;          //Shift amount from instruction
+    int regRsVal;       //TODO:Value of the Rs register from the register file
+    int regRtVal;       //TODO:Value of the Rt register from the register file
+    bool RegDst;        //RegDst ? destination register is Rt : destination register is Rd
+    bool RegWrite;      //TODO:RegWrite ? N/A : Register on the write register input is written with the value of the Write data input
+    bool ALUSrc;        //ALUSrc ? The second ALU operand comes from Rt : The second ALU operand comes from Immediate 16
+
 } reg_id_ex_t;
 
 //EX/MEM pipeline register
 typedef struct EX_MEM_REG {
-    int pcNext;
+    int pcNext;         //
     int aluResult;
     int regRtVal;
     int wbReg;
+    bool memToReg;      //Should the memory result be written to the register file
 } reg_ex_mem_t;
 
 

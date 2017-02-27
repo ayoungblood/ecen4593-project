@@ -2,6 +2,7 @@
 *   Decode instruction stage of the CPU
 */
 #include <stdio.h>
+#include <stdbool.h>
 #include "decode.h"
 
 
@@ -16,6 +17,8 @@ int decode( inst_t instr , pc_t  pc , reg_id_ex_t * id_ex ) {
         id_ex->regRt = ( instr & RT_MASK ) >> RT_SHIFT;
         //TODO: Get register values from register file
         id_ex->regRd = ( instr & RD_MASK ) >> RD_SHIFT;
+        id_ex->RegDst = false;                                  //Destination register is Rd
+        id_ex->ALUSrc = true;                                   //Input to ALU is Rt
         id_ex->shamt = ( instr & SH_MASK ) >> SH_SHIFT;
         id_ex->pcNext = pc;
         //Instruction function decoding
@@ -70,6 +73,8 @@ int decode( inst_t instr , pc_t  pc , reg_id_ex_t * id_ex ) {
         //I type
         id_ex->regRs = ( instr & RS_MASK ) >> RS_SHIFT;
         id_ex->regRt = ( instr & RT_MASK ) >> RT_SHIFT;
+        id_ex->RegDst = true;                                   //Writeback register is Rt
+        id_ex->ALUSrc = false;                                  //Second ALU input is the immediate 16 value
         //TODO: Get register values from register file
         id_ex->immed = ( instr & IM_MASK );
         //Sign Extension of immediate field
