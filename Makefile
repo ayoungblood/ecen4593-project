@@ -31,7 +31,9 @@ all: $(TARGET)
 
 test: $(OBJECTS)
 		$(CC) src/alu.o -Wall $(LIBS) -o test/alu-test test/alu-test.c
+		$(CC) src/registers.o -Wall $(LIBS) -o test/registers-test test/registers-test.c
 		test/alu-test
+		test/registers-test
 
 clean:
 		-rm -f *.bc *.i *.s
@@ -39,3 +41,4 @@ clean:
 		-rm -f *.gch src/*.gch
 		-rm -f $(TARGET)
 		-rm -f test/alu-test
+		-rm -f test/registers-test

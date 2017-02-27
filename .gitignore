@@ -3,6 +3,7 @@
 # Project targets
 sim
 test/alu-test
+test/registers-test
 
 # Object files
 *.o
