@@ -32,9 +32,11 @@ all: $(TARGET)
 test: $(OBJECTS)
 		$(CC) src/alu.o -Wall $(LIBS) -o test/alu-test test/alu-test.c
 		$(CC) src/registers.o -Wall $(LIBS) -o test/registers-test test/registers-test.c
+		$(CC) src/decode.o -Wall $(LIBS) -o test/decode-test test/decode-test.c
 		test/alu-test
 		test/registers-test
-
+		test/decode-test
+		
 clean:
 		-rm -f *.bc *.i *.s
 		-rm -f src/*.o
@@ -42,3 +44,5 @@ clean:
 		-rm -f $(TARGET)
 		-rm -f test/alu-test
 		-rm -f test/registers-test
+		-rm -f test/decode-test
+		-rm -f sandbox/test-decode

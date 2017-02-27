@@ -5,145 +5,93 @@
 #include <stdbool.h>
 #include "decode.h"
 
+#define DEBUG 1
 
-int decode( inst_t instr , pc_t  pc , reg_id_ex_t * id_ex ) {
 
-    //Determine the if R type instruction
-    opcode_t opCode = ( instr & OP_MASK ) >> OP_SHIFT;
+int decode( inst_t instr , pc_t pc , control_t * control ) {
     
-    if ( opCode == OPC_RTYPE ) {
-        //RType instruction
-        id_ex->regRs = ( instr & RS_MASK ) >> RS_SHIFT;
-        id_ex->regRt = ( instr & RT_MASK ) >> RT_SHIFT;
-        //TODO: Get register values from register file
-        id_ex->regRd = ( instr & RD_MASK ) >> RD_SHIFT;
-        id_ex->RegDst = false;                                  //Destination register is Rd
-        id_ex->ALUSrc = true;                                   //Input to ALU is Rt
-        id_ex->shamt = ( instr & SH_MASK ) >> SH_SHIFT;
-        id_ex->pcNext = pc;
-        //Instruction function decoding
-        funct_t funct = ( instr & FC_MASK );
-        switch(funct){
-            case FNC_ADD:
-                id_ex->op = OPR_ADD;
-                break;
-            case FNC_ADDU:
-                id_ex->op = OPR_ADDU;
-                break;
-            case FNC_AND:
-                id_ex->op = OPR_AND;
-                break;
-            case FNC_JR:
-                id_ex->op = OPR_JR;
-                break;
-            case FNC_NOR:
-                id_ex->op = OPR_NOR;
-                break;
-            case FNC_OR:
-                id_ex->op = OPR_OR;
-                break;
-            case FNC_SLT:
-                id_ex->op = OPR_SLT;
-                break;
-            case FNC_SLTU:
-                id_ex->op = OPR_SLTU;
-                break;
-            case FNC_SLL:
-                id_ex->op = OPR_SLL;
-                break;
-            case FNC_SRL:
-                id_ex->op = OPR_SRL;
-                break;
-            //TODO: Add MULT, DIV, NOP, and other instructions
-            default:
-                printf("Illegal instruction funct code: 0x%02x\n", funct);
-        }
-    }
-    else if( opCode == OPC_J || opCode == OPC_JAL ){
-        //J type 
-        id_ex->immed = ( instr & AD_MASK ); 
-        if( opCode == OPC_J ){
-            id_ex->op = OPR_J;
-        }
-        else {
-            id_ex->op = OPR_JAL;   
-        }
-    }
-    else {
-        //I type
-        id_ex->regRs = ( instr & RS_MASK ) >> RS_SHIFT;
-        id_ex->regRt = ( instr & RT_MASK ) >> RT_SHIFT;
-        id_ex->RegDst = true;                                   //Writeback register is Rt
-        id_ex->ALUSrc = false;                                  //Second ALU input is the immediate 16 value
-        //TODO: Get register values from register file
-        id_ex->immed = ( instr & IM_MASK );
-        //Sign Extension of immediate field
-        if( ( id_ex->immed & BIT15 ) != 0 ){
-            id_ex->immed |= EXT_16_32;
-        }
-        switch(opCode){
-            case OPC_ADDI:
-                id_ex->op = OPR_ADDI;
-                break;
-            case OPC_ADDIU:
-                id_ex->op = OPR_ADDIU;
-                break;
-            case OPC_ANDI:
-                id_ex->op = OPR_ANDI;
-                break;
-            case OPC_BEQ:
-                id_ex->op = OPR_BEQ;
-                break;
-            case OPC_BNE:
-                id_ex->op = OPR_BNE;
-                break;
-            case OPC_LBU:
-                id_ex->op = OPR_LBU;
-                break;
-            case OPC_LHU:
-                id_ex->op = OPR_LHU;
-                break;
-            case OPC_LL:
-                //id_ex->op = OPR_LL;
-                printf("Unknown opcode OPC_LL");
-                break;
-            case OPC_LUI:
-                printf("Unknown opcode OPC_LUI");
-                //id_ex->op = OPR_LUI;
-                break;
-            case OPC_LW:
-                id_ex->op = OPR_LW;
-                break;
-            case OPC_ORI:
-                id_ex->op = OPR_ORI;
-                break;
-            case OPC_SLTI:
-                id_ex->op = OPR_SLTI;
-                break;
-            case OPC_SLTIU:
-                id_ex->op = OPR_SLTIU;
-                break;
-            case OPC_SB:
-                id_ex->op = OPR_SB;
-                break;
-            case OPC_SC:
-                printf("Unknown opcode OPC_SC");
-                //id_ex->op = OPR_SC;
-                break;
-            case OPC_SH:
-                id_ex->op = OPR_SH;
-                break;
-            case OPC_SW:
-                id_ex->op = OPR_SW;
-                break;
-            default:
-                printf("Illegal I type instruction 0x%02x\n", opCode);
+    //Get all of the bitmasked values out of the instruction
+    control->opCode = ( instr & OP_MASK ) >> OP_SHIFT;
+    control->regRs = ( instr & RS_MASK ) >> RS_SHIFT;
+    control->regRt = ( instr & RT_MASK ) >> RT_SHIFT;
+    control->regRd = ( instr & RD_MASK ) >> RD_SHIFT;
+    control->shamt = ( instr & SH_MASK ) >> SH_SHIFT;
+    control->funct = ( instr & FC_MASK );
+    control->immed = ( instr & IM_MASK );
+    control->address = ( instr & AD_MASK );
 
-        }
+    //Control registers. Truth table found on page 269
+    control->regDst = (control->opCode == OPC_RTYPE) ? true : false;
+    control->ALUSrc = (control->opCode == OPC_LW || control->opCode == OPC_SW) ? true : false;
+    control->memToReg = (control->opCode == OPC_LW) ? true : false;
+    control->regWrite = (control->opCode == OPC_RTYPE || control->opCode == OPC_LW) ? true : false;
+    control->memRead = (control->opCode == OPC_LW) ? true : false;
+    control->memWrite = (control->opCode == OPC_SW) ? true : false;
+
+    switch(control->opCode){
+        case OPC_RTYPE: 
+            switch(control->funct){
+                case FNC_ADD:
+                    control->ALUop = OPR_ADD;
+                    break;
+                case FNC_SUB:
+                    control->ALUop = OPR_SUB;
+                    break;
+                case FNC_AND:
+                    control->ALUop = OPR_AND;
+                    break;
+                case FNC_OR:
+                    control->ALUop = OPR_OR;
+                    break;
+                case FNC_SLT:
+                    control->ALUop = OPR_SLT;
+                    break;
+                case FNC_NOR:
+                    control->ALUop = OPR_NOR;
+                    break;
+                default:
+                    printf("Unknown R-Type instruction 0x%08x\n", control->funct);
+            }
+            break;
+        case OPC_LW:
+            control->ALUop = OPR_ADD;
+            break;
+        case OPC_SW:
+            control->ALUop = OPR_ADD;
+            break;
+        case OPC_BEQ:
+            control->ALUop = OPR_SUB;
+            break;
+        default:
+            printf("Unknown OpCode 0x%08x\n", control->opCode);
     }
 
-    return opCode;
+    #ifdef DEBUG
+    printf("Decoded control register from instruction 0x%08x\n", instr);
+    printf("Decoded Instrunction: \n");
+    printf("\tcontrol->opCode: 0x%08x\n", control->opCode);
+    printf("\tcontrol->regRs: 0x%08x\n", control->regRs);
+    printf("\tcontrol->regRt: 0x%08x\n", control->regRt);
+    printf("\tcontrol->regRd: 0x%08x\n", control->regRd);
+    printf("\tcontrol->shamt: 0x%08x\n", control->shamt);
+    printf("\tcontrol->funct: 0x%08x\n", control->funct);
+    printf("\tcontrol->immed: 0x%08x\n", control->immed);
+    printf("\tcontrol->address: 0x%08x\n", control->address);
+    printf("Control bits:\n");
+    printf("\tcontrol->regDst: 0x%08x\n", control->regDst);
+    printf("\tcontrol->ALUSrc: 0x%08x\n", control->ALUSrc);
+    printf("\tcontrol->memToReg: 0x%08x\n", control->memToReg);
+    printf("\tcontrol->regWrite: 0x%08x\n", control->regWrite);
+    printf("\tcontrol->memRead: 0x%08x\n", control->memRead);
+    printf("\tcontrol->memWrite: 0x%08x\n", control->memWrite);
+    printf("\tcontrol->ALUop: 0x%08x\n", control->ALUop);
+    #endif
+
+
+
+    return 0;
 
 
 
 }
+

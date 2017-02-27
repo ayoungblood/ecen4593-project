@@ -50,7 +50,8 @@ typedef enum FunctCodes {
     FNC_SLT     = 0x2a,
     FNC_SLTU    = 0x2b,
     FNC_SLL     = 0x00,
-    FNC_SRL     = 0x02
+    FNC_SRL     = 0x02,
+    FNC_SUB     = 0x22
 } funct_t;
 
 // Enumerate all "operations" (R/J/I type instruction action)
@@ -119,36 +120,31 @@ typedef enum Operations {
 } operation_t;
 
 
-//Pipeline register struct typedefs
 
-//Currently no IF/ID struct, as the only two fields are the instruction and pcnext
-//May implement later if needed
+typedef struct CONTROL_REGISTER {
+    //These are control register definitions that come from Figure 4.16 on page 264 of the Hennessy textbook
+    bool regDst;        //regDst ? destination register is Rd : destination register is Rt
+    bool regWrite;      //TODO:regWrite ? Register on the write register input is written with the value of the Write data input : nothing
+    bool ALUSrc;        //ALUSrc ? The second ALU operand comes from Immediate 16 : The second ALU operand comes from Rt
+    bool PCSrc;         //PCSrc ? PC replaced branch targer calculation : PC is replace by output of adder (PC + 4) 
+    bool memRead;       //memRead ? Data memory contents given by address input are put on Read data output : Nothing
+    bool memWrite;      //memWrite ? Data memory contents designated by the address input replace by data on Write data input : Nothing
+    bool memToReg;      //memToReg ? Value from Write data input comes from the data memory : value fed to register Write data input comes from ALU 
+    operation_t ALUop;  //ALU operation
 
-//ID/EX pipeline register
-typedef struct ID_EX_REG{
-    int regRs;          //Register file number for Rs
-    int regRt;          //Register file number for Rt
-    int regRd;          //Register file number for Rd
-    int immed;          //Sign extended immediate 16 value
-    int pcNext;         //The address where the NEXT instruction is located
-    operation_t op;     //ALU operation, Memory Operation (decoded)
-    int shamt;          //Shift amount from instruction
-    int regRsVal;       //TODO:Value of the Rs register from the register file
-    int regRtVal;       //TODO:Value of the Rt register from the register file
-    bool RegDst;        //RegDst ? destination register is Rt : destination register is Rd
-    bool RegWrite;      //TODO:RegWrite ? N/A : Register on the write register input is written with the value of the Write data input
-    bool ALUSrc;        //ALUSrc ? The second ALU operand comes from Rt : The second ALU operand comes from Immediate 16
+    opcode_t opCode;
+    uint32_t regRs;
+    uint32_t regRt;
+    uint32_t regRd;
+    uint32_t immed;
+    uint32_t address;
+    funct_t funct;
+    uint32_t shamt;
 
-} reg_id_ex_t;
-
-//EX/MEM pipeline register
-typedef struct EX_MEM_REG {
-    int pcNext;         //
-    int aluResult;
-    int regRtVal;
-    int wbReg;
-    bool memToReg;      //Should the memory result be written to the register file
-} reg_ex_mem_t;
+    uint32_t regRsValue;
+    uint32_t regRtValue;
+    
+} control_t;
 
 
 #endif /* _TYPES_H */

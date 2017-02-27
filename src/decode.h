@@ -6,8 +6,8 @@
 #define _DECODE_H
 #include "types.h"
 
+int decode( inst_t , pc_t , control_t * );
 
-int decode( inst_t , pc_t , reg_id_ex_t * );
 
 //Instruction decoding bitmasks
 #define OP_MASK 0xFC000000

@@ -2,21 +2,17 @@
 #include <stdlib.h>
 #include "../src/decode.h"
 
+
+#define DEBUG 1
+
 // Compile with
 //    gcc ../src/decode.o -o test-decode test-decode.c
 
 int main(int argc, char *argv[]){
-    inst_t inst = 0x2271ff9c;
+    inst_t inst = 0x02518824;
     pc_t pc = 0;
-    reg_id_ex_t * id_ex = malloc(sizeof(reg_id_ex_t));
+    control_t * control = malloc(sizeof(control_t));
 
-    int rv = decode(inst, pc, id_ex);
-    printf("rs: %d\n", id_ex->regRs);
-    printf("rt: %d\n", id_ex->regRt);
-    printf("rd: %d\n", id_ex->regRd);
-    printf("shamt: %d\n", id_ex->shamt);
-    printf("pc: %d\n", id_ex->pcNext);
-    printf("immed: %d\n", id_ex->immed);
-    printf("op: %d\n", id_ex->op);
+    int rv = decode(inst, pc, control);
     return 0;
 }
