@@ -8,12 +8,13 @@
 
 // Initialize the registers
 void reg_init(void);
-// Read from a register
-void reg_read(int reg, word_t *value);
-// Write to a register
-void reg_write(int reg, word_t *value);
 // Print all the register values
 void reg_dump(void);
+
+// Read from a register by register number
+void reg_read(int reg, word_t *value);
+// Write to a register by register number
+void reg_write(int reg, word_t *value);
 
 // Mapping register names to register numbers
 enum RegNames {
