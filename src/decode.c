@@ -17,16 +17,11 @@ int decode( inst_t instr , pc_t pc , control_t * control ) {
     control->regRd = ( instr & RD_MASK ) >> RD_SHIFT;
     control->shamt = ( instr & SH_MASK ) >> SH_SHIFT;
     control->funct = ( instr & FC_MASK );
-    control->immed = ( instr & IM_MASK );
     control->address = ( instr & AD_MASK );
+    uint32_t immed = ( instr & IM_MASK );
 
-    //Control registers. Truth table found on page 269
-    control->regDst = (control->opCode == OPC_RTYPE) ? true : false;
-    control->ALUSrc = (control->opCode == OPC_LW || control->opCode == OPC_SW) ? true : false;
-    control->memToReg = (control->opCode == OPC_LW) ? true : false;
-    control->regWrite = (control->opCode == OPC_RTYPE || control->opCode == OPC_LW) ? true : false;
-    control->memRead = (control->opCode == OPC_LW) ? true : false;
-    control->memWrite = (control->opCode == OPC_SW) ? true : false;
+    //Sign extension of the immediate field
+    control->immed = ( instr & BIT15 ) ? immed | EXT_16_32 : immed;
 
     switch(control->opCode){
         case OPC_RTYPE: 
@@ -52,15 +47,68 @@ int decode( inst_t instr , pc_t pc , control_t * control ) {
                 default:
                     printf("Unknown R-Type instruction 0x%08x\n", control->funct);
             }
+            control->regDst = true;
+            control->ALUSrc = false;
+            control->memToReg = false;
+            control->regWrite = true;
+            control->memRead = false;
+            control->memWrite = false;
+            control->jump = false;
+            control->PCSrc = false;
             break;
         case OPC_LW:
             control->ALUop = OPR_ADD;
+            control->regDst = false;
+            control->ALUSrc = true;
+            control->memToReg = true;
+            control->regWrite = true;
+            control->memRead = true;
+            control->memWrite = false;
+            control->jump = false;
+            control->PCSrc = false;
             break;
         case OPC_SW:
             control->ALUop = OPR_ADD;
+            // control->regDst = false; Dont Care
+            control->ALUSrc = true;
+            // control->memToReg = true; Dont Care
+            control->regWrite = false;
+            control->memRead = false;
+            control->memWrite = true;
+            control->jump = false;
+            control->PCSrc = false;
             break;
         case OPC_BEQ:
+        case OPC_BNE:
             control->ALUop = OPR_SUB;
+            // control->regDst = false; Dont Care
+            control->ALUSrc = false;
+            // control->memToReg = true; Dont Care
+            control->regWrite = false;
+            control->memRead = false;
+            control->memWrite = false;
+            control->jump = false;
+            control->PCSrc = true;
+            break;
+        case OPC_ADDI:
+            control->ALUop = OPR_ADD;
+            setControlImmedArithmetic(control);
+            break;
+        case OPC_ADDIU:
+            control->ALUop = OPR_ADDU;
+            setControlImmedArithmetic(control);
+            break;
+        case OPC_ANDI:
+            control->ALUop = OPR_AND;
+            setControlImmedArithmetic(control);
+            break;
+        case OPC_ORI:
+            control->ALUop = OPR_OR;
+            setControlImmedArithmetic(control);
+            break;
+        case OPC_SLTI:
+            control->ALUop = OPR_SLT;
+            setControlImmedArithmetic(control);
             break;
         default:
             printf("Unknown OpCode 0x%08x\n", control->opCode);
@@ -85,6 +133,8 @@ int decode( inst_t instr , pc_t pc , control_t * control ) {
     printf("\tcontrol->memRead: 0x%08x\n", control->memRead);
     printf("\tcontrol->memWrite: 0x%08x\n", control->memWrite);
     printf("\tcontrol->ALUop: 0x%08x\n", control->ALUop);
+    printf("\tcontrol->PCSrc: 0x%08x\n", control->PCSrc);
+    printf("\tcontrol->jump: 0x%08x\n", control->jump);
     #endif
 
 
@@ -93,5 +143,16 @@ int decode( inst_t instr , pc_t pc , control_t * control ) {
 
 
 
+}
+
+void setControlImmedArithmetic(control_t * control){
+    control->regDst = false;
+    control->ALUSrc = true;
+    control->memToReg = false;
+    control->regWrite = true;
+    control->memRead = false;
+    control->memWrite = false;
+    control->jump = false;
+    control->PCSrc = false;
 }
 

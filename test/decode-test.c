@@ -19,7 +19,7 @@ control_t *c;
 static char * test_decode_add() {
 	i = 0x02518820;							//add, $s1, $s2, $s1
 	p = 0x4;
-	c = malloc(sizeof(control_t));
+	c = (control_t *)malloc(sizeof(control_t));
 	decode(i, p, c);
     mu_assert(_FL "bad assert opCode", c->opCode == 0);
     mu_assert(_FL "bad assert regRs", c->regRs == 18);
@@ -35,16 +35,133 @@ static char * test_decode_add() {
     mu_assert(_FL "bad assert memWrite", c->memWrite == 0);
     mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
     mu_assert(_FL "bad assert ALUop", c->ALUop == 0);
+    mu_assert(_FL "bad assert jump", c->jump == 0);
+    free(c);
+    return 0;
+}
+
+static char * test_decode_addi() {
+	i = 0x22a8ff9c;									//addi $t0, $s5, -100
+	p = 0x4;
+	c = (control_t *)malloc(sizeof(control_t));
+	decode(i, p, c);
+    mu_assert(_FL "bad assert opCode", c->opCode == 8);
+    mu_assert(_FL "bad assert regRs", c->regRs == 21);
+    mu_assert(_FL "bad assert regRt", c->regRt == 8);
+    mu_assert(_FL "bad assert immed", c->immed == -100);
+    mu_assert(_FL "bad assert regDst", c->regDst == 0);
+    mu_assert(_FL "bad assert regWrite", c->regWrite == 1);
+    mu_assert(_FL "bad assert ALUSrc", c->ALUSrc == 1);
+    mu_assert(_FL "bad assert PCSrc", c->PCSrc == 0);
+    mu_assert(_FL "bad assert memRead", c->memRead == 0);
+    mu_assert(_FL "bad assert memWrite", c->memWrite == 0);
+    mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
+    mu_assert(_FL "bad assert ALUop", c->ALUop == 0);
+    mu_assert(_FL "bad assert jump", c->jump == 0);
+    free(c);
     return 0;
 }
 
 static char * test_decode_and() {
+	i = 0x02a44024;									//addi $t0, $s5, $a0
+	p = 0x4;
+	c = (control_t *)malloc(sizeof(control_t));
+	decode(i, p, c);
+    mu_assert(_FL "bad assert opCode", c->opCode == 0);
+    mu_assert(_FL "bad assert regRs", c->regRs == 21);
+    mu_assert(_FL "bad assert regRt", c->regRt == 4);
+    mu_assert(_FL "bad assert regRd", c->regRd == 8);
+    mu_assert(_FL "bad assert shamt", c->shamt == 0);
+    mu_assert(_FL "bad assert funct", c->funct == 0x24);
+    mu_assert(_FL "bad assert regDst", c->regDst == 1);
+    mu_assert(_FL "bad assert regWrite", c->regWrite == 1);
+    mu_assert(_FL "bad assert ALUSrc", c->ALUSrc == 0);
+    mu_assert(_FL "bad assert PCSrc", c->PCSrc == 0);
+    mu_assert(_FL "bad assert memRead", c->memRead == 0);
+    mu_assert(_FL "bad assert memWrite", c->memWrite == 0);
+    mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
+    mu_assert(_FL "bad assert ALUop", c->ALUop == 4);
+    mu_assert(_FL "bad assert jump", c->jump == 0);
+	free(c);
 
     return 0;
 }
 
+
+static char * test_decode_beq() {
+	i = 0x12110fff;									//beq $s0, $s1, 0x4000
+	p = 0x4;
+	c = (control_t *)malloc(sizeof(control_t));
+	decode(i, p, c);
+    mu_assert(_FL "bad assert opCode", c->opCode == 0x04);
+    mu_assert(_FL "bad assert regRs", c->regRs == 16);
+    mu_assert(_FL "bad assert regRt", c->regRt == 17);
+    mu_assert(_FL "bad assert immed", c->immed == 0x0fff);  //(0x4000 - 0x4) / 4 (PC+4 and word alignment)
+    mu_assert(_FL "bad assert regWrite", c->regWrite == 0);
+    mu_assert(_FL "bad assert ALUSrc", c->ALUSrc == 0);
+    mu_assert(_FL "bad assert PCSrc", c->PCSrc == 1);
+    mu_assert(_FL "bad assert memRead", c->memRead == 0);
+    mu_assert(_FL "bad assert memWrite", c->memWrite == 0);
+    mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
+    mu_assert(_FL "bad assert ALUop", c->ALUop == 19);
+    mu_assert(_FL "bad assert jump", c->jump == 0);
+	free(c);
+
+    return 0;
+}
+
+static char * test_decode_lw() {
+	i = 0x8d120005;									//lw $s2, 5($t0)
+	p = 0x4;
+	c = (control_t *)malloc(sizeof(control_t));
+	decode(i, p, c);
+    mu_assert(_FL "bad assert opCode", c->opCode == 0x23);
+    mu_assert(_FL "bad assert regRs", c->regRs == 8);
+    mu_assert(_FL "bad assert regRt", c->regRt == 18);
+    mu_assert(_FL "bad assert immed", c->immed == 0x0005);  
+    mu_assert(_FL "bad assert regDst", c->regDst == 0);
+    mu_assert(_FL "bad assert regWrite", c->regWrite == 1);
+    mu_assert(_FL "bad assert ALUSrc", c->ALUSrc == 1);
+    mu_assert(_FL "bad assert PCSrc", c->PCSrc == 0);
+    mu_assert(_FL "bad assert memRead", c->memRead == 1);
+    mu_assert(_FL "bad assert memWrite", c->memWrite == 0);
+    mu_assert(_FL "bad assert memToReg", c->memToReg == 1);
+    mu_assert(_FL "bad assert ALUop", c->ALUop == 0);
+    mu_assert(_FL "bad assert jump", c->jump == 0);
+	free(c);
+
+    return 0;
+}
+
+static char * test_decode_sw() {
+	i = 0xad1f0000;									//sw $ra, 0($t0)
+	p = 0x4;
+	c = (control_t *)malloc(sizeof(control_t));
+	decode(i, p, c);
+    mu_assert(_FL "bad assert opCode", c->opCode == 0x2B);
+    mu_assert(_FL "bad assert regRs", c->regRs == 8);
+    mu_assert(_FL "bad assert regRt", c->regRt == 31);
+    mu_assert(_FL "bad assert immed", c->immed == 0x0000);
+    //mu_assert(_FL "bad assert regDst", c->regDst == 0);
+    mu_assert(_FL "bad assert regWrite", c->regWrite == 0);
+    mu_assert(_FL "bad assert ALUSrc", c->ALUSrc == 1);
+    mu_assert(_FL "bad assert PCSrc", c->PCSrc == 0);
+    mu_assert(_FL "bad assert memRead", c->memRead == 0);
+    mu_assert(_FL "bad assert memWrite", c->memWrite == 1);
+    mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
+    mu_assert(_FL "bad assert ALUop", c->ALUop == 0);
+    mu_assert(_FL "bad assert jump", c->jump == 0);
+	free(c);
+
+    return 0;
+}
 static char * all_tests() {
     mu_run_test(test_decode_add);
+    mu_run_test(test_decode_addi);
+    mu_run_test(test_decode_and);
+    mu_run_test(test_decode_beq);
+    mu_run_test(test_decode_lw);
+    mu_run_test(test_decode_sw);
     return 0;
 }
 

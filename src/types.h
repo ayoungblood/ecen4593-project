@@ -131,6 +131,7 @@ typedef struct CONTROL_REGISTER {
     bool memWrite;      //memWrite ? Data memory contents designated by the address input replace by data on Write data input : Nothing
     bool memToReg;      //memToReg ? Value from Write data input comes from the data memory : value fed to register Write data input comes from ALU 
     operation_t ALUop;  //ALU operation
+    bool jump;          //Override PC with shifted and concatenated address
 
     opcode_t opCode;
     uint32_t regRs;
