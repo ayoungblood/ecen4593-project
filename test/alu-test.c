@@ -56,6 +56,41 @@ static char * test_ALU_ADD() {
     return 0;
 }
 
+static char * test_ALU_ADDU() {
+    // These should not overflow
+    s = t = 0x0;
+    rv = alu(OPR_ADDU,s,t,&d,&z);
+    mu_assert(_FL "bad assert", d == 0);
+    mu_assert(_FL "bad assert", z == true);
+    s = 0x2;
+    t = 0xffffffff; // -1
+    rv = alu(OPR_ADDU,s,t,&d,&z);
+    mu_assert(_FL "bad assert", d == 1);
+    mu_assert(_FL "bad assert", z == false);
+    s = 0x7fffffff; // 2147483647
+    t = 0x80000001; // -2147483647
+    rv = alu(OPR_ADDU,s,t,&d,&z);
+    mu_assert(_FL "bad assert", d == 0);
+    mu_assert(_FL "bad assert", z == true);
+    // These should overflow, but _should_ modify d and z
+    s = 0x7fffffff; // 2147483647
+    t = 0x7fffffff; // 2147483647
+    rv = alu(OPR_ADDU,s,t,&d,&z);
+    mu_assert(_FL "bad assert", d == -2);
+    mu_assert(_FL "bad assert", z == false);
+    s = 0x7fffffff; // 2147483647
+    t = 0x1; // 1
+    rv = alu(OPR_ADDU,s,t,&d,&z);
+    mu_assert(_FL "bad assert", d == 0x80000000);
+    mu_assert(_FL "bad assert", z == false);
+    s = 0xffffffff; // -1
+    t = 0x80000000; // -2147483648
+    rv = alu(OPR_ADDU,s,t,&d,&z);
+    mu_assert(_FL "bad assert", d == 0x7fffffff);
+    mu_assert(_FL "bad assert", z == false);
+    return 0;
+}
+
 static char * test_ALU_AND() {
     // AND cannot overflow
     s = t = 0x0;
@@ -128,6 +163,54 @@ static char * test_ALU_OR() {
     return 0;
 }
 
+static char * test_ALU_SLT() {
+    // SLT does not overflow
+    s = t = 0x0;
+    rv = alu(OPR_SLT,s,t,&d,&z);
+    mu_assert(_FL "bad assert", d == 0x0);
+    mu_assert(_FL "bad assert", z == true);
+    s = 0x7fffffff;
+    t = 0x80000000;
+    rv = alu(OPR_SLT,s,t,&d,&z);
+    mu_assert(_FL "bad assert", d == 0x0);
+    mu_assert(_FL "bad assert", z == true);
+    s = 0xffffffff;
+    t = 0x7f000000;
+    rv = alu(OPR_SLT,s,t,&d,&z);
+    mu_assert(_FL "bad assert", d == 0x1);
+    mu_assert(_FL "bad assert", z == false);
+    s = 0x80000000;
+    t = 0xffffffff;
+    rv = alu(OPR_SLT,s,t,&d,&z);
+    mu_assert(_FL "bad assert", d == 0x1);
+    mu_assert(_FL "bad assert", z == false);
+    return 0;
+}
+
+static char * test_ALU_SLTU() {
+    // SLTU does not overflow
+    s = t = 0x0;
+    rv = alu(OPR_SLTU,s,t,&d,&z);
+    mu_assert(_FL "bad assert", d == 0x0);
+    mu_assert(_FL "bad assert", z == true);
+    s = 0x7fffffff;
+    t = 0x80000000;
+    rv = alu(OPR_SLTU,s,t,&d,&z);
+    mu_assert(_FL "bad assert", d == 0x1);
+    mu_assert(_FL "bad assert", z == false);
+    s = 0xffffffff;
+    t = 0x7f000000;
+    rv = alu(OPR_SLTU,s,t,&d,&z);
+    mu_assert(_FL "bad assert", d == 0x0);
+    mu_assert(_FL "bad assert", z == true);
+    s = 0xffffffff;
+    t = 0xfffffffe;
+    rv = alu(OPR_SLTU,s,t,&d,&z);
+    mu_assert(_FL "bad assert", d == 0x0);
+    mu_assert(_FL "bad assert", z == true);
+    return 0;
+}
+/*
 static char * test_ALU_SUB() {
     // These should not overflow
     s = t = 0x0;
@@ -174,13 +257,57 @@ static char * test_ALU_SUB() {
     mu_assert(_FL "bad assert", z == false);
     return 0;
 }
+*/
+static char * test_ALU_SUBU() {
+    // These should not overflow
+    s = t = 0x0;
+    rv = alu(OPR_SUBU,s,t,&d,&z);
+    mu_assert(_FL "bad assert", d == 0);
+    mu_assert(_FL "bad assert", z == true);
+    s = 0x2;
+    t = 0xffffffff; // -1
+    rv = alu(OPR_SUBU,s,t,&d,&z);
+    mu_assert(_FL "bad assert", d == 3);
+    mu_assert(_FL "bad assert", z == false);
+    s = 0x7fffffff; // 2147483647
+    t = 0x7ffffff0; // 2147483632
+    rv = alu(OPR_SUBU,s,t,&d,&z);
+    mu_assert(_FL "bad assert", d == 15);
+    mu_assert(_FL "bad assert", z == false);
+    s = 0xfffffff0; // -16
+    t = 0xfffffff8; // -8
+    rv = alu(OPR_SUBU,s,t,&d,&z);
+    mu_assert(_FL "bad assert", d == -8);
+    mu_assert(_FL "bad assert", z == false);
+    // These should overflow, and _should_ modify d and z
+    s = 0xfffffffe; // -2
+    t = 0x7fffffff; // 2147483647
+    rv = alu(OPR_SUBU,s,t,&d,&z);
+    mu_assert(_FL "bad assert", d == 0x7fffffff);
+    mu_assert(_FL "bad assert", z == false);
+    s = 0x80000000; // -2147483648
+    t = 0x2; // 2
+    rv = alu(OPR_SUBU,s,t,&d,&z);
+    mu_assert(_FL "bad assert", d == 0x7ffffffe);
+    mu_assert(_FL "bad assert", z == false);
+    s = 0xffffffff; // -1
+    t = 0x80000000; // -2147483648
+    rv = alu(OPR_SUBU,s,t,&d,&z);
+    mu_assert(_FL "bad assert", d == 0x7fffffff);
+    mu_assert(_FL "bad assert", z == false);
+    return 0;
+}
 
 static char * all_tests() {
     mu_run_test(test_ALU_ADD);
+    mu_run_test(test_ALU_ADDU);
     mu_run_test(test_ALU_AND);
     mu_run_test(test_ALU_NOR);
     mu_run_test(test_ALU_OR);
+    mu_run_test(test_ALU_SLT);
+    mu_run_test(test_ALU_SLTU);
     //mu_run_test(test_ALU_SUB);
+    mu_run_test(test_ALU_SUBU);
     return 0;
 }
 
@@ -189,7 +316,7 @@ int main(int argc, char **argv) {
     if (result != 0) {
         printf("%s\n", result);
     } else {
-        printf("ALL TESTS PASSED\n");
+        printf(__FILE__": ALL TESTS PASSED\n");
     }
     printf("Tests run: %d\n", tests_run);
     return result != 0;

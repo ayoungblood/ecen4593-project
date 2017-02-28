@@ -31,6 +31,11 @@ int alu(operation_t operation, word_t op_rs, word_t op_rt, word_t *result, bool 
                 return ALU_INTEGER_OVERFLOW;
             }
             break;
+        case OPR_ADDU:
+            // rd <= rs + rt
+            // No integer overflow occurs under any circumstances
+            *result = (int32_t)op_rs + (int32_t)op_rt;
+            break;
         case OPR_AND:
             // rd <= rs AND rt
             *result = op_rs & op_rt;
@@ -43,6 +48,14 @@ int alu(operation_t operation, word_t op_rs, word_t op_rt, word_t *result, bool 
             // rd <= rs OR rt
             *result = op_rs | op_rt;
             break;
+        case OPR_SLT:
+            // rd <= (rs < rt)
+            *result = ((int32_t)op_rs)<((int32_t)op_rt)?1:0;
+            break;
+        case OPR_SLTU:
+            // rd <= (rs < rt)
+            *result = ((uint32_t)op_rs)<((uint32_t)op_rt)?1:0;
+            break;
         case OPR_SUB:
             // rd <= rs - rt
             // "The 32-bit word value in GPR rt is subtracted from the 32-bit value in
@@ -52,12 +65,17 @@ int alu(operation_t operation, word_t op_rs, word_t op_rt, word_t *result, bool 
             // overflow, the 32-bit result is placed into GPR rd."
             temp = (int32_t)op_rs - (int32_t)op_rt;
             if (!SUB_OVERFLOW(op_rs,op_rt,temp)) {
-                printf("Subtract, no overflow. rs: %d, rt: %d, temp: %d; rs.31: %d, rt.31: %d, temp.31: %d\n",(int32_t)op_rs,(int32_t)op_rt,(int32_t)temp,BIT31(op_rs),BIT31(op_rt),BIT31(temp));
+                //printf("Subtract, no overflow. rs: %d, rt: %d, temp: %d; rs.31: %d, rt.31: %d, temp.31: %d\n",(int32_t)op_rs,(int32_t)op_rt,(int32_t)temp,BIT31(op_rs),BIT31(op_rt),BIT31(temp));
                 *result = temp;
             } else {
-                printf("Subtract, OVERFLOW! rs: %d, rt: %d, temp: %d; rs.31: %d, rt.31: %d, temp.31: %d\n",(int32_t)op_rs,(int32_t)op_rt,(int32_t)temp,BIT31(op_rs),BIT31(op_rt),BIT31(temp));
+                //printf("Subtract, OVERFLOW! rs: %d, rt: %d, temp: %d; rs.31: %d, rt.31: %d, temp.31: %d\n",(int32_t)op_rs,(int32_t)op_rt,(int32_t)temp,BIT31(op_rs),BIT31(op_rt),BIT31(temp));
                 return ALU_INTEGER_OVERFLOW;
             }
+            break;
+        case OPR_SUBU:
+            // rd <= rs - rt
+            // No integer overflow occurs under any circumstances
+            *result = (int32_t)op_rs - (int32_t)op_rt;
             break;
         default:
             assert(0); // We should not get here
