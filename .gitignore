@@ -4,6 +4,7 @@
 sim
 test/alu-test
 test/registers-test
+test/decode-test
 
 # Object files
 *.o
