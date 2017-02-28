@@ -9,6 +9,9 @@
 int decode( inst_t , pc_t , control_t * );
 
 
+//Helper functions
+void setControlImmedArithmetic(control_t *);
+
 //Instruction decoding bitmasks
 #define OP_MASK 0xFC000000
 #define RS_MASK 0x03E00000
