@@ -44,3 +44,10 @@ test/decode-test
 *.bc
 *.i
 *.s
+
+# Unignore assembly files that we care about
+# Note that libgit2 (and therefore Github Desktop) has a bug that makes
+# negation statements not work properly. However, adding the file(s) manually
+# with 'git add' causes them to appear.
+# https://github.com/libgit2/libgit2/issues/3224
+!asm/*.s
