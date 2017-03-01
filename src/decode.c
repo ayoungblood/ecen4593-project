@@ -1,9 +1,9 @@
 /*  src/decode.c
 *   Decode instruction stage of the CPU
 */
-#include <stdio.h>
-#include <stdbool.h>
+
 #include "decode.h"
+
 
 #define DEBUG 1
 
@@ -137,6 +137,30 @@ int decode( inst_t instr , pc_t pc , control_t * control ) {
     printf("\tcontrol->jump: 0x%08x\n", control->jump);
     #endif
 
+
+
+    //Set register values for input to the ALU
+    reg_read((int)control->regRs, &(control->regRsValue));
+    if(control->ALUSrc){
+        //Second argument comes from immediate 16 value
+        control->regRtValue =  control->immed;
+    }
+    else {
+        //Second argument comes from Rt
+        reg_read((int)control->regRt, &(control->regRtValue));
+    }
+
+    #ifdef DEBUG
+    printf("First argument:\n");
+    printf("\tRs = %d, Rs Value = 0x%08x\n",control->regRs, control->regRsValue);
+    printf("Second argument:\n");
+    if(control->ALUSrc){
+        printf("\tImmed16 = 0x%08x\n", control->regRtValue);
+    }
+    else{
+        printf("\tRt = %d, Rt Value = 0x%08x\n", control->regRt, control->regRtValue);
+    }
+    #endif /*DEBUG*/
 
 
     return 0;

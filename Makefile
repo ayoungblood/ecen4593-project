@@ -32,7 +32,7 @@ all: $(TARGET)
 test: $(OBJECTS)
 		$(CC) src/alu.o -Wall $(LIBS) -o test/alu-test test/alu-test.c
 		$(CC) src/registers.o -Wall $(LIBS) -o test/registers-test test/registers-test.c
-		$(CC) src/decode.o -Wall $(LIBS) -o test/decode-test test/decode-test.c
+		$(CC) src/decode.o src/registers.o -Wall $(LIBS) -o test/decode-test test/decode-test.c
 		test/alu-test
 		test/registers-test
 		test/decode-test
