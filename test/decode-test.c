@@ -161,6 +161,54 @@ static char * test_decode_sw() {
     return 0;
 }
 
+
+static char * test_decode_slti() {
+    i = 0x2a28f000;                  //slti $t0, $s1, 0xf000
+    printf("Instruction: slti $t0, $s1, 0xf000\n");
+    p = 0x4;
+    c = (control_t *)malloc(sizeof(control_t));
+    decode(i, p, c);
+    mu_assert(_FL "bad assert opCode", c->opCode == OPC_SLTI);
+    mu_assert(_FL "bad assert regRs", c->regRs == REG_S1);
+    mu_assert(_FL "bad assert regRt", c->regRt == REG_T0);
+    mu_assert(_FL "bad assert immed", c->immed == 0xfffff000);
+    mu_assert(_FL "bad assert regDst", c->regDst == 0);
+    mu_assert(_FL "bad assert regWrite", c->regWrite == 1);
+    mu_assert(_FL "bad assert ALUSrc", c->ALUSrc == 1);
+    mu_assert(_FL "bad assert PCSrc", c->PCSrc == 0);
+    mu_assert(_FL "bad assert memRead", c->memRead == 0);
+    mu_assert(_FL "bad assert memWrite", c->memWrite == 0);
+    mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
+    mu_assert(_FL "bad assert ALUop", c->ALUop == OPR_SLT);
+    mu_assert(_FL "bad assert jump", c->jump == 0);
+    free(c);
+
+    return 0;
+}
+static char * test_decode_sltiu() {
+    i = 0x2e28f000;                  //sltiu $t0, $s1, 0xf000
+    printf("Instruction: sltiu $t0, $s1, 0xf000\n");
+    p = 0x4;
+    c = (control_t *)malloc(sizeof(control_t));
+    decode(i, p, c);
+    mu_assert(_FL "bad assert opCode", c->opCode == OPC_SLTIU);
+    mu_assert(_FL "bad assert regRs", c->regRs == REG_S1);
+    mu_assert(_FL "bad assert regRt", c->regRt == REG_T0);
+    mu_assert(_FL "bad assert immed", c->immed == 0xf000);
+    mu_assert(_FL "bad assert regDst", c->regDst == 0);
+    mu_assert(_FL "bad assert regWrite", c->regWrite == 1);
+    mu_assert(_FL "bad assert ALUSrc", c->ALUSrc == 1);
+    mu_assert(_FL "bad assert PCSrc", c->PCSrc == 0);
+    mu_assert(_FL "bad assert memRead", c->memRead == 0);
+    mu_assert(_FL "bad assert memWrite", c->memWrite == 0);
+    mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
+    mu_assert(_FL "bad assert ALUop", c->ALUop == OPR_SLTU);
+    mu_assert(_FL "bad assert jump", c->jump == 0);
+    free(c);
+
+    return 0;
+}
+
 static char * test_decode_j() {
     i = 0x08000804;                  //j 0x2011
     printf("Instruction: j 0x2011\n");
@@ -225,6 +273,8 @@ static char * all_tests() {
     mu_run_test(test_decode_sw);
     mu_run_test(test_decode_j);
     mu_run_test(test_decode_jal);
+    mu_run_test(test_decode_sltiu);
+    mu_run_test(test_decode_slti);
     return 0;
 }
 

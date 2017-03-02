@@ -23,7 +23,7 @@ int decode( inst_t instr , pc_t pc , control_t * control ) {
     control->pcNext = pc + 4;
 
     //Sign extension of the immediate field
-    control->immed = ( instr & BIT15 ) ? immed | EXT_16_32 : immed;
+    control->immed = (( instr & BIT15 ) && (control->opCode != OPC_SLTIU)) ? immed | EXT_16_32 : immed;
 
     switch(control->opCode){
         case OPC_RTYPE:
@@ -110,6 +110,10 @@ int decode( inst_t instr , pc_t pc , control_t * control ) {
             break;
         case OPC_SLTI:
             control->ALUop = OPR_SLT;
+            setControlImmedArithmetic(control);
+            break;
+        case OPC_SLTIU:
+            control->ALUop = OPR_SLTU;
             setControlImmedArithmetic(control);
             break;
         case OPC_J:
