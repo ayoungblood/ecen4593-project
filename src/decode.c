@@ -9,7 +9,7 @@
 
 
 int decode( inst_t instr , pc_t pc , control_t * control ) {
-    
+
     //Get all of the bitmasked values out of the instruction
     control->opCode = ( instr & OP_MASK ) >> OP_SHIFT;
     control->regRs = ( instr & RS_MASK ) >> RS_SHIFT;
@@ -20,11 +20,13 @@ int decode( inst_t instr , pc_t pc , control_t * control ) {
     control->address = ( instr & AD_MASK );
     uint32_t immed = ( instr & IM_MASK );
 
+    control->pcNext = pc + 4;
+
     //Sign extension of the immediate field
     control->immed = ( instr & BIT15 ) ? immed | EXT_16_32 : immed;
 
     switch(control->opCode){
-        case OPC_RTYPE: 
+        case OPC_RTYPE:
             switch(control->funct){
                 case FNC_ADD:
                     control->ALUop = OPR_ADD;
@@ -110,9 +112,46 @@ int decode( inst_t instr , pc_t pc , control_t * control ) {
             control->ALUop = OPR_SLT;
             setControlImmedArithmetic(control);
             break;
+        case OPC_J:
+            control->regRs = REG_ZERO;
+            control->regRt = REG_ZERO;
+            control->regRd = REG_ZERO;
+        case OPC_JAL:
+            control->ALUop = OPR_ADDU;
+            control->regDst = true;
+            control->ALUSrc = false;
+            control->regWrite = false;
+            control->memRead = false;
+            control->memWrite = false;
+            control->PCSrc = false;
+            control->jump = true;
+            control->regRd = REG_RA;    //Override so we can put pc in $ra
         default:
             printf("Unknown OpCode 0x%08x\n", control->opCode);
     }
+
+    //Set register values for input to the ALU
+    reg_read((int)control->regRs, &(control->regRsValue));
+    if(control->ALUSrc){
+        //Second argument comes from immediate 16 value
+        control->regRtValue =  control->immed;
+    }
+    else if(control->opCode == OPC_JAL){
+        //For JAL, put the pc+4 through and add with zero then write back to $ra
+        control->regRtValue = control->pcNext;
+    }
+    else {
+        //Second argument comes from Rt
+        reg_read((int)control->regRt, &(control->regRtValue));
+    }
+
+
+    //Jump address calculation
+    control->address = ( control->address << 2 );         //Word aligned
+    //Don't think i need to bitmask the address since in theory it shouldn't be
+    //"signed"
+    control->pcNext = ( control->pcNext && 0xF0000000 ) || control->address;
+
 
     #ifdef DEBUG
     printf("Decoded control register from instruction 0x%08x\n", instr);
@@ -135,33 +174,19 @@ int decode( inst_t instr , pc_t pc , control_t * control ) {
     printf("\tcontrol->ALUop: 0x%08x\n", control->ALUop);
     printf("\tcontrol->PCSrc: 0x%08x\n", control->PCSrc);
     printf("\tcontrol->jump: 0x%08x\n", control->jump);
-    #endif
-
-
-
-    //Set register values for input to the ALU
-    reg_read((int)control->regRs, &(control->regRsValue));
-    if(control->ALUSrc){
-        //Second argument comes from immediate 16 value
-        control->regRtValue =  control->immed;
-    }
-    else {
-        //Second argument comes from Rt
-        reg_read((int)control->regRt, &(control->regRtValue));
-    }
-
-    #ifdef DEBUG
     printf("First argument:\n");
     printf("\tRs = %d, Rs Value = 0x%08x\n",control->regRs, control->regRsValue);
     printf("Second argument:\n");
     if(control->ALUSrc){
         printf("\tImmed16 = 0x%08x\n", control->regRtValue);
     }
+    else if(control->opCode == OPC_JAL){
+        printf("\tJAL instruction PC+4 -> Rt Value, Rt Value = 0x%08x\n", control->regRtValue);
+    }
     else{
         printf("\tRt = %d, Rt Value = 0x%08x\n", control->regRt, control->regRtValue);
     }
     #endif /*DEBUG*/
-
 
     return 0;
 
@@ -179,4 +204,3 @@ void setControlImmedArithmetic(control_t * control){
     control->jump = false;
     control->PCSrc = false;
 }
-

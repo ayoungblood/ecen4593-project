@@ -126,10 +126,10 @@ typedef struct CONTROL_REGISTER {
     bool regDst;        //regDst ? destination register is Rd : destination register is Rt
     bool regWrite;      //TODO:regWrite ? Register on the write register input is written with the value of the Write data input : nothing
     bool ALUSrc;        //ALUSrc ? The second ALU operand comes from Immediate 16 : The second ALU operand comes from Rt
-    bool PCSrc;         //PCSrc ? PC replaced branch targer calculation : PC is replace by output of adder (PC + 4) 
+    bool PCSrc;         //PCSrc ? PC replaced branch targer calculation : PC is replace by output of adder (PC + 4)
     bool memRead;       //memRead ? Data memory contents given by address input are put on Read data output : Nothing
     bool memWrite;      //memWrite ? Data memory contents designated by the address input replace by data on Write data input : Nothing
-    bool memToReg;      //memToReg ? Value from Write data input comes from the data memory : value fed to register Write data input comes from ALU 
+    bool memToReg;      //memToReg ? Value from Write data input comes from the data memory : value fed to register Write data input comes from ALU
     operation_t ALUop;  //ALU operation
     bool jump;          //Override PC with shifted and concatenated address
 
@@ -144,7 +144,10 @@ typedef struct CONTROL_REGISTER {
 
     uint32_t regRsValue;
     uint32_t regRtValue;
-    
+
+    uint32_t ALUresult;
+    uint32_t pcNext;
+
 } control_t;
 
 
