@@ -113,19 +113,33 @@ int decode( inst_t instr , pc_t pc , control_t * control ) {
             setControlImmedArithmetic(control);
             break;
         case OPC_J:
+            control->ALUop = OPR_ADDU;
             control->regRs = REG_ZERO;
             control->regRt = REG_ZERO;
             control->regRd = REG_ZERO;
-        case OPC_JAL:
-            control->ALUop = OPR_ADDU;
             control->regDst = true;
             control->ALUSrc = false;
-            control->regWrite = false;
+            control->regWrite = true;
             control->memRead = false;
             control->memWrite = false;
+            control->memToReg = false;
             control->PCSrc = false;
             control->jump = true;
+            break;
+        case OPC_JAL:
+            control->ALUop = OPR_ADDU;
+            control->regRs = REG_ZERO;
+            control->regRt = REG_ZERO;
             control->regRd = REG_RA;    //Override so we can put pc in $ra
+            control->regDst = true;
+            control->ALUSrc = false;
+            control->regWrite = true;
+            control->memRead = false;
+            control->memWrite = false;
+            control->memToReg = false;
+            control->PCSrc = false;
+            control->jump = true;
+
         default:
             printf("Unknown OpCode 0x%08x\n", control->opCode);
     }
@@ -150,7 +164,7 @@ int decode( inst_t instr , pc_t pc , control_t * control ) {
     control->address = ( control->address << 2 );         //Word aligned
     //Don't think i need to bitmask the address since in theory it shouldn't be
     //"signed"
-    control->pcNext = ( control->pcNext && 0xF0000000 ) || control->address;
+    control->pcNext = ( control->pcNext & 0xF0000000 ) | control->address;
 
 
     #ifdef DEBUG
@@ -164,6 +178,7 @@ int decode( inst_t instr , pc_t pc , control_t * control ) {
     printf("\tcontrol->funct: 0x%08x\n", control->funct);
     printf("\tcontrol->immed: 0x%08x\n", control->immed);
     printf("\tcontrol->address: 0x%08x\n", control->address);
+    printf("\tcontrol->pcNext: 0x%08x\n", control->pcNext);
     printf("Control bits:\n");
     printf("\tcontrol->regDst: 0x%08x\n", control->regDst);
     printf("\tcontrol->ALUSrc: 0x%08x\n", control->ALUSrc);
