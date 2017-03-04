@@ -150,5 +150,4 @@ typedef struct CONTROL_REGISTER {
 
 } control_t;
 
-
 #endif /* _TYPES_H */

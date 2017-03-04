@@ -4,8 +4,7 @@
 
 #include "main.h"
 
-bool debug = false;
-bool verbose = false;
+int flags = 0; // Global flags register, shared across all files
 
 int main(int argc, char *argv[]) {
     int i;
@@ -24,11 +23,11 @@ int main(int argc, char *argv[]) {
             switch (argv[i+1][1]) { // add command line option flags here
                 case 'd': // -d: debug
                     printf("Debug mode enabled.\n");
-                    debug = true;
+                    flags |= MASK_DEBUG;
                     break;
                 case 'v': // -v: verbose
                     printf("Verbose output enabled.\n");
-                    verbose = true;
+                    flags |= MASK_VERBOSE;
                     break;
                 default:
                     printf("Option not recognized: %c\n",argv[i+1][1]);
