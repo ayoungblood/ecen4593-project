@@ -36,6 +36,7 @@ static char * test_decode_add() {
     mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
     mu_assert(_FL "bad assert ALUop", c->ALUop == 0);
     mu_assert(_FL "bad assert jump", c->jump == 0);
+    mu_assert(_FL "bad assert pcNext", c->pcNext == 0x8);
     free(c);
     return 0;
 }
@@ -59,6 +60,7 @@ static char * test_decode_addi() {
     mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
     mu_assert(_FL "bad assert ALUop", c->ALUop == OPR_ADD);
     mu_assert(_FL "bad assert jump", c->jump == 0);
+    mu_assert(_FL "bad assert pcNext", c->pcNext == 0x8);
     free(c);
     return 0;
 }
@@ -84,6 +86,7 @@ static char * test_decode_and() {
     mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
     mu_assert(_FL "bad assert ALUop", c->ALUop == OPR_AND);
     mu_assert(_FL "bad assert jump", c->jump == 0);
+    mu_assert(_FL "bad assert pcNext", c->pcNext == 0x8);
     free(c);
 
     return 0;
@@ -92,9 +95,12 @@ static char * test_decode_and() {
 
 static char * test_decode_beq() {
     i = 0x12110fff;                  //beq $s0, $s1, 0x4000
-    printf("Instruction: beq $s0, $s1, 0x4000\n");
+    printf("Instruction: beq $s0, $s1, 0x4000 (taken)\n");
     p = 0x4;
     c = (control_t *)malloc(sizeof(control_t));
+    reg_init();
+    reg_write(REG_S0, &p);
+    reg_write(REG_S1, &p);
     decode(i, p, c);
     mu_assert(_FL "bad assert opCode", c->opCode == OPC_BEQ);
     mu_assert(_FL "bad assert regRs", c->regRs == REG_S0);
@@ -108,6 +114,87 @@ static char * test_decode_beq() {
     mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
     mu_assert(_FL "bad assert ALUop", c->ALUop == OPR_SUB);
     mu_assert(_FL "bad assert jump", c->jump == 0);
+    mu_assert(_FL "bad assert pcNext", c->pcNext == 0x1007);
+    free(c);
+
+    return 0;
+}
+
+static char * test_decode_beq_not_taken() {
+    i = 0x12110fff;                  //beq $s0, $s1, 0x4000
+    printf("Instruction: beq $s0, $s1, 0x4000 (not taken)\n");
+    p = 0x4;
+    c = (control_t *)malloc(sizeof(control_t));
+    reg_init();
+    reg_write(REG_S0, &p);
+    reg_write(REG_S1, &i);
+    decode(i, p, c);
+    mu_assert(_FL "bad assert opCode", c->opCode == OPC_BEQ);
+    mu_assert(_FL "bad assert regRs", c->regRs == REG_S0);
+    mu_assert(_FL "bad assert regRt", c->regRt == REG_S1);
+    mu_assert(_FL "bad assert immed", c->immed == 0x0fff);  //(0x4000 - 0x4) / 4 (PC+4 and word alignment)
+    mu_assert(_FL "bad assert regWrite", c->regWrite == 0);
+    mu_assert(_FL "bad assert ALUSrc", c->ALUSrc == 0);
+    mu_assert(_FL "bad assert PCSrc", c->PCSrc == 0);
+    mu_assert(_FL "bad assert memRead", c->memRead == 0);
+    mu_assert(_FL "bad assert memWrite", c->memWrite == 0);
+    mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
+    mu_assert(_FL "bad assert ALUop", c->ALUop == OPR_SUB);
+    mu_assert(_FL "bad assert jump", c->jump == 0);
+    mu_assert(_FL "bad assert pcNext", c->pcNext == 0x8);
+    free(c);
+
+    return 0;
+}
+
+static char * test_decode_bne() {
+    i = 0x1483fff7;                  //bne $a0, $v1, -32
+    printf("Instruction: bne $a0, $v1, -32 (taken)\n");
+    p = 0x40006022;
+    c = (control_t *)malloc(sizeof(control_t));
+    reg_init();
+    reg_write(REG_A0, &p);
+    reg_write(REG_V1, &i);
+    decode(i, p, c);
+    mu_assert(_FL "bad assert opCode", c->opCode == OPC_BNE);
+    mu_assert(_FL "bad assert regRs", c->regRs == REG_A0);
+    mu_assert(_FL "bad assert regRt", c->regRt == REG_V1);
+    mu_assert(_FL "bad assert immed", c->immed == 0xfffffff7);  //(0x4000 - 0x4) / 4 (PC+4 and word alignment)
+    mu_assert(_FL "bad assert regWrite", c->regWrite == 0);
+    mu_assert(_FL "bad assert ALUSrc", c->ALUSrc == 0);
+    mu_assert(_FL "bad assert PCSrc", c->PCSrc == 1);
+    mu_assert(_FL "bad assert memRead", c->memRead == 0);
+    mu_assert(_FL "bad assert memWrite", c->memWrite == 0);
+    mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
+    mu_assert(_FL "bad assert ALUop", c->ALUop == OPR_SUB);
+    mu_assert(_FL "bad assert jump", c->jump == 0);
+    mu_assert(_FL "bad assert pcNext", c->pcNext == 0x40006002);
+    free(c);
+
+    return 0;
+}
+static char * test_decode_bne_not_taken() {
+    i = 0x1483fff7;                  //bne $a0, $v1, -32
+    printf("Instruction: bne $a0, $v1, -32 (taken)\n");
+    p = 0x40006022;
+    c = (control_t *)malloc(sizeof(control_t));
+    reg_init();
+    reg_write(REG_A0, &p);
+    reg_write(REG_V1, &p);
+    decode(i, p, c);
+    mu_assert(_FL "bad assert opCode", c->opCode == OPC_BNE);
+    mu_assert(_FL "bad assert regRs", c->regRs == REG_A0);
+    mu_assert(_FL "bad assert regRt", c->regRt == REG_V1);
+    mu_assert(_FL "bad assert immed", c->immed == 0xfffffff7);  //(0x4000 - 0x4) / 4 (PC+4 and word alignment)
+    mu_assert(_FL "bad assert regWrite", c->regWrite == 0);
+    mu_assert(_FL "bad assert ALUSrc", c->ALUSrc == 0);
+    mu_assert(_FL "bad assert PCSrc", c->PCSrc == 0);
+    mu_assert(_FL "bad assert memRead", c->memRead == 0);
+    mu_assert(_FL "bad assert memWrite", c->memWrite == 0);
+    mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
+    mu_assert(_FL "bad assert ALUop", c->ALUop == OPR_SUB);
+    mu_assert(_FL "bad assert jump", c->jump == 0);
+    mu_assert(_FL "bad assert pcNext", c->pcNext == 0x40006026);
     free(c);
 
     return 0;
@@ -132,6 +219,7 @@ static char * test_decode_lw() {
     mu_assert(_FL "bad assert memToReg", c->memToReg == 1);
     mu_assert(_FL "bad assert ALUop", c->ALUop == 0);
     mu_assert(_FL "bad assert jump", c->jump == 0);
+    mu_assert(_FL "bad assert pcNext", c->pcNext == 0x8);
     free(c);
 
     return 0;
@@ -156,6 +244,7 @@ static char * test_decode_sw() {
     // mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
     mu_assert(_FL "bad assert ALUop", c->ALUop == 0);
     mu_assert(_FL "bad assert jump", c->jump == 0);
+    mu_assert(_FL "bad assert pcNext", c->pcNext == 0x8);
     free(c);
 
     return 0;
@@ -181,6 +270,7 @@ static char * test_decode_slti() {
     mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
     mu_assert(_FL "bad assert ALUop", c->ALUop == OPR_SLT);
     mu_assert(_FL "bad assert jump", c->jump == 0);
+    mu_assert(_FL "bad assert pcNext", c->pcNext == 0x8);
     free(c);
 
     return 0;
@@ -204,6 +294,7 @@ static char * test_decode_sltiu() {
     mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
     mu_assert(_FL "bad assert ALUop", c->ALUop == OPR_SLTU);
     mu_assert(_FL "bad assert jump", c->jump == 0);
+    mu_assert(_FL "bad assert pcNext", c->pcNext == 0x8);
     free(c);
 
     return 0;
@@ -269,6 +360,9 @@ static char * all_tests() {
     mu_run_test(test_decode_addi);
     mu_run_test(test_decode_and);
     mu_run_test(test_decode_beq);
+    mu_run_test(test_decode_beq_not_taken);
+    mu_run_test(test_decode_bne);
+    mu_run_test(test_decode_bne_not_taken);
     mu_run_test(test_decode_lw);
     mu_run_test(test_decode_sw);
     mu_run_test(test_decode_j);

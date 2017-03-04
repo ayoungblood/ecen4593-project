@@ -149,7 +149,7 @@ int decode( inst_t instr , pc_t pc , control_t * control ) {
     }
 
     //Set register values for input to the ALU
-    reg_read((int)control->regRs, &(control->regRsValue));
+    reg_read((int)(control->regRs), &(control->regRsValue));
     if(control->ALUSrc){
         //Second argument comes from immediate 16 value
         control->regRtValue =  control->immed;
@@ -160,7 +160,7 @@ int decode( inst_t instr , pc_t pc , control_t * control ) {
     }
     else {
         //Second argument comes from Rt
-        reg_read((int)control->regRt, &(control->regRtValue));
+        reg_read((int)(control->regRt), &(control->regRtValue));
     }
 
 
@@ -168,7 +168,28 @@ int decode( inst_t instr , pc_t pc , control_t * control ) {
     control->address = ( control->address << 2 );         //Word aligned
     //Don't think i need to bitmask the address since in theory it shouldn't be
     //"signed"
-    control->pcNext = ( control->pcNext & 0xF0000000 ) | control->address;
+    if(control->jump){
+        control->pcNext = ( control->pcNext & 0xF0000000 ) | control->address;
+    }
+    //branch determination in ID phase
+    if(control->opCode == OPC_BEQ){
+        if(control->regRsValue == control->regRtValue){
+            control->pcNext = control->pcNext + control->immed;
+            control->PCSrc = true; //Branch is taken, use pcNext for address
+        }
+        else{
+            control->PCSrc = false; //Branch not taken
+        }
+    }
+    else if (control->opCode == OPC_BNE){
+        if(control->regRsValue != control->regRtValue){
+            control->pcNext = (int32_t)control->pcNext + (int32_t)(control->immed * 4);
+            control->PCSrc = true;  //Branch taken
+        }
+        else{
+            control->PCSrc = false; //Branch not taken
+        }
+    }
 
 
     #ifdef DEBUG
