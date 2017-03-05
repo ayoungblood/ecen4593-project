@@ -11,7 +11,7 @@
 
 #define ENDIANNESS BIG
 #define MEM_FILL 1
-#define MEM_FILL_VALUE 0xffffffff
+#define MEM_FILL_VALUE 0x0
 
 // Initialize the memory. Size and offset in bytes
 void mem_init(uint32_t size, uint32_t offset);

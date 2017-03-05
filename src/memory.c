@@ -21,7 +21,8 @@ void mem_init(uint32_t size, uint32_t offset) {
     }
 #if (MEM_FILL)
     for (uint32_t i = 0; i < (size>>2); ++i) {
-        mem[i] = i + (i<<16);
+        //mem[i] = i + (i<<16);
+        mem[i] = MEM_FILL_VALUE;
     }
 #endif // MEM_FILL
 }
@@ -68,7 +69,7 @@ uint32_t mem_end(void) {
     return (start + (length<<2) - 1);
 }
 
-// Read from a memory address
+// Read a word from a (word-aligned) memory address
 void mem_read_w(uint32_t address, word_t *data) {
     uint32_t index = (address>>2) - (start>>2);
     if (flags & MASK_SANITY && index >= length) {
@@ -80,7 +81,37 @@ void mem_read_w(uint32_t address, word_t *data) {
         printf("mem_read_w: address 0x%08x, data 0x%08x, array index %d\n",address,*data,index);
     }
 }
-// Write from a memory address
+// Read a halfword from a (halfword-aligned) memory address
+void mem_read_h(uint32_t address, word_t *data) {
+    uint32_t index = (address>>2) - (start>>2);
+    uint32_t shift = ((2-(address & 0x2))<<3); // shift amount based on byte position
+    if (flags & MASK_SANITY && index >= length) {
+        printf(ANSI_C_RED "mem_read_h: out of range (0x%08x > 0x%08x)\n" ANSI_C_RESET,index,length);
+        return;
+    }
+    *data = mem[index];
+    *data >>= shift;
+    *data &= 0xffff;
+    if (flags & MASK_DEBUG) {
+        printf("mem_read_h: address 0x%08x, data 0x%08x, array index %d\n",address,*data,index);
+    }
+}
+// Read a byte from a memory address
+void mem_read_b(uint32_t address, word_t *data) {
+    uint32_t index = (address>>2) - (start>>2);
+    uint32_t shift = ((3-(address & 0x3))<<3); // shift amount based on byte position
+    if (flags & MASK_SANITY && index >= length) {
+        printf(ANSI_C_RED "mem_read_b: out of range (0x%08x > 0x%08x)\n" ANSI_C_RESET,index,length);
+        return;
+    }
+    *data = mem[index];
+    *data >>= shift;
+    *data &= 0xff;
+    if (flags & MASK_DEBUG) {
+        printf("mem_read_b: address 0x%08x, data 0x%08x, array index %d\n",address,*data,index);
+    }
+}
+// Write a word to a (word-aligned) memory address
 void mem_write_w(uint32_t address, word_t *data) {
     uint32_t index = (address>>2) - (start>>2);
     if (flags & MASK_SANITY && index >= length) {
@@ -90,5 +121,31 @@ void mem_write_w(uint32_t address, word_t *data) {
     mem[index] = *data;
     if (flags & MASK_DEBUG) {
         printf("mem_write_w: address 0x%08x, data 0x%08x, array index %d\n",address,*data,index);
+    }
+}
+// Write a halfword to a (halfword-aligned) memory address
+void mem_write_h(uint32_t address, word_t *data) {
+    uint32_t index = (address>>2) - (start>>2);
+    uint32_t shift = ((2-(address & 0x2))<<3); // shift amount based on byte position
+    if (flags & MASK_SANITY && index >= length) {
+        printf(ANSI_C_RED "mem_write_h: out of range (0x%08x > 0x%08x)\n" ANSI_C_RESET,index,length);
+    }
+    mem[index] &= ~(0xffff << shift); // clear the byte we are writing to
+    mem[index] |= (*data & 0xffff)<<shift; // set the byte we are writing to
+    if (flags & MASK_DEBUG) {
+        printf("mem_write_h: address 0x%08x, data 0x%08x, array index %d\n",address,*data,index);
+    }
+}
+// Write a byte to a memory address
+void mem_write_b(uint32_t address, word_t *data) {
+    uint32_t index = (address>>2) - (start>>2);
+    uint32_t shift = ((3-(address & 0x3))<<3); // shift amount based on byte position
+    if (flags & MASK_SANITY && index >= length) {
+        printf(ANSI_C_RED "mem_write_b: out of range (0x%08x > 0x%08x)\n" ANSI_C_RESET,index,length);
+    }
+    mem[index] &= ~(0xff << shift); // clear the byte we are writing to
+    mem[index] |= (*data & 0xff)<<shift; // set the byte we are writing to
+    if (flags & MASK_DEBUG) {
+        printf("mem_write_b: address 0x%08x, data 0x%08x, array index %d\n",address,*data,index);
     }
 }
