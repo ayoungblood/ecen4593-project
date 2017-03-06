@@ -133,11 +133,13 @@ typedef struct CONTROL_REGISTER {
     operation_t ALUop;  //ALU operation
     bool jump;          //Override PC with shifted and concatenated address
 
+    inst_t instr;       //Raw instruction
+
     opcode_t opCode;
     uint32_t regRs;
     uint32_t regRt;
     uint32_t regRd;
-    uint32_t immed;    
+    uint32_t immed;
     uint32_t address;
     funct_t funct;
     uint32_t shamt;
@@ -147,6 +149,7 @@ typedef struct CONTROL_REGISTER {
 
     uint32_t ALUresult;
     uint32_t pcNext;
+    uint32_t memData;
 
 } control_t;
 

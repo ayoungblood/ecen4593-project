@@ -7,223 +7,231 @@
 extern int flags; // from main.c or memory-test.c
 
 
-int decode( inst_t instr , pc_t pc , control_t * control ) {
+int decode( control_t * ifid , pc_t * pc , control_t * idex ) {
 
     //Get all of the bitmasked values out of the instruction
-    control->opCode = ( instr & OP_MASK ) >> OP_SHIFT;
-    control->regRs = ( instr & RS_MASK ) >> RS_SHIFT;
-    control->regRt = ( instr & RT_MASK ) >> RT_SHIFT;
-    control->regRd = ( instr & RD_MASK ) >> RD_SHIFT;
-    control->shamt = ( instr & SH_MASK ) >> SH_SHIFT;
-    control->funct = ( instr & FC_MASK );
-    control->address = ( instr & AD_MASK );
-    uint32_t immed = ( instr & IM_MASK );
+    idex->opCode = ( ifid->instr & OP_MASK ) >> OP_SHIFT;
+    idex->regRs = ( ifid->instr & RS_MASK ) >> RS_SHIFT;
+    idex->regRt = ( ifid->instr & RT_MASK ) >> RT_SHIFT;
+    idex->regRd = ( ifid->instr & RD_MASK ) >> RD_SHIFT;
+    idex->shamt = ( ifid->instr & SH_MASK ) >> SH_SHIFT;
+    idex->funct = ( ifid->instr & FC_MASK );
+    idex->address = ( ifid->instr & AD_MASK );
+    uint32_t immed = ( ifid->instr & IM_MASK );
 
-    control->pcNext = pc + 4;
+    idex->pcNext = ifid->pcNext;
 
     //Sign extension of the immediate field
-    control->immed = (( instr & BIT15 ) && (control->opCode != OPC_SLTIU)) ? immed | EXT_16_32 : immed;
+    idex->immed = (( ifid->instr & BIT15 ) && (idex->opCode != OPC_SLTIU)) ? immed | EXT_16_32 : immed;
 
-    switch(control->opCode){
+    switch(idex->opCode){
         case OPC_RTYPE:
-            switch(control->funct){
+            switch(idex->funct){
                 case FNC_ADD:
-                    control->ALUop = OPR_ADD;
+                    idex->ALUop = OPR_ADD;
                     break;
                 case FNC_SUB:
-                    control->ALUop = OPR_SUB;
+                    idex->ALUop = OPR_SUB;
                     break;
                 case FNC_AND:
-                    control->ALUop = OPR_AND;
+                    idex->ALUop = OPR_AND;
                     break;
                 case FNC_OR:
-                    control->ALUop = OPR_OR;
+                    idex->ALUop = OPR_OR;
                     break;
                 case FNC_SLT:
-                    control->ALUop = OPR_SLT;
+                    idex->ALUop = OPR_SLT;
                     break;
                 case FNC_NOR:
-                    control->ALUop = OPR_NOR;
+                    idex->ALUop = OPR_NOR;
                     break;
                 default:
-                    printf("Unknown R-Type instruction 0x%08x\n", control->funct);
+                    printf("Unknown R-Type instruction 0x%08x\n", idex->funct);
             }
-            control->regDst = true;
-            control->ALUSrc = false;
-            control->memToReg = false;
-            control->regWrite = true;
-            control->memRead = false;
-            control->memWrite = false;
-            control->jump = false;
-            control->PCSrc = false;
+            idex->regDst = true;
+            idex->ALUSrc = false;
+            idex->memToReg = false;
+            idex->regWrite = true;
+            idex->memRead = false;
+            idex->memWrite = false;
+            idex->jump = false;
+            idex->PCSrc = false;
             break;
         case OPC_LW:
-            control->ALUop = OPR_LW;
-            setControlLoad(control);
+            idex->ALUop = OPR_LW;
+            setidexLoad(idex);
             break;
         case OPC_LHU:
-            control->ALUop = OPR_LHU;
-            setControlLoad(control);
+            idex->ALUop = OPR_LHU;
+            setidexLoad(idex);
             break;
         case OPC_LBU:
-            control->ALUop = OPR_LBU;
-            setControlLoad(control);
+            idex->ALUop = OPR_LBU;
+            setidexLoad(idex);
             break;
         case OPC_SW:
-            control->ALUop = OPR_SW;
-            setControlStore(control);
+            idex->ALUop = OPR_SW;
+            setidexStore(idex);
             break;
         case OPC_SH:
-            control->ALUop = OPR_SH;
-            setControlStore(control);
+            idex->ALUop = OPR_SH;
+            setidexStore(idex);
             break;
         case OPC_SB:
-            control->ALUop = OPR_SB;
-            setControlStore(control);
+            idex->ALUop = OPR_SB;
+            setidexStore(idex);
             break;
         case OPC_BEQ:
         case OPC_BNE:
-            control->ALUop = OPR_SUB;
-            control->ALUSrc = false;
-            control->regWrite = false;
-            control->memRead = false;
-            control->memWrite = false;
-            control->jump = false;
-            control->PCSrc = true;
+            idex->ALUop = OPR_SUB;
+            idex->ALUSrc = false;
+            idex->regWrite = false;
+            idex->memRead = false;
+            idex->memWrite = false;
+            idex->jump = false;
+            idex->PCSrc = true;
             break;
         case OPC_ADDI:
-            control->ALUop = OPR_ADD;
-            setControlImmedArithmetic(control);
+            idex->ALUop = OPR_ADD;
+            setidexImmedArithmetic(idex);
             break;
         case OPC_ADDIU:
-            control->ALUop = OPR_ADDU;
-            setControlImmedArithmetic(control);
+            idex->ALUop = OPR_ADDU;
+            setidexImmedArithmetic(idex);
             break;
         case OPC_ANDI:
-            control->ALUop = OPR_AND;
-            setControlImmedArithmetic(control);
+            idex->ALUop = OPR_AND;
+            setidexImmedArithmetic(idex);
             break;
         case OPC_ORI:
-            control->ALUop = OPR_OR;
-            setControlImmedArithmetic(control);
+            idex->ALUop = OPR_OR;
+            setidexImmedArithmetic(idex);
             break;
         case OPC_SLTI:
-            control->ALUop = OPR_SLT;
-            setControlImmedArithmetic(control);
+            idex->ALUop = OPR_SLT;
+            setidexImmedArithmetic(idex);
             break;
         case OPC_SLTIU:
-            control->ALUop = OPR_SLTU;
-            setControlImmedArithmetic(control);
+            idex->ALUop = OPR_SLTU;
+            setidexImmedArithmetic(idex);
             break;
         case OPC_J:
-            control->ALUop = OPR_ADDU;
-            control->regRs = REG_ZERO;
-            control->regRt = REG_ZERO;
-            control->regRd = REG_ZERO;
-            control->regDst = true;
-            control->ALUSrc = false;
-            control->regWrite = true;
-            control->memRead = false;
-            control->memWrite = false;
-            control->memToReg = false;
-            control->PCSrc = false;
-            control->jump = true;
+            idex->ALUop = OPR_ADDU;
+            idex->regRs = REG_ZERO;
+            idex->regRt = REG_ZERO;
+            idex->regRd = REG_ZERO;
+            idex->regDst = true;
+            idex->ALUSrc = false;
+            idex->regWrite = true;
+            idex->memRead = false;
+            idex->memWrite = false;
+            idex->memToReg = false;
+            idex->PCSrc = false;
+            idex->jump = true;
             break;
         case OPC_JAL:
-            control->ALUop = OPR_ADDU;
-            control->regRs = REG_ZERO;
-            control->regRt = REG_ZERO;
-            control->regRd = REG_RA;    //Override so we can put pc in $ra
-            control->regDst = true;
-            control->ALUSrc = false;
-            control->regWrite = true;
-            control->memRead = false;
-            control->memWrite = false;
-            control->memToReg = false;
-            control->PCSrc = false;
-            control->jump = true;
+            idex->ALUop = OPR_ADDU;
+            idex->regRs = REG_ZERO;
+            idex->regRt = REG_ZERO;
+            idex->regRd = REG_RA;    //Override so we can put pc in $ra
+            idex->regDst = true;
+            idex->ALUSrc = false;
+            idex->regWrite = true;
+            idex->memRead = false;
+            idex->memWrite = false;
+            idex->memToReg = false;
+            idex->PCSrc = false;
+            idex->jump = true;
 
         default:
-            printf("Unknown OpCode 0x%08x\n", control->opCode);
+            printf("Unknown OpCode 0x%08x\n", idex->opCode);
     }
 
     //Set register values for input to the ALU
-    reg_read((int)(control->regRs), &(control->regRsValue));
-    if(control->ALUSrc){
+    reg_read((int)(idex->regRs), &(idex->regRsValue));
+    if(idex->ALUSrc){
         //Second argument comes from immediate 16 value
-        control->regRtValue =  control->immed;
+        idex->regRtValue =  idex->immed;
     }
-    else if(control->opCode == OPC_JAL){
+    else if(idex->opCode == OPC_JAL){
         //For JAL, put the pc+4 through and add with zero then write back to $ra
-        control->regRtValue = control->pcNext;
+        idex->regRtValue = idex->pcNext;
     }
     else {
         //Second argument comes from Rt
-        reg_read((int)(control->regRt), &(control->regRtValue));
+        reg_read((int)(idex->regRt), &(idex->regRtValue));
     }
 
 
     //Jump address calculation
-    control->address = ( control->address << 2 );         //Word aligned
+    idex->address = ( idex->address << 2 );         //Word aligned
     //Don't think i need to bitmask the address since in theory it shouldn't be
     //"signed"
-    if(control->jump){
-        control->pcNext = ( control->pcNext & 0xF0000000 ) | control->address;
+    if(idex->jump){
+        idex->pcNext = ( idex->pcNext & 0xF0000000 ) | idex->address;
+        //Update the actual program counter
+        *pc = idex->pcNext;
     }
     //branch determination in ID phase
-    if(control->opCode == OPC_BEQ){
-        if(control->regRsValue == control->regRtValue){
-            control->pcNext = control->pcNext + control->immed;
-            control->PCSrc = true; //Branch is taken, use pcNext for address
+    if(idex->opCode == OPC_BEQ){
+        if(idex->regRsValue == idex->regRtValue){
+            idex->pcNext = idex->pcNext + idex->immed;
+            idex->PCSrc = true; //Branch is taken, use pcNext for address
+            //Update the actual program counter
+            *pc = id->pcNext;
         }
         else{
-            control->PCSrc = false; //Branch not taken
+            idex->PCSrc = false; //Branch not taken
         }
     }
-    else if (control->opCode == OPC_BNE){
-        if(control->regRsValue != control->regRtValue){
-            control->pcNext = (int32_t)control->pcNext + (int32_t)(control->immed * 4);
-            control->PCSrc = true;  //Branch taken
+    else if (idex->opCode == OPC_BNE){
+        if(idex->regRsValue != idex->regRtValue){
+            idex->pcNext = (int32_t)idex->pcNext + (int32_t)(idex->immed * 4);
+            idex->PCSrc = true;  //Branch taken
+            //Update the actual program counter
+            *pc = id->pcNext;
         }
         else{
-            control->PCSrc = false; //Branch not taken
+            idex->PCSrc = false; //Branch not taken
         }
     }
 
 
     if(flags & MASK_DEBUG){
-        printf("Decoded control register from instruction 0x%08x\n", instr);
+        printf("Decoded idex register from instruction 0x%08x\n", ifid->instr);
         printf("Decoded Instrunction: \n");
-        printf("\tcontrol->opCode: 0x%08x\n", control->opCode);
-        printf("\tcontrol->regRs: 0x%08x\n", control->regRs);
-        printf("\tcontrol->regRt: 0x%08x\n", control->regRt);
-        printf("\tcontrol->regRd: 0x%08x\n", control->regRd);
-        printf("\tcontrol->shamt: 0x%08x\n", control->shamt);
-        printf("\tcontrol->funct: 0x%08x\n", control->funct);
-        printf("\tcontrol->immed: 0x%08x\n", control->immed);
-        printf("\tcontrol->address: 0x%08x\n", control->address);
-        printf("\tcontrol->pcNext: 0x%08x\n", control->pcNext);
-        printf("Control bits:\n");
-        printf("\tcontrol->regDst: 0x%08x\n", control->regDst);
-        printf("\tcontrol->ALUSrc: 0x%08x\n", control->ALUSrc);
-        printf("\tcontrol->memToReg: 0x%08x\n", control->memToReg);
-        printf("\tcontrol->regWrite: 0x%08x\n", control->regWrite);
-        printf("\tcontrol->memRead: 0x%08x\n", control->memRead);
-        printf("\tcontrol->memWrite: 0x%08x\n", control->memWrite);
-        printf("\tcontrol->ALUop: 0x%08x\n", control->ALUop);
-        printf("\tcontrol->PCSrc: 0x%08x\n", control->PCSrc);
-        printf("\tcontrol->jump: 0x%08x\n", control->jump);
+        printf("\tidex->opCode: 0x%08x\n", idex->opCode);
+        printf("\tidex->regRs: 0x%08x\n", idex->regRs);
+        printf("\tidex->regRt: 0x%08x\n", idex->regRt);
+        printf("\tidex->regRd: 0x%08x\n", idex->regRd);
+        printf("\tidex->shamt: 0x%08x\n", idex->shamt);
+        printf("\tidex->funct: 0x%08x\n", idex->funct);
+        printf("\tidex->immed: 0x%08x\n", idex->immed);
+        printf("\tidex->address: 0x%08x\n", idex->address);
+        printf("\tidex->pcNext: 0x%08x\n", idex->pcNext);
+        printf("Global Program Counter:\n");
+        printf("\t0x%08x\n", *pc);
+        printf("idex bits:\n");
+        printf("\tidex->regDst: 0x%08x\n", idex->regDst);
+        printf("\tidex->ALUSrc: 0x%08x\n", idex->ALUSrc);
+        printf("\tidex->memToReg: 0x%08x\n", idex->memToReg);
+        printf("\tidex->regWrite: 0x%08x\n", idex->regWrite);
+        printf("\tidex->memRead: 0x%08x\n", idex->memRead);
+        printf("\tidex->memWrite: 0x%08x\n", idex->memWrite);
+        printf("\tidex->ALUop: 0x%08x\n", idex->ALUop);
+        printf("\tidex->PCSrc: 0x%08x\n", idex->PCSrc);
+        printf("\tidex->jump: 0x%08x\n", idex->jump);
         printf("First argument:\n");
-        printf("\tRs = %d, Rs Value = 0x%08x\n",control->regRs, control->regRsValue);
+        printf("\tRs = %d, Rs Value = 0x%08x\n",idex->regRs, idex->regRsValue);
         printf("Second argument:\n");
-        if(control->ALUSrc){
-            printf("\tImmed16 = 0x%08x\n", control->regRtValue);
+        if(idex->ALUSrc){
+            printf("\tImmed16 = 0x%08x\n", idex->regRtValue);
         }
-        else if(control->opCode == OPC_JAL){
-            printf("\tJAL instruction PC+4 -> Rt Value, Rt Value = 0x%08x\n", control->regRtValue);
+        else if(idex->opCode == OPC_JAL){
+            printf("\tJAL instruction PC+4 -> Rt Value, Rt Value = 0x%08x\n", idex->regRtValue);
         }
         else{
-            printf("\tRt = %d, Rt Value = 0x%08x\n", control->regRt, control->regRtValue);
+            printf("\tRt = %d, Rt Value = 0x%08x\n", idex->regRt, idex->regRtValue);
         }
     } /*DEBUG*/
 
@@ -233,34 +241,34 @@ int decode( inst_t instr , pc_t pc , control_t * control ) {
 
 }
 
-void setControlImmedArithmetic(control_t * control){
-    control->regDst = false;
-    control->ALUSrc = true;
-    control->memToReg = false;
-    control->regWrite = true;
-    control->memRead = false;
-    control->memWrite = false;
-    control->jump = false;
-    control->PCSrc = false;
+void setidexImmedArithmetic(control_t * idex){
+    idex->regDst = false;
+    idex->ALUSrc = true;
+    idex->memToReg = false;
+    idex->regWrite = true;
+    idex->memRead = false;
+    idex->memWrite = false;
+    idex->jump = false;
+    idex->PCSrc = false;
 }
 
 
-void setControlLoad(control_t * control){
-    control->regDst = false;
-    control->ALUSrc = true;
-    control->memToReg = true;
-    control->regWrite = true;
-    control->memRead = true;
-    control->memWrite = false;
-    control->jump = false;
-    control->PCSrc = false;
+void setidexLoad(control_t * idex){
+    idex->regDst = false;
+    idex->ALUSrc = true;
+    idex->memToReg = true;
+    idex->regWrite = true;
+    idex->memRead = true;
+    idex->memWrite = false;
+    idex->jump = false;
+    idex->PCSrc = false;
 }
 
-void setControlStore(control_t * control){
-    control->ALUSrc = true;
-    control->regWrite = false;
-    control->memRead = false;
-    control->memWrite = true;
-    control->jump = false;
-    control->PCSrc = false;
+void setidexStore(control_t * idex){
+    idex->ALUSrc = true;
+    idex->regWrite = false;
+    idex->memRead = false;
+    idex->memWrite = true;
+    idex->jump = false;
+    idex->PCSrc = false;
 }

@@ -10,13 +10,13 @@
 #include "util.h"
 #include "registers.h"
 
-int decode( inst_t , pc_t , control_t * );
+int decode( control_t * , pc_t * , control_t * );
 
 
 //Helper functions
-void setControlImmedArithmetic(control_t *);
-void setControlLoad(control_t *);
-void setControlStore(control_t *);
+void setidexImmedArithmetic(control_t *);
+void setidexLoad(control_t *);
+void setidexStore(control_t *);
 
 //Instruction decoding bitmasks
 #define OP_MASK 0xFC000000
