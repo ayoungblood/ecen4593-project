@@ -58,27 +58,15 @@ int decode( control_t * ifid , pc_t * pc , control_t * idex ) {
             idex->PCSrc = false;
             break;
         case OPC_LW:
-            idex->ALUop = OPR_LW;
-            setidexLoad(idex);
-            break;
         case OPC_LHU:
-            idex->ALUop = OPR_LHU;
-            setidexLoad(idex);
-            break;
         case OPC_LBU:
-            idex->ALUop = OPR_LBU;
+            idex->ALUop = OPR_ADDU;
             setidexLoad(idex);
             break;
         case OPC_SW:
-            idex->ALUop = OPR_SW;
-            setidexStore(idex);
-            break;
         case OPC_SH:
-            idex->ALUop = OPR_SH;
-            setidexStore(idex);
-            break;
         case OPC_SB:
-            idex->ALUop = OPR_SB;
+            idex->ALUop = OPR_ADDU;
             setidexStore(idex);
             break;
         case OPC_BEQ:
