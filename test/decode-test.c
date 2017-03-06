@@ -362,8 +362,8 @@ static char * test_decode_jal() {
     return 0;
 }
 static char * all_tests() {
-    mu_run_test(test_decode_add);
-    /*mu_run_test(test_decode_addi);
+    /*mu_run_test(test_decode_add);
+    mu_run_test(test_decode_addi);
     mu_run_test(test_decode_and);
     mu_run_test(test_decode_beq);
     mu_run_test(test_decode_beq_not_taken);
