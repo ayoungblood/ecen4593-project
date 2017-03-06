@@ -12,6 +12,8 @@
 
 int tests_run = 0;
 
+int flags = MASK_DEBUG | MASK_VERBOSE | MASK_SANITY;
+
 word_t i, p;
 control_t *c;
 
@@ -217,7 +219,7 @@ static char * test_decode_lw() {
     mu_assert(_FL "bad assert memRead", c->memRead == 1);
     mu_assert(_FL "bad assert memWrite", c->memWrite == 0);
     mu_assert(_FL "bad assert memToReg", c->memToReg == 1);
-    mu_assert(_FL "bad assert ALUop", c->ALUop == 0);
+    mu_assert(_FL "bad assert ALUop", c->ALUop == OPR_LW);
     mu_assert(_FL "bad assert jump", c->jump == 0);
     mu_assert(_FL "bad assert pcNext", c->pcNext == 0x8);
     free(c);
@@ -242,7 +244,7 @@ static char * test_decode_sw() {
     mu_assert(_FL "bad assert memRead", c->memRead == 0);
     mu_assert(_FL "bad assert memWrite", c->memWrite == 1);
     // mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
-    mu_assert(_FL "bad assert ALUop", c->ALUop == 0);
+    mu_assert(_FL "bad assert ALUop", c->ALUop == OPR_SW);
     mu_assert(_FL "bad assert jump", c->jump == 0);
     mu_assert(_FL "bad assert pcNext", c->pcNext == 0x8);
     free(c);

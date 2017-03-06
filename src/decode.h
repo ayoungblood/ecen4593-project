@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include "types.h"
+#include "util.h"
 #include "registers.h"
 
 int decode( inst_t , pc_t , control_t * );
@@ -14,6 +15,8 @@ int decode( inst_t , pc_t , control_t * );
 
 //Helper functions
 void setControlImmedArithmetic(control_t *);
+void setControlLoad(control_t *);
+void setControlStore(control_t *);
 
 //Instruction decoding bitmasks
 #define OP_MASK 0xFC000000
@@ -38,4 +41,3 @@ void setControlImmedArithmetic(control_t *);
 
 
 #endif /* _DECODE_H */
-

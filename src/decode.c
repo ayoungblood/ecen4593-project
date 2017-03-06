@@ -4,8 +4,7 @@
 
 #include "decode.h"
 
-
-#define DEBUG 1
+extern int flags; // from main.c or memory-test.c
 
 
 int decode( inst_t instr , pc_t pc , control_t * control ) {
@@ -59,33 +58,33 @@ int decode( inst_t instr , pc_t pc , control_t * control ) {
             control->PCSrc = false;
             break;
         case OPC_LW:
-            control->ALUop = OPR_ADD;
-            control->regDst = false;
-            control->ALUSrc = true;
-            control->memToReg = true;
-            control->regWrite = true;
-            control->memRead = true;
-            control->memWrite = false;
-            control->jump = false;
-            control->PCSrc = false;
+            control->ALUop = OPR_LW;
+            setControlLoad(control);
+            break;
+        case OPC_LHU:
+            control->ALUop = OPR_LHU;
+            setControlLoad(control);
+            break;
+        case OPC_LBU:
+            control->ALUop = OPR_LBU;
+            setControlLoad(control);
             break;
         case OPC_SW:
-            control->ALUop = OPR_ADD;
-            // control->regDst = false; Dont Care
-            control->ALUSrc = true;
-            // control->memToReg = true; Dont Care
-            control->regWrite = false;
-            control->memRead = false;
-            control->memWrite = true;
-            control->jump = false;
-            control->PCSrc = false;
+            control->ALUop = OPR_SW;
+            setControlStore(control);
+            break;
+        case OPC_SH:
+            control->ALUop = OPR_SH;
+            setControlStore(control);
+            break;
+        case OPC_SB:
+            control->ALUop = OPR_SB;
+            setControlStore(control);
             break;
         case OPC_BEQ:
         case OPC_BNE:
             control->ALUop = OPR_SUB;
-            // control->regDst = false; Dont Care
             control->ALUSrc = false;
-            // control->memToReg = true; Dont Care
             control->regWrite = false;
             control->memRead = false;
             control->memWrite = false;
@@ -192,41 +191,41 @@ int decode( inst_t instr , pc_t pc , control_t * control ) {
     }
 
 
-    #ifdef DEBUG
-    printf("Decoded control register from instruction 0x%08x\n", instr);
-    printf("Decoded Instrunction: \n");
-    printf("\tcontrol->opCode: 0x%08x\n", control->opCode);
-    printf("\tcontrol->regRs: 0x%08x\n", control->regRs);
-    printf("\tcontrol->regRt: 0x%08x\n", control->regRt);
-    printf("\tcontrol->regRd: 0x%08x\n", control->regRd);
-    printf("\tcontrol->shamt: 0x%08x\n", control->shamt);
-    printf("\tcontrol->funct: 0x%08x\n", control->funct);
-    printf("\tcontrol->immed: 0x%08x\n", control->immed);
-    printf("\tcontrol->address: 0x%08x\n", control->address);
-    printf("\tcontrol->pcNext: 0x%08x\n", control->pcNext);
-    printf("Control bits:\n");
-    printf("\tcontrol->regDst: 0x%08x\n", control->regDst);
-    printf("\tcontrol->ALUSrc: 0x%08x\n", control->ALUSrc);
-    printf("\tcontrol->memToReg: 0x%08x\n", control->memToReg);
-    printf("\tcontrol->regWrite: 0x%08x\n", control->regWrite);
-    printf("\tcontrol->memRead: 0x%08x\n", control->memRead);
-    printf("\tcontrol->memWrite: 0x%08x\n", control->memWrite);
-    printf("\tcontrol->ALUop: 0x%08x\n", control->ALUop);
-    printf("\tcontrol->PCSrc: 0x%08x\n", control->PCSrc);
-    printf("\tcontrol->jump: 0x%08x\n", control->jump);
-    printf("First argument:\n");
-    printf("\tRs = %d, Rs Value = 0x%08x\n",control->regRs, control->regRsValue);
-    printf("Second argument:\n");
-    if(control->ALUSrc){
-        printf("\tImmed16 = 0x%08x\n", control->regRtValue);
-    }
-    else if(control->opCode == OPC_JAL){
-        printf("\tJAL instruction PC+4 -> Rt Value, Rt Value = 0x%08x\n", control->regRtValue);
-    }
-    else{
-        printf("\tRt = %d, Rt Value = 0x%08x\n", control->regRt, control->regRtValue);
-    }
-    #endif /*DEBUG*/
+    if(flags & MASK_DEBUG){
+        printf("Decoded control register from instruction 0x%08x\n", instr);
+        printf("Decoded Instrunction: \n");
+        printf("\tcontrol->opCode: 0x%08x\n", control->opCode);
+        printf("\tcontrol->regRs: 0x%08x\n", control->regRs);
+        printf("\tcontrol->regRt: 0x%08x\n", control->regRt);
+        printf("\tcontrol->regRd: 0x%08x\n", control->regRd);
+        printf("\tcontrol->shamt: 0x%08x\n", control->shamt);
+        printf("\tcontrol->funct: 0x%08x\n", control->funct);
+        printf("\tcontrol->immed: 0x%08x\n", control->immed);
+        printf("\tcontrol->address: 0x%08x\n", control->address);
+        printf("\tcontrol->pcNext: 0x%08x\n", control->pcNext);
+        printf("Control bits:\n");
+        printf("\tcontrol->regDst: 0x%08x\n", control->regDst);
+        printf("\tcontrol->ALUSrc: 0x%08x\n", control->ALUSrc);
+        printf("\tcontrol->memToReg: 0x%08x\n", control->memToReg);
+        printf("\tcontrol->regWrite: 0x%08x\n", control->regWrite);
+        printf("\tcontrol->memRead: 0x%08x\n", control->memRead);
+        printf("\tcontrol->memWrite: 0x%08x\n", control->memWrite);
+        printf("\tcontrol->ALUop: 0x%08x\n", control->ALUop);
+        printf("\tcontrol->PCSrc: 0x%08x\n", control->PCSrc);
+        printf("\tcontrol->jump: 0x%08x\n", control->jump);
+        printf("First argument:\n");
+        printf("\tRs = %d, Rs Value = 0x%08x\n",control->regRs, control->regRsValue);
+        printf("Second argument:\n");
+        if(control->ALUSrc){
+            printf("\tImmed16 = 0x%08x\n", control->regRtValue);
+        }
+        else if(control->opCode == OPC_JAL){
+            printf("\tJAL instruction PC+4 -> Rt Value, Rt Value = 0x%08x\n", control->regRtValue);
+        }
+        else{
+            printf("\tRt = %d, Rt Value = 0x%08x\n", control->regRt, control->regRtValue);
+        }
+    } /*DEBUG*/
 
     return 0;
 
@@ -241,6 +240,27 @@ void setControlImmedArithmetic(control_t * control){
     control->regWrite = true;
     control->memRead = false;
     control->memWrite = false;
+    control->jump = false;
+    control->PCSrc = false;
+}
+
+
+void setControlLoad(control_t * control){
+    control->regDst = false;
+    control->ALUSrc = true;
+    control->memToReg = true;
+    control->regWrite = true;
+    control->memRead = true;
+    control->memWrite = false;
+    control->jump = false;
+    control->PCSrc = false;
+}
+
+void setControlStore(control_t * control){
+    control->ALUSrc = true;
+    control->regWrite = false;
+    control->memRead = false;
+    control->memWrite = true;
     control->jump = false;
     control->PCSrc = false;
 }
