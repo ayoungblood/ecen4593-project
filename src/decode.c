@@ -178,7 +178,7 @@ int decode( control_t * ifid , pc_t * pc , control_t * idex ) {
             idex->pcNext = idex->pcNext + idex->immed;
             idex->PCSrc = true; //Branch is taken, use pcNext for address
             //Update the actual program counter
-            *pc = id->pcNext;
+            *pc = ifid->pcNext;
         }
         else{
             idex->PCSrc = false; //Branch not taken
@@ -189,7 +189,7 @@ int decode( control_t * ifid , pc_t * pc , control_t * idex ) {
             idex->pcNext = (int32_t)idex->pcNext + (int32_t)(idex->immed * 4);
             idex->PCSrc = true;  //Branch taken
             //Update the actual program counter
-            *pc = id->pcNext;
+            *pc = ifid->pcNext;
         }
         else{
             idex->PCSrc = false; //Branch not taken
