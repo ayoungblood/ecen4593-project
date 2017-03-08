@@ -10,6 +10,7 @@ extern int flags; // from main.c or memory-test.c
 int decode( control_t * ifid , pc_t * pc , control_t * idex ) {
 
     //Get all of the bitmasked values out of the instruction
+    idex->instr = ifid->instr;
     idex->opCode = ( ifid->instr & OP_MASK ) >> OP_SHIFT;
     idex->regRs = ( ifid->instr & RS_MASK ) >> RS_SHIFT;
     idex->regRt = ( ifid->instr & RT_MASK ) >> RT_SHIFT;
@@ -135,20 +136,11 @@ int decode( control_t * ifid , pc_t * pc , control_t * idex ) {
             printf("Unknown OpCode 0x%08x\n", idex->opCode);
     }
 
+
     //Set register values for input to the ALU
     reg_read((int)(idex->regRs), &(idex->regRsValue));
-    if(idex->ALUSrc){
-        //Second argument comes from immediate 16 value
-        idex->regRtValue =  idex->immed;
-    }
-    else if(idex->opCode == OPC_JAL){
-        //For JAL, put the pc+4 through and add with zero then write back to $ra
-        idex->regRtValue = idex->pcNext;
-    }
-    else {
-        //Second argument comes from Rt
-        reg_read((int)(idex->regRt), &(idex->regRtValue));
-    }
+    reg_read((int)(idex->regRt), &(idex->regRtValue));
+
 
 
     //Jump address calculation
@@ -186,7 +178,7 @@ int decode( control_t * ifid , pc_t * pc , control_t * idex ) {
 
 
     if(flags & MASK_DEBUG){
-        printf("Decoded idex register from instruction 0x%08x\n", ifid->instr);
+        printf("Decoded idex register from instruction 0x%08x\n", idex->instr);
         printf("Decoded Instrunction: \n");
         printf("\tidex->opCode: 0x%08x\n", idex->opCode);
         printf("\tidex->regRs: 0x%08x\n", idex->regRs);
@@ -212,15 +204,8 @@ int decode( control_t * ifid , pc_t * pc , control_t * idex ) {
         printf("First argument:\n");
         printf("\tRs = %d, Rs Value = 0x%08x\n",idex->regRs, idex->regRsValue);
         printf("Second argument:\n");
-        if(idex->ALUSrc){
-            printf("\tImmed16 = 0x%08x\n", idex->regRtValue);
-        }
-        else if(idex->opCode == OPC_JAL){
-            printf("\tJAL instruction PC+4 -> Rt Value, Rt Value = 0x%08x\n", idex->regRtValue);
-        }
-        else{
-            printf("\tRt = %d, Rt Value = 0x%08x\n", idex->regRt, idex->regRtValue);
-        }
+        printf("\tRt = %d, Rt Value = 0x%08x\n", idex->regRt, idex->regRtValue);
+
     } /*DEBUG*/
 
     return 0;

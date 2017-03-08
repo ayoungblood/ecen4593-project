@@ -1,6 +1,8 @@
 /* src/registers.h
  * Register file header
  */
+#ifndef _REGISTERS_H
+#define _REGISTERS_H
 
 #include <stdio.h>
 
@@ -51,3 +53,6 @@ enum RegNames {
     REG_FP      = 30,
     REG_RA      = 31
 };
+
+
+#endif

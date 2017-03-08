@@ -65,3 +65,4 @@ clean:
 		-rm -f test/decode-test
 		-rm -f test/memory-test
 		-rm -f sandbox/test-decode
+		-rm -f sandbox/main-sandbox
