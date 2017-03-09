@@ -1,11 +1,10 @@
-/*  src/decode.c
-*   Decode instruction stage of the CPU
-*/
+/* src/decode.c
+ * Instruction decode stage of the pipeline
+ */
 
 #include "decode.h"
 
 extern int flags; // from main.c or memory-test.c
-
 
 int decode( control_t * ifid , pc_t * pc , control_t * idex ) {
 

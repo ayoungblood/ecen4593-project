@@ -1,5 +1,5 @@
 /* src/registers.c
- * Provides access to register file
+ * Register file implementation
  */
 
 #include "registers.h"

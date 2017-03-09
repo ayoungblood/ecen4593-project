@@ -1,9 +1,9 @@
 /* util.h
- * Things that should not be in types.h
+ * Utility/debug defines and other miscellany
  */
 
- #ifndef _UTIL_H
- #define _UTIL_H
+#ifndef _UTIL_H
+#define _UTIL_H
 
 // Debugging and internal status flags
 #define MASK_DEBUG      0x1 // Show debugging messages

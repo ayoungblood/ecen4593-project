@@ -1,9 +1,10 @@
-/*	src/decode.h
-*   Decode functions
-*/
+/* src/decode.h
+ * Instruction decode stage of the pipeline
+ */
 
 #ifndef _DECODE_H
 #define _DECODE_H
+
 #include <stdio.h>
 #include <stdbool.h>
 #include "types.h"
@@ -11,7 +12,6 @@
 #include "registers.h"
 
 int decode( control_t * , pc_t * , control_t * );
-
 
 //Helper functions
 void setidexImmedArithmetic(control_t *);

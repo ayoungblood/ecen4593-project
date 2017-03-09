@@ -1,8 +1,8 @@
-/* src/memory.c
+/* src/main_memory.c
  * Provides access to a byte-addressable memory
  */
 
-#include "memory.h"
+#include "main_memory.h"
 
 extern int flags; // from main.c or memory-test.c
 static word_t *mem; // pointer to memory block

@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include "../src/alu.h"
 #include "../src/decode.h"
-#include "../src/memory.h"
+#include "../src/main_memory.h"
 #include "../src/fetch.h"
 #include "../src/write.h"
 #include "../src/registers.h"

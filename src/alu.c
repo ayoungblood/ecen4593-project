@@ -1,5 +1,5 @@
 /* src/alu.c
- * Wraps all the ALU functions
+ * ALU function wrappers
  * ALU operations:
  *  - add
  *  - and

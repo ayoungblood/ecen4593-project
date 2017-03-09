@@ -1,5 +1,5 @@
 /* src/registers.h
- * Register file header
+ * Register file implementation
  */
 #ifndef _REGISTERS_H
 #define _REGISTERS_H
@@ -55,4 +55,4 @@ enum RegNames {
 };
 
 
-#endif
+#endif /* _REGISTERS_H */

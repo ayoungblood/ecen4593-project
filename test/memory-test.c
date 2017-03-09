@@ -6,7 +6,7 @@
 #include <stdbool.h>
 
 #include "minunit.h"
-#include "../src/memory.h"
+#include "../src/main_memory.h"
 #include "../src/types.h"
 
 int tests_run = 0;

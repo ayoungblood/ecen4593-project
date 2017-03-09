@@ -2,13 +2,11 @@
 * Write back stage of the pipeline
 */
 
-
 #include "write.h"
 
 extern int flags;
 
-
-void writeback(control_t * memwb){
+void writeback(control_t *memwb){
     //Determine the WB register based on regDst
     word_t writeRegister = 0;
     word_t writeRegisterValue = 0;

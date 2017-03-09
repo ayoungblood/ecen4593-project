@@ -1,5 +1,5 @@
 /* src/main.h
- * Top-level simulator header
+ * Simulator top level
  */
 
 #include <stdlib.h>
@@ -10,6 +10,6 @@
 #include "util.h"
 #include "types.h"
 #include "decode.h"
-#include "memory.h"
+#include "main_memory.h"
 
 #define MEMORY_SIZE 4096

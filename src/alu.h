@@ -1,5 +1,5 @@
 /* src/alu.h
- * ALU functions
+ * ALU function wrappers
  */
 
 #ifndef _ALU_H

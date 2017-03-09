@@ -1,6 +1,9 @@
-/* src/memory.h
+/* src/main_memory.h
  * Memory header
  */
+
+#ifndef _MAIN_MEMORY_H
+#define _MAIN_MEMORY_H
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -34,3 +37,5 @@ void mem_read_b(uint32_t address, word_t *data); // read byte
 void mem_write_w(uint32_t address, word_t *data); // write word
 void mem_write_h(uint32_t address, word_t *data); // write half-word
 void mem_write_b(uint32_t address, word_t *data); // write byte
+
+#endif // _MAIN_MEMORY_H

@@ -1,5 +1,5 @@
 /* src/main.c
- * Top-level simulator source
+ * Simulator top level
  */
 
 #include "main.h"
