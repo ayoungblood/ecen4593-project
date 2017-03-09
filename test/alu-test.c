@@ -11,6 +11,8 @@
 
 int tests_run = 0;
 
+int flags = MASK_DEBUG | MASK_VERBOSE | MASK_SANITY;
+
 word_t s, t, d;
 bool z;
 int rv;
