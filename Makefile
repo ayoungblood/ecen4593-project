@@ -55,6 +55,11 @@ test-memory: $(OBJECTS)
 		$(CC) src/memory.o -Wall $(LIBS) -o test/memory-test test/memory-test.c
 		test/memory-test
 
+test-main: all
+		./sim asm/disjoint.s
+		./sim -v asm/disjoint.s
+		./sim -d -v asm/disjoint.s
+
 clean:
 		-rm -f *.bc *.i *.s
 		-rm -f src/*.o
