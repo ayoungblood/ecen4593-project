@@ -1,5 +1,5 @@
-/* test/mem-test.c
- * Very simple unit tests for src/memory.c
+/* test/main-memory-test.c
+ * Very simple unit tests for src/main_memory.c
  */
 
 #include <stdio.h>
