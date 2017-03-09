@@ -17,7 +17,7 @@ int flags = MASK_DEBUG | MASK_VERBOSE | MASK_SANITY;
 word_t i, p;
 control_t *c, *ifid;
 
-static char * test_decode_add() {
+/*static char * test_decode_add() {
     i = 0x02518820; // add, $s1, $s2, $s1
     printf("Instruction: add $s1, $s2, $s1\n");
     p = 0x4;
@@ -361,8 +361,11 @@ static char * test_decode_jal() {
 
     return 0;
 }
+
+*/
 static char * all_tests() {
-    /*mu_run_test(test_decode_add);
+    /*
+    mu_run_test(test_decode_add);
     mu_run_test(test_decode_addi);
     mu_run_test(test_decode_and);
     mu_run_test(test_decode_beq);
