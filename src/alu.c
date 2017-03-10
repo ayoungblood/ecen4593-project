@@ -87,20 +87,14 @@ int execute(control_t *idex, control_t *exmem){
         printf("\texmem->ALUop: 0x%08x\n", exmem->ALUop);
         printf("\texmem->PCSrc: 0x%08x\n", exmem->PCSrc);
         printf("\texmem->jump: 0x%08x\n", exmem->jump);
-
     }
-
-
     return 0;
 }
-
-
 
 // Perform an ALU operation
 int alu(operation_t operation, word_t op_rs, word_t op_rt, word_t *result, bool *zero) {
     int32_t temp;
-    //uint64_t xu;
-    switch(operation) {
+    switch (operation) {
         case OPR_ADD:
             // rd <= rs + rt
             // "The 32-bit word value in GPR rt is added to the 32-bit value in GPR rs
@@ -163,8 +157,9 @@ int alu(operation_t operation, word_t op_rs, word_t op_rt, word_t *result, bool 
             // No integer overflow occurs under any circumstances
             *result = (int32_t)op_rs - (int32_t)op_rt;
             break;
-        default:
-            assert(0); // We should not get here
+        default: // We should not get here. Complain and crash.
+            printf(ANSI_C_RED "Illegal ALU operation %d. Halting.\n" ANSI_C_RESET, operation);
+            assert(0);
             break;
     }
     // Set the zero flag
