@@ -15,43 +15,76 @@ typedef uint32_t pc_t;
 // Represents a single word (32b) of memory, with ambiguous signedness
 typedef uint32_t word_t;
 
+// Ignored MIPS I instructions
+// BGEZ: Branch on Greater Than or Equal to Zero
+// BGEZAL: Branch on Greater Than or Equal to Zero and Link
+// BGTZ: Branch on Greater Than Zero
+// BLEZ: Branch on Less Than or Equal to Zero
+// BLTZ: Branch on Less Than Zero
+// BLTZAL: Branch on Less Than Zero And Link
+// BREAK: Breakpoint
+// COPz: Coprocessor Operation
+// DIV: Divide Word
+// DIVU: Divide Unsigned Word
+// JALR: Jump And Link Register
+// LWCz: Load Word To Coprocessor
+// LWL: Load Word Left
+// LWR: Load Word Right
+// MFHI: Move From HI Register
+// MFLO: Move from LO Register
+// MTHI: Move To HI Register
+// MTLO: Move To LO Register
+// MULT: Multiply Word
+// MULTU: Multiply Unsigned Word
+// SLLV: Shift Word Left Logical Variable
+// SRA: Shift Word Right Arithmetic
+// SRAV: Shift Word Right Arithmetic Variable
+// SRLV: Shift Word Right Logical Variable
+// SUBU: Subtract Unsigned Word
+// SWCZ: Store Word From Coprocessor
+// SWL: Store Word Left
+// SWR: Store Word Right
+// SYSCALL: System Call
+
 // Mapping opcode values to mnemonic
 typedef enum OpCodes {
     OPC_RTYPE   = 0x00,
-    OPC_ADDI    = 0x08,
-    OPC_ADDIU   = 0x09,
-    OPC_ANDI    = 0x0c,
-    OPC_BEQ     = 0x04,
-    OPC_BNE     = 0x05,
-    OPC_J       = 0x02,
-    OPC_JAL     = 0x03,
-    OPC_LBU     = 0x24,
-    OPC_LHU     = 0x25,
-    OPC_LL      = 0x30,
-    OPC_LUI     = 0x0f,
-    OPC_LW      = 0x23,
-    OPC_ORI     = 0x0d,
-    OPC_SLTI    = 0x0a,
-    OPC_SLTIU   = 0x0b,
-    OPC_SB      = 0x28,
-    OPC_SC      = 0x38,
-    OPC_SH      = 0x29,
-    OPC_SW      = 0x2b
+    OPC_ADDI    = 0x08, // 0b001000, Add Immediate Word
+    OPC_ADDIU   = 0x09, // 0b001001, Add Immediate Unsigned Word
+    OPC_ANDI    = 0x0c, // 0b001100, And Immediate
+    OPC_BEQ     = 0x04, // 0b000100, Branch on Equal
+    OPC_BNE     = 0x05, // 0b000101, Branch on Not Equal
+    OPC_J       = 0x02, // 0b000010, Jump
+    OPC_JAL     = 0x03, // 0b000011, Jump And Link
+    OPC_LB      = 0x20, // 0b100000, Load Byte
+    OPC_LBU     = 0x24, // 0b100100, Load Byte Unsigned
+    OPC_LH      = 0x21, // 0b100001, Load Halfword
+    OPC_LHU     = 0x25, // 0b100101, Load Halfword Unsigned
+    OPC_LUI     = 0x0f, // 0b001111, Load Upper Immediate
+    OPC_LW      = 0x23, // 0b100011, Load Word
+    OPC_ORI     = 0x0d, // 0b001101, Or Immediate
+    OPC_SB      = 0x28, // 0b101000, Store Byte
+    OPC_SH      = 0x29, // 0b101001, Store Halfword
+    OPC_SLTI    = 0x0a, // 0b001010, Set on Less Than Immediate
+    OPC_SLTIU   = 0x0b, // 0b001011, Set on Less Than Immediate Unsigned
+    OPC_SW      = 0x2b, // 0b101011, Store Word
+    OPC_XORI    = 0x0e  // 0b001110, Exclusive OR Immediate
 } opcode_t;
 
 // Mapping funct values to mnemonic (R-type, opcode=0x0)
 typedef enum FunctCodes {
-    FNC_ADD     = 0x20,
-    FNC_ADDU    = 0x21,
-    FNC_AND     = 0x24,
-    FNC_JR      = 0x08,
-    FNC_NOR     = 0x27,
-    FNC_OR      = 0x25,
-    FNC_SLT     = 0x2a,
-    FNC_SLTU    = 0x2b,
-    FNC_SLL     = 0x00,
-    FNC_SRL     = 0x02,
-    FNC_SUB     = 0x22
+    FNC_ADD     = 0x20, // 0b100000, Add Word
+    FNC_ADDU    = 0x21, // 0b100001, Add Unsigned Word
+    FNC_AND     = 0x24, // 0b100100, And
+    FNC_JR      = 0x08, // 0b001000, Jump Register
+    FNC_NOR     = 0x27, // 0b100111, Not Or
+    FNC_OR      = 0x25, // 0b100101, Or
+    FNC_SLL     = 0x00, // 0b000000, Shift Word Left Logical
+    FNC_SLT     = 0x2a, // 0b101010, Set On Less Than
+    FNC_SLTU    = 0x2b, // 0b101011, Set on Less Than Unsigned
+    FNC_SRL     = 0x02, // 0b000010, Shift Word Right Logical
+    FNC_SUB     = 0x22, // 0b100010, Subtract Word
+    FNC_XOR     = 0x26  // 0b100110, Exclusive OR
 } funct_t;
 
 // Enumerate all "operations" (R/J/I type instruction action)
@@ -119,21 +152,19 @@ typedef enum Operations {
     OPR_TRAP
 } operation_t;
 
-
-
 typedef struct CONTROL_REGISTER {
-    //These are control register definitions that come from Figure 4.16 on page 264 of the Hennessy textbook
-    bool regDst;        //regDst ? destination register is Rd : destination register is Rt
-    bool regWrite;      //regWrite ? Register on the write register input is written with the value of the Write data input : nothing
-    bool ALUSrc;        //ALUSrc ? The second ALU operand comes from Immediate 16 : The second ALU operand comes from Rt
-    bool PCSrc;         //This has been implemented in the ID stage, so PCSrc true means branch taken
-    bool memRead;       //memRead ? Data memory contents given by address input are put on Read data output : Nothing
-    bool memWrite;      //memWrite ? Data memory contents designated by the address input replace by data on Write data input : Nothing
-    bool memToReg;      //memToReg ? Value from Write data input comes from the data memory : value fed to register Write data input comes from ALU
-    operation_t ALUop;  //ALU operation
-    bool jump;          //Override PC with shifted and concatenated address
+    // These are control register definitions that come from Figure 4.16 on page 264 of the Hennessy textbook
+    bool regDst;        // regDst ? destination register is Rd : destination register is Rt
+    bool regWrite;      // regWrite ? Register on the write register input is written with the value of the Write data input : nothing
+    bool ALUSrc;        // ALUSrc ? The second ALU operand comes from Immediate 16 : The second ALU operand comes from Rt
+    bool PCSrc;         // This has been implemented in the ID stage, so PCSrc true means branch taken
+    bool memRead;       // memRead ? Data memory contents given by address input are put on Read data output : Nothing
+    bool memWrite;      // memWrite ? Data memory contents designated by the address input replace by data on Write data input : Nothing
+    bool memToReg;      // memToReg ? Value from Write data input comes from the data memory : value fed to register Write data input comes from ALU
+    operation_t ALUop;  // ALU operation
+    bool jump;          // Override PC with shifted and concatenated address
 
-    inst_t instr;       //Raw instruction
+    inst_t instr;       // Raw instruction
 
     opcode_t opCode;
     uint32_t regRs;
