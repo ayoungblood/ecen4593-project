@@ -2,12 +2,12 @@
 # Loosely based on https://stackoverflow.com/questions/1484817/how-do-i-make-a-simple-makefile-for-gcc-on-linux
 TARGET = sim
 CC = gcc
-CFLAGS = -Wall -Wextra -pedantic -Wshadow -m64 -std=c11 -Wpointer-arith -masm=intel -save-temps -fverbose-asm -Wstrict-prototypes -Wmissing-prototypes
+CFLAGS = -Wall -Wextra -pedantic -Wshadow -m64 -std=c11 -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes
 # -Wall -Wextra -pedantic: stricter warnings
 # -Wshadow: warn if a local shadows something else
 # -m64: Target x86-64
 # -std=c99: ISO/IEC 9899:2011, current C standard
-# -save-temps -fverbose-asm -masm=intel: make prettier disassembly
+# -save-temps -fverbose-asm -masm=intel: make prettier disassembly (disabled for now)
 # -Wpointer-arith: warn on silly pointer operations
 # --Wstrict-prototypes -Wmissing-prototypes: be strict about function prototypes
 LIBS =
