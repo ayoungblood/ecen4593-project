@@ -34,10 +34,12 @@ test: $(OBJECTS)
 		$(CC) src/registers.o -Wall $(LIBS) -o test/registers-test test/registers-test.c
 		$(CC) src/decode.o src/registers.o -Wall $(LIBS) -o test/decode-test test/decode-test.c
 		$(CC) src/main_memory.o -Wall $(LIBS) -o test/main-memory-test test/main-memory-test.c
+		$(CC) src/memory.o src/main_memory.o -Wall $(LIBS) -o test/memory-test test/memory-test.c
 		test/alu-test
 		test/registers-test
 		test/decode-test
 		test/main-memory-test
+		test/memory-test
 
 test-alu: $(OBJECTS)
 		$(CC) src/alu.o -Wall $(LIBS) -o test/alu-test test/alu-test.c
@@ -55,6 +57,10 @@ test-main-memory: $(OBJECTS)
 		$(CC) src/main_memory.o -Wall $(LIBS) -o test/main-memory-test test/main-memory-test.c
 		test/main-memory-test
 
+test-memory: $(OBJECTS)
+		$(CC) src/memory.o src/main_memory.o -Wall $(LIBS) -o test/memory-test test/memory-test.c
+		test/memory-test
+
 test-main: all
 		./sim asm/disjoint.s
 		./sim -v asm/disjoint.s
@@ -69,5 +75,6 @@ clean:
 		-rm -f test/registers-test
 		-rm -f test/decode-test
 		-rm -f test/main-memory-test
+		-rm -f test/memory-test
 		-rm -f sandbox/test-decode
 		-rm -f sandbox/main-sandbox

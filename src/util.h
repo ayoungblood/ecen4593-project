@@ -5,6 +5,10 @@
 #ifndef _UTIL_H
 #define _UTIL_H
 
+// Sign extension macros for byte and halfword
+#define SIGN_EXTEND_B(x) ((x & (1<< 7))?(x | 0xffffff00):(x))
+#define SIGN_EXTEND_H(x) ((x & (1<<15))?(x | 0xffff0000):(x))
+
 // Debugging and internal status flags
 #define MASK_DEBUG      0x1 // Show debugging messages
 #define MASK_VERBOSE    0x2 // Show verbose messages
