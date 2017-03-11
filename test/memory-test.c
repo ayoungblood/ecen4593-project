@@ -26,48 +26,49 @@ static char * test_mem_small_store() {
 
     // Write to the memory using the pipeline stage wrapper
     control_t *exmem = (control_t *)malloc(sizeof(control_t));
+    control_t *memwb = (control_t *)malloc(sizeof(control_t));
     exmem->opCode = OPC_SW; // store word
     exmem->memWrite = true; // assert write
     exmem->memRead = false; // de-assert read
     exmem->ALUresult = 0x80; // the memory address
     exmem->regRt = 0xdeadbeef; // the value to write
-    memory(exmem);
+    memory(exmem, memwb);
     exmem->opCode = OPC_SW; // store word
     exmem->memWrite = true; // assert write
     exmem->memRead = false; // de-assert read
     exmem->ALUresult = 0x84; // the memory address
     exmem->regRt = 0xfa5f4444; // the value to write
-    memory(exmem);
+    memory(exmem, memwb);
     exmem->opCode = OPC_SH; // store halfword
     exmem->memWrite = true; // assert write
     exmem->memRead = false; // de-assert read
     exmem->ALUresult = 0x88; // the memory address
     exmem->regRt = 0xff88; // the value to write
-    memory(exmem);
+    memory(exmem, memwb);
     exmem->opCode = OPC_SH; // store halfword
     exmem->memWrite = true; // assert write
     exmem->memRead = false; // de-assert read
     exmem->ALUresult = 0x8a; // the memory address
     exmem->regRt = 0xffaa; // the value to write
-    memory(exmem);
+    memory(exmem, memwb);
     exmem->opCode = OPC_SB; // store byte
     exmem->memWrite = true; // assert write
     exmem->memRead = false; // de-assert read
     exmem->ALUresult = 0x8c; // the memory address
     exmem->regRt = 0xfc; // the value to write
-    memory(exmem);
+    memory(exmem, memwb);
     exmem->opCode = OPC_SB; // store byte
     exmem->memWrite = true; // assert write
     exmem->memRead = false; // de-assert read
     exmem->ALUresult = 0x8d; // the memory address
     exmem->regRt = 0xfd; // the value to write
-    memory(exmem);
+    memory(exmem, memwb);
     exmem->opCode = OPC_SH; // store halfword
     exmem->memWrite = true; // assert write
     exmem->memRead = false; // de-assert read
     exmem->ALUresult = 0x8e; // the memory address
     exmem->regRt = 0xfeef; // the value to write
-    memory(exmem);
+    memory(exmem, memwb);
 
     mem_dump();
     mem_read_w(0x80, &data);
@@ -82,6 +83,7 @@ static char * test_mem_small_store() {
     // De-allocate memory and clean up pipeline register
     mem_close();
     free(exmem);
+    free(memwb);
     return 0;
 }
 
@@ -104,52 +106,54 @@ static char * test_mem_small_load() {
 
     // Read from the memory using the pipeline stage wrapper
     control_t *exmem = (control_t *)malloc(sizeof(control_t));
+    control_t *memwb = (control_t *)malloc(sizeof(control_t));
     exmem->opCode = OPC_LW; // load word
     exmem->memRead = true; // assert read
     exmem->memWrite = false; // de-assert write
     exmem->ALUresult = 0x80; // the memory address
-    memory(exmem);
-    mu_assert(_FL "bad assert", exmem->memData == 0xfedcba98);
+    memory(exmem, memwb);
+    mu_assert(_FL "bad assert", memwb->memData == 0xfedcba98);
     exmem->opCode = OPC_LH; // load halfword
     exmem->memRead = true; // assert read
     exmem->memWrite = false; // de-assert write
     exmem->ALUresult = 0x84; // the memory address
-    memory(exmem);
-    mu_assert(_FL "bad assert", exmem->memData == 0x7444);
+    memory(exmem, memwb);
+    mu_assert(_FL "bad assert", memwb->memData == 0x7444);
     exmem->opCode = OPC_LH; // load halfword
     exmem->memRead = true; // assert read
     exmem->memWrite = false; // de-assert write
     exmem->ALUresult = 0x86; // the memory address
-    memory(exmem);
-    mu_assert(_FL "bad assert", exmem->memData == 0xfffff444); // sign-extended
+    memory(exmem, memwb);
+    mu_assert(_FL "bad assert", memwb->memData == 0xfffff444); // sign-extended
     exmem->opCode = OPC_LHU; // load halfword unsigned
     exmem->memRead = true; // assert read
     exmem->memWrite = false; // de-assert write
     exmem->ALUresult = 0x86; // the memory address
-    memory(exmem);
-    mu_assert(_FL "bad assert", exmem->memData == 0xf444); // not sign-extended
+    memory(exmem, memwb);
+    mu_assert(_FL "bad assert", memwb->memData == 0xf444); // not sign-extended
     exmem->opCode = OPC_LB; // load byte
     exmem->memRead = true; // assert read
     exmem->memWrite = false; // de-assert write
     exmem->ALUresult = 0x8b; // the memory address
-    memory(exmem);
-    mu_assert(_FL "bad assert", exmem->memData == 0x78);
+    memory(exmem, memwb);
+    mu_assert(_FL "bad assert", memwb->memData == 0x78);
     exmem->opCode = OPC_LB; // load byte
     exmem->memRead = true; // assert read
     exmem->memWrite = false; // de-assert write
     exmem->ALUresult = 0x8a; // the memory address
-    memory(exmem);
-    mu_assert(_FL "bad assert", exmem->memData == 0xffffff88); // sign-extended
+    memory(exmem, memwb);
+    mu_assert(_FL "bad assert", memwb->memData == 0xffffff88); // sign-extended
     exmem->opCode = OPC_LBU; // load byte unsigned
     exmem->memRead = true; // assert read
     exmem->memWrite = false; // de-assert write
     exmem->ALUresult = 0x8a; // the memory address
-    memory(exmem);
-    mu_assert(_FL "bad assert", exmem->memData == 0x88); // not sign-extended
+    memory(exmem, memwb);
+    mu_assert(_FL "bad assert", memwb->memData == 0x88); // not sign-extended
 
     // De-allocate memory and clean up pipeline register
     mem_close();
     free(exmem);
+    free(memwb);
     return 0;
 }
 
