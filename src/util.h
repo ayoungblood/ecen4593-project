@@ -5,6 +5,11 @@
 #ifndef _UTIL_H
 #define _UTIL_H
 
+#include <stdio.h>
+#include <string.h>
+#include "types.h"
+
+
 // Debugging and internal status flags
 #define MASK_DEBUG      0x1 // Show debugging messages
 #define MASK_VERBOSE    0x2 // Show verbose messages
@@ -20,5 +25,8 @@
 #define ANSI_C_MAGENTA "\x1b[1;35m"
 #define ANSI_C_WHITE   "\x1b[1;37m"
 #define ANSI_C_RESET   "\x1b[0m"
+
+
+void print_pipeline_register(control_t *);
 
 #endif /* _TYPES_H */
