@@ -10,6 +10,10 @@
 #include "types.h"
 
 
+// Sign extension macros for byte and halfword
+#define SIGN_EXTEND_B(x) ((x & (1<< 7))?(x | 0xffffff00):(x))
+#define SIGN_EXTEND_H(x) ((x & (1<<15))?(x | 0xffff0000):(x))
+
 // Debugging and internal status flags
 #define MASK_DEBUG      0x1 // Show debugging messages
 #define MASK_VERBOSE    0x2 // Show verbose messages
@@ -27,6 +31,8 @@
 #define ANSI_C_RESET   "\x1b[0m"
 
 
-void print_pipeline_register(control_t *);
+void print_pipeline_register(control_t *reg);
+
+void copy_pipeline_register(control_t *orig, control_t *copy);
 
 #endif /* _TYPES_H */

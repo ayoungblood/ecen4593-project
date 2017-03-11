@@ -7,16 +7,17 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <assert.h>
 #include "types.h"
 #include "util.h"
 #include "registers.h"
 
-int decode( control_t * , pc_t * , control_t * );
+int decode( control_t *ifid, pc_t *pc , control_t *idex );
 
 //Helper functions
-void setidexImmedArithmetic(control_t *);
-void setidexLoad(control_t *);
-void setidexStore(control_t *);
+void setidexImmedArithmetic(control_t *idex);
+void setidexLoad(control_t *idex);
+void setidexStore(control_t *idex);
 
 //Instruction decoding bitmasks
 #define OP_MASK 0xFC000000

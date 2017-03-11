@@ -35,64 +35,21 @@ int execute(control_t *idex, control_t *exmem){
         ALUArg2 = idex->regRtValue;
     }
 
-    alu(idex->ALUop, ALUArg1, ALUArg2, &ALUresult, &zero);
+    alu(idex->ALUop, ALUArg1, ALUArg2, idex->shamt, &ALUresult, &zero);
 
     //Copy the results into the next pipeline register
-    exmem->regDst = idex->regDst;
-    exmem->regWrite = idex->regWrite;
-    exmem->ALUSrc = idex->ALUSrc;
-    exmem->PCSrc = idex->PCSrc;
-    exmem->memRead = idex->memRead;
-    exmem->memWrite = idex->memWrite;
-    exmem->memToReg = idex->memToReg;
-    exmem->ALUop = idex->ALUop;
-    exmem->jump = idex->jump;
-    exmem->instr = idex->instr;
-    exmem->opCode = idex->opCode;
-    exmem->regRs = idex->regRs;
-    exmem->regRt = idex->regRt;
-    exmem->regRd = idex->regRd;
-    exmem->immed = idex->immed;
-    exmem->address = idex->address;
-    exmem->funct = idex->funct;
-    exmem->shamt = idex->shamt;
-    exmem->regRsValue = idex->regRsValue;
-    exmem->regRtValue = idex->regRtValue;
+    copy_pipeline_register(idex, exmem);
     exmem->ALUresult = ALUresult;
-    exmem->pcNext = idex->pcNext;
 
     if(flags & MASK_DEBUG){
-        printf("Decoded exmem register from instruction 0x%08x\n", exmem->instr);
-        printf("Decoded Instrunction: \n");
-        printf("\texmem->opCode: 0x%08x\n", exmem->opCode);
-        printf("\texmem->regRs: 0x%08x\n", exmem->regRs);
-        printf("\texmem->regRt: 0x%08x\n", exmem->regRt);
-        printf("\texmem->regRd: 0x%08x\n", exmem->regRd);
-        printf("\texmem->shamt: 0x%08x\n", exmem->shamt);
-        printf("\texmem->funct: 0x%08x\n", exmem->funct);
-        printf("\texmem->immed: 0x%08x\n", exmem->immed);
-        printf("\texmem->address: 0x%08x\n", exmem->address);
-        printf("\texmem->pcNext: 0x%08x\n", exmem->pcNext);
-        printf("\texmem->regRtValue: 0x%08x\n", exmem->regRtValue);
-        printf("\texmem->regRsValue: 0x%08x\n", exmem->regRsValue);
-        printf("\texmem->ALUresult: 0x%08x\n", exmem->ALUresult);
-        printf("Global Program Counter:\n");
-        printf("exmem bits:\n");
-        printf("\texmem->regDst: 0x%08x\n", exmem->regDst);
-        printf("\texmem->ALUSrc: 0x%08x\n", exmem->ALUSrc);
-        printf("\texmem->memToReg: 0x%08x\n", exmem->memToReg);
-        printf("\texmem->regWrite: 0x%08x\n", exmem->regWrite);
-        printf("\texmem->memRead: 0x%08x\n", exmem->memRead);
-        printf("\texmem->memWrite: 0x%08x\n", exmem->memWrite);
-        printf("\texmem->ALUop: 0x%08x\n", exmem->ALUop);
-        printf("\texmem->PCSrc: 0x%08x\n", exmem->PCSrc);
-        printf("\texmem->jump: 0x%08x\n", exmem->jump);
+        print_pipeline_register(exmem);
     }
+
     return 0;
 }
 
 // Perform an ALU operation
-int alu(operation_t operation, word_t op_rs, word_t op_rt, word_t *result, bool *zero) {
+int alu(operation_t operation, word_t op_rs, word_t op_rt, word_t shamt, word_t *result, bool *zero) {
     int32_t temp;
     switch (operation) {
         case OPR_ADD:
@@ -127,6 +84,14 @@ int alu(operation_t operation, word_t op_rs, word_t op_rt, word_t *result, bool 
         case OPR_OR:
             // rd <= rs OR rt
             *result = op_rs | op_rt;
+            break;
+        case OPR_SLL:
+            // rd = rt << shamt
+            *result = op_rt << shamt;
+            break;
+        case OPR_SRL:
+            // rd = rt >> shamt
+            *result = op_rt >> shamt;
             break;
         case OPR_SLT:
             // rd <= (rs < rt)

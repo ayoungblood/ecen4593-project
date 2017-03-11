@@ -42,11 +42,18 @@ int decode( control_t * ifid , pc_t * pc , control_t * idex ) {
                 case FNC_SLT:
                     idex->ALUop = OPR_SLT;
                     break;
+                case FNC_SLL:
+                    idex->ALUop = OPR_SLL;
+                    break;
+                case FNC_SRL:
+                    idex->ALUop = OPR_SRL;
+                    break;
                 case FNC_NOR:
                     idex->ALUop = OPR_NOR;
                     break;
                 default:
-                    printf("Unknown R-Type instruction 0x%08x\n", idex->funct);
+                    printf(ANSI_C_RED "Illegal R-type instruction 0x%08x. Halting.\n" ANSI_C_RESET, idex->funct);
+                    assert(0);
             }
             idex->regDst = true;
             idex->ALUSrc = false;
@@ -132,7 +139,8 @@ int decode( control_t * ifid , pc_t * pc , control_t * idex ) {
             idex->jump = true;
 
         default:
-            printf("Unknown OpCode 0x%08x\n", idex->opCode);
+            printf(ANSI_C_RED "Illegal instruction, opcode 0x%02x. Halting.\n" ANSI_C_RESET, idex->opCode);
+            assert(0);
     }
 
 
@@ -177,35 +185,8 @@ int decode( control_t * ifid , pc_t * pc , control_t * idex ) {
 
 
     if(flags & MASK_DEBUG){
-        printf("Decoded idex register from instruction 0x%08x\n", idex->instr);
-        printf("Decoded Instrunction: \n");
-        printf("\tidex->opCode: 0x%08x\n", idex->opCode);
-        printf("\tidex->regRs: 0x%08x\n", idex->regRs);
-        printf("\tidex->regRt: 0x%08x\n", idex->regRt);
-        printf("\tidex->regRd: 0x%08x\n", idex->regRd);
-        printf("\tidex->shamt: 0x%08x\n", idex->shamt);
-        printf("\tidex->funct: 0x%08x\n", idex->funct);
-        printf("\tidex->immed: 0x%08x\n", idex->immed);
-        printf("\tidex->address: 0x%08x\n", idex->address);
-        printf("\tidex->pcNext: 0x%08x\n", idex->pcNext);
-        printf("Global Program Counter:\n");
-        printf("\t0x%08x\n", *pc);
-        printf("idex bits:\n");
-        printf("\tidex->regDst: 0x%08x\n", idex->regDst);
-        printf("\tidex->ALUSrc: 0x%08x\n", idex->ALUSrc);
-        printf("\tidex->memToReg: 0x%08x\n", idex->memToReg);
-        printf("\tidex->regWrite: 0x%08x\n", idex->regWrite);
-        printf("\tidex->memRead: 0x%08x\n", idex->memRead);
-        printf("\tidex->memWrite: 0x%08x\n", idex->memWrite);
-        printf("\tidex->ALUop: 0x%08x\n", idex->ALUop);
-        printf("\tidex->PCSrc: 0x%08x\n", idex->PCSrc);
-        printf("\tidex->jump: 0x%08x\n", idex->jump);
-        printf("First argument:\n");
-        printf("\tRs = %d, Rs Value = 0x%08x\n",idex->regRs, idex->regRsValue);
-        printf("Second argument:\n");
-        printf("\tRt = %d, Rt Value = 0x%08x\n", idex->regRt, idex->regRtValue);
-
-    } /*DEBUG*/
+        print_pipeline_register(idex);
+    }
 
     return 0;
 

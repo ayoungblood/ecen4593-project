@@ -23,7 +23,7 @@ int execute(control_t *, control_t *);
  * values specified below. Crashes the program if an unknown operation
  * is specified
  */
-int alu(operation_t operation, word_t op_a, word_t op_b, word_t *result, bool *zero);
+int alu(operation_t operation, word_t op_a, word_t op_b, word_t shamt, word_t *result, bool *zero);
 
 // Detecting overflow based on AVR instruction set
 // http://www.atmel.com/images/Atmel-0856-AVR-Instruction-Set-Manual.pdf

@@ -153,6 +153,8 @@ typedef enum Operations {
 } operation_t;
 
 typedef struct CONTROL_REGISTER {
+    char * regName;
+
     // These are control register definitions that come from Figure 4.16 on page 264 of the Hennessy textbook
     bool regDst;        // regDst ? destination register is Rd : destination register is Rt
     bool regWrite;      // regWrite ? Register on the write register input is written with the value of the Write data input : nothing
