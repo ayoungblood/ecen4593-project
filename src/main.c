@@ -46,25 +46,35 @@ int main(int argc, char *argv[]) {
      * Beginning the actual simulation                                        *
      * All initialization and state configuration happens below here          *
      **************************************************************************/
+
+    // Create an array to hold all the debug information
+    asm_line_t lines[MEMORY_SIZE];
+    for (i = 0; i < MEMORY_SIZE; ++i) lines[i].type = 0; // initialize all invalid
+
+    parse(asm_fp, lines);
+
+    printf("Calculated offset: 0x%08x, printing 32 words from offset\n",mem_start());
+    word_t temp;
+    for (i = 0; i < 32; ++i) {
+        mem_read_w(mem_start() + (i<<2), &temp);
+        printf("    0x%08x: %08x\n", mem_start() + (i<<2), temp);
+        printf("(%1x) 0x%08x: %08x\t%s\n", lines[i].type, lines[i].addr, lines[i].inst, lines[i].comment);
+    }
     // Initialize the register file
     reg_init();
-    //
-    char buf[120]; // for storing a line from the source file
-    char str[80]; // for the comment part of a line from the source file
+    // @TODO start simulation
 
-    typedef struct ASMLine { // for storing debugging information per line
-        uint32_t addr;
-        uint32_t inst;
-        char     comment[80];
-        char     type; // 0: invalid, 2: valid
-    } asm_line_t;
-    asm_line_t lines[MEMORY_SIZE];
-    for (i = 0; i < MEMORY_SIZE; ++i) lines[i].type = 0; // all invalid
+    mem_close();
+    return 0; // exit without errors
+}
 
+int parse(FILE *fp, asm_line_t *lines) {
     uint32_t addr, inst, start;
     int count = 0;
+    char buf[120]; // for storing a line from the source file
+    char str[80]; // for the comment part of a line from the source file
     // iterate through file line-by-line
-    while (fgets(buf, sizeof(buf), asm_fp) != NULL ) {
+    while (fgets(buf, sizeof(buf), fp) != NULL ) {
         // scanf magic to extract an address, colon, instruction, and the remaining line
         if (sscanf(buf,"%x: %x %[^\n]",&addr,&inst,str) == 3) {
             if (count == 0) { // first instruction, set offset and initialize memory
@@ -81,18 +91,7 @@ int main(int argc, char *argv[]) {
             ++count;
         }
     }
-    fclose(asm_fp); // close the file
+    fclose(fp); // close the file
     printf("Succesfully extracted %d instructions\n",count);
-
-    printf("Calculated offset: 0x%08x, printing 32 words from offset\n",start);
-    word_t temp;
-    for (i = 0; i < 32; ++i) {
-        mem_read_w(start + (i<<2), &temp);
-        printf("    0x%08x: %08x\n",(i<<2) + start,temp);
-        printf("(%1x) 0x%08x: %08x\t%s\n", lines[i].type, lines[i].addr, lines[i].inst, lines[i].comment);
-    }
-
-    // @TODO start simulation
-
-    return 0; // exit without errors
+    return count;
 }

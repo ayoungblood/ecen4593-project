@@ -78,3 +78,4 @@ clean:
 		-rm -f test/memory-test
 		-rm -f sandbox/test-decode
 		-rm -f sandbox/main-sandbox
+		-rm -rf sim.dSYM

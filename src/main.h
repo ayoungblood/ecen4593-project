@@ -13,3 +13,13 @@
 #include "main_memory.h"
 
 #define MEMORY_SIZE 4096
+
+// For storing debugging information per line
+typedef struct ASMLine {
+    uint32_t addr;        // address
+    uint32_t inst;        // instruction
+    char     comment[80]; // remaining string data
+    char     type;        // 0: invalid, 2: valid
+} asm_line_t;
+
+int parse(FILE *fp, asm_line_t *lines);
