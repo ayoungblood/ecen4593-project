@@ -30,17 +30,17 @@ int decode( control_t * ifid , pc_t * pc , control_t * idex ) {
                 case FNC_ADD:
                     idex->ALUop = OPR_ADD;
                     break;
-                case FNC_SUB:
-                    idex->ALUop = OPR_SUB;
+                case FNC_ADDU:
+                    idex->ALUop = OPR_ADDU;
                     break;
                 case FNC_AND:
                     idex->ALUop = OPR_AND;
                     break;
+                case FNC_NOR:
+                    idex->ALUop = OPR_NOR;
+                    break;
                 case FNC_OR:
                     idex->ALUop = OPR_OR;
-                    break;
-                case FNC_SLT:
-                    idex->ALUop = OPR_SLT;
                     break;
                 case FNC_SLL:
                     idex->ALUop = OPR_SLL;
@@ -48,11 +48,23 @@ int decode( control_t * ifid , pc_t * pc , control_t * idex ) {
                 case FNC_SRL:
                     idex->ALUop = OPR_SRL;
                     break;
-                case FNC_NOR:
-                    idex->ALUop = OPR_NOR;
+                case FNC_SLT:
+                    idex->ALUop = OPR_SLT;
+                    break;
+                case FNC_SLTU:
+                    idex->ALUop = OPR_SLTU;
+                    break;
+                case FNC_SUB:
+                    idex->ALUop = OPR_SUB;
+                    break;
+                case FNC_SUBU:
+                    idex->ALUop = OPR_SUBU;
+                    break;
+                case FNC_XOR:
+                    idex->ALUop = OPR_XOR;
                     break;
                 default:
-                    printf(ANSI_C_RED "Illegal R-type instruction 0x%08x. Halting.\n" ANSI_C_RESET, idex->funct);
+                    printf(ANSI_C_RED "Illegal R-type instruction 0x%02x. Halting.\n" ANSI_C_RESET, idex->funct);
                     assert(0);
             }
             idex->regDst = true;
@@ -108,6 +120,10 @@ int decode( control_t * ifid , pc_t * pc , control_t * idex ) {
             break;
         case OPC_SLTIU:
             idex->ALUop = OPR_SLTU;
+            setidexImmedArithmetic(idex);
+            break;
+        case OPC_XORI:
+            idex->ALUop = OPR_XOR;
             setidexImmedArithmetic(idex);
             break;
         case OPC_J:

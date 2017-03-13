@@ -1,11 +1,5 @@
 /* src/alu.c
- * ALU function wrappers
- * ALU operations:
- *  - add
- *  - and
- *  - nor
- *  - or
- *  - sub
+ * ALU function wrapper and execute pipeline stage implementation
  */
 
 #include "alu.h"
@@ -121,6 +115,11 @@ int alu(operation_t operation, word_t op_rs, word_t op_rt, word_t shamt, word_t 
             // rd <= rs - rt
             // No integer overflow occurs under any circumstances
             *result = (int32_t)op_rs - (int32_t)op_rt;
+            break;
+        case OPR_XOR:
+            // rd <= rs XOR rt
+            // No integer overflow occurs under any circumstances
+            *result = op_rs ^ op_rt;
             break;
         default: // We should not get here. Complain and crash.
             printf(ANSI_C_RED "Illegal ALU operation %d. Halting.\n" ANSI_C_RESET, operation);

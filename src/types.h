@@ -40,7 +40,6 @@ typedef uint32_t word_t;
 // SRA: Shift Word Right Arithmetic
 // SRAV: Shift Word Right Arithmetic Variable
 // SRLV: Shift Word Right Logical Variable
-// SUBU: Subtract Unsigned Word
 // SWCZ: Store Word From Coprocessor
 // SWL: Store Word Left
 // SWR: Store Word Right
@@ -84,6 +83,7 @@ typedef enum FunctCodes {
     FNC_SLTU    = 0x2b, // 0b101011, Set on Less Than Unsigned
     FNC_SRL     = 0x02, // 0b000010, Shift Word Right Logical
     FNC_SUB     = 0x22, // 0b100010, Subtract Word
+    FNC_SUBU    = 0x23, // 0b100011, Subtract Unsigend Word
     FNC_XOR     = 0x26  // 0b100110, Exclusive OR
 } funct_t;
 

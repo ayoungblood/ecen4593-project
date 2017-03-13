@@ -1,5 +1,5 @@
 /* src/alu.h
- * ALU function wrappers
+ * ALU function wrapper and execute pipeline stage implementation
  */
 
 #ifndef _ALU_H
