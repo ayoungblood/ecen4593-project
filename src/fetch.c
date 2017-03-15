@@ -26,7 +26,7 @@ void fetch(control_t * ifid, pc_t * pc, bool *stall){
         uint32_t immed = ( ifid->instr & IM_MASK );
 
         //Sign extension of the immediate field
-        ifid->immed = (( ifid->instr & BIT15 ) && (ifid->opCode != OPC_SLTIU)) ? immed | EXT_16_32 : immed;
+        ifid->immed = (( ifid->instr & BIT15 ) && (ifid->opCode != OPC_SLTIU) && (ifid->opCode != OPC_ANDI) && (ifid->opCode != OPC_ORI) && (ifid->opCode != OPC_XORI)) ? immed | EXT_16_32 : immed;
 
         //Update the program counter by 4
         *pc = *pc + 4;
