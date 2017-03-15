@@ -4,7 +4,7 @@
 
 
 // compile from root with
-// gcc src/decode.o src/alu.o src/fetch.o src/main_memory.o src/registers.o src/write.o src/util.o src/memory.o -o sandbox/main-sandbox sandbox/main-sandbox.c
+// gcc src/*.o -o sandbox/main-sandbox sandbox/main-sandbox.c
 
 
 #include <stdio.h>
@@ -33,7 +33,7 @@ void execute_pipeline(){
     writeback(memwb);
     memory(exmem, memwb);
     execute(idex, exmem);
-    decode(ifid, &pc, idex);
+    decode(ifid, idex);
     fetch(ifid, &pc);
 }
 

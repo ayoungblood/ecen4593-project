@@ -58,3 +58,27 @@
      copy->ALUresult = orig->ALUresult;
      copy->pcNext = orig->pcNext;
  }
+
+ void flush(control_t *reg){
+     reg->regDst = 0;
+     reg->regWrite = 0;
+     reg->ALUSrc = 0;
+     reg->PCSrc = 0;
+     reg->memRead = 0;
+     reg->memWrite = 0;
+     reg->ALUop = 0;
+     reg->jump = 0;
+     reg->instr = 0;
+     reg->opCode = 0;
+     reg->regRs = 0;
+     reg->regRt = 0;
+     reg->regRd = 0;
+     reg->immed = 0;
+     reg->address = 0;
+     reg->funct = 0;
+     reg->shamt = 0;
+     reg->regRsValue = 0;
+     reg->regRtValue = 0;
+     reg->ALUresult = 0;
+     reg->pcNext = 0;
+ }

@@ -35,4 +35,6 @@ void print_pipeline_register(control_t *reg);
 
 void copy_pipeline_register(control_t *orig, control_t *copy);
 
+void flush(control_t *reg);
+
 #endif /* _TYPES_H */

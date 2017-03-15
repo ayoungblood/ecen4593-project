@@ -6,23 +6,9 @@
 
 extern int flags; // from main.c or memory-test.c
 
-int decode( control_t * ifid , pc_t * pc , control_t * idex ) {
+int decode( control_t * ifid , control_t * idex) {
 
-    //Get all of the bitmasked values out of the instruction
-    idex->instr = ifid->instr;
-    idex->opCode = ( ifid->instr & OP_MASK ) >> OP_SHIFT;
-    idex->regRs = ( ifid->instr & RS_MASK ) >> RS_SHIFT;
-    idex->regRt = ( ifid->instr & RT_MASK ) >> RT_SHIFT;
-    idex->regRd = ( ifid->instr & RD_MASK ) >> RD_SHIFT;
-    idex->shamt = ( ifid->instr & SH_MASK ) >> SH_SHIFT;
-    idex->funct = ( ifid->instr & FC_MASK );
-    idex->address = ( ifid->instr & AD_MASK );
-    uint32_t immed = ( ifid->instr & IM_MASK );
-
-    idex->pcNext = ifid->pcNext;
-
-    //Sign extension of the immediate field
-    idex->immed = (( ifid->instr & BIT15 ) && (idex->opCode != OPC_SLTIU)) ? immed | EXT_16_32 : immed;
+    copy_pipeline_register(ifid, idex);
 
     switch(idex->opCode){
         case OPC_RTYPE:
@@ -172,16 +158,12 @@ int decode( control_t * ifid , pc_t * pc , control_t * idex ) {
     //"signed"
     if(idex->jump){
         idex->pcNext = ( idex->pcNext & 0xF0000000 ) | idex->address;
-        //Update the actual program counter
-        *pc = idex->pcNext;
     }
     //branch determination in ID phase
     if(idex->opCode == OPC_BEQ){
         if(idex->regRsValue == idex->regRtValue){
             idex->pcNext = idex->pcNext + idex->immed;
             idex->PCSrc = true; //Branch is taken, use pcNext for address
-            //Update the actual program counter
-            *pc = ifid->pcNext;
         }
         else{
             idex->PCSrc = false; //Branch not taken
@@ -191,8 +173,6 @@ int decode( control_t * ifid , pc_t * pc , control_t * idex ) {
         if(idex->regRsValue != idex->regRtValue){
             idex->pcNext = (int32_t)idex->pcNext + (int32_t)(idex->immed * 4);
             idex->PCSrc = true;  //Branch taken
-            //Update the actual program counter
-            *pc = ifid->pcNext;
         }
         else{
             idex->PCSrc = false; //Branch not taken
