@@ -61,6 +61,10 @@ test-memory: $(OBJECTS)
 		$(CC) src/memory.o src/main_memory.o -Wall $(LIBS) -o test/memory-test test/memory-test.c
 		test/memory-test
 
+test-fetch: $(OBJECTS)
+		$(CC) src/fetch.o src/registers.o src/main_memory.o -Wall $(LIBS) -o test/fetch-test test/fetch-test.c
+		test/fetch-test
+
 test-main: all
 		./sim asm/disjoint.s
 		./sim -v asm/disjoint.s
@@ -76,6 +80,7 @@ clean:
 		-rm -f test/decode-test
 		-rm -f test/main-memory-test
 		-rm -f test/memory-test
+		-rm -f test/fetch-test
 		-rm -f sandbox/test-decode
 		-rm -f sandbox/main-sandbox
 		-rm -rf sim.dSYM
