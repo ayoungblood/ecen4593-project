@@ -162,7 +162,7 @@ int decode( control_t * ifid , control_t * idex) {
     //branch determination in ID phase
     if(idex->opCode == OPC_BEQ){
         if(idex->regRsValue == idex->regRtValue){
-            idex->pcNext = idex->pcNext + idex->immed;
+            idex->pcNext = idex->pcNext + ( idex->immed << 2 );
             idex->PCSrc = true; //Branch is taken, use pcNext for address
         }
         else{
@@ -171,7 +171,7 @@ int decode( control_t * ifid , control_t * idex) {
     }
     else if (idex->opCode == OPC_BNE){
         if(idex->regRsValue != idex->regRtValue){
-            idex->pcNext = (int32_t)idex->pcNext + (int32_t)(idex->immed * 4);
+            idex->pcNext = idex->pcNext + ( idex->immed << 2 );
             idex->PCSrc = true;  //Branch taken
         }
         else{

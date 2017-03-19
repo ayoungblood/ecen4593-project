@@ -313,6 +313,31 @@ static char * test_fetch_jal() {
     return 0;
 }
 
+static char * test_fetch_stall() {
+    ifid = (control_t *)malloc(sizeof(control_t));
+    i = 0x02518820; // add, $s1, $s2, $s1
+    p = 0x4;
+    mem_write_w(p, &i);
+    i = 0x69696969; // lol
+    mem_write_w(p + 4, &i);
+
+    //Want two instructions in memory to show that we dont fetch the lol instruction on stall
+
+    fetch(ifid, &p, &stall);    //This fetches the add
+    stall = true;               //Say the add depends on a previous load
+    fetch(ifid, &(ifid->pcNext), &stall);   //Should not advance pc nor get lol
+    //Should still see the add in ifid
+    mu_assert(_FL "instruction add $s1, $s2, $s1 bad opCode", ifid->opCode == OPC_RTYPE);
+    mu_assert(_FL "instruction add $s1, $s2, $s1 bad funct", ifid->funct == FNC_ADD);
+    mu_assert(_FL "instruction add $s1, $s2, $s1 bad Rd", ifid->regRd == REG_S1);
+    mu_assert(_FL "instruction add $s1, $s2, $s1 bad Rs", ifid->regRs == REG_S2);
+    mu_assert(_FL "instruction add $s1, $s2, $s1 bad Rt", ifid->regRt == REG_S1);
+    //PC should still point to 0x8 which will get the lol after the stall is clear
+    mu_assert(_FL "instruction add $s1, $s2, $s1 bad pcNext", ifid->pcNext == 0x8);
+    free(ifid);
+    return 0;
+}
+
 static char * all_tests() {
     uint64_t size = 0x140;
     uint64_t offs = 0x00;
@@ -339,6 +364,7 @@ static char * all_tests() {
     mu_run_test(test_fetch_xori);
     mu_run_test(test_fetch_j);
     mu_run_test(test_fetch_jal);
+    mu_run_test(test_fetch_stall);
 
 
     return 0;

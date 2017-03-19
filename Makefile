@@ -50,7 +50,7 @@ test-registers: $(OBJECTS)
 		test/registers-test
 
 test-decode: $(OBJECTS)
-		$(CC) src/decode.o src/registers.o -Wall $(LIBS) -o test/decode-test test/decode-test.c
+		$(CC) src/decode.o src/registers.o src/util.o -Wall $(LIBS) -o test/decode-test test/decode-test.c
 		test/decode-test
 
 test-main-memory: $(OBJECTS)
