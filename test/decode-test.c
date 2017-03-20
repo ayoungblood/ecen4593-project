@@ -203,140 +203,120 @@ static char * test_decode_lw() {
     return 0;
 }
 
-/*
+
 
 static char * test_decode_sw() {
     i = 0xad1f0000;                  //sw $ra, 0($t0)
-    printf("Instruction: sw $ra, 0($t0)\n");
     p = 0x4;
-    c = (control_t *)malloc(sizeof(control_t));
-    decode(i, p, c);
-    mu_assert(_FL "bad assert opCode", c->opCode == OPC_SW);
-    mu_assert(_FL "bad assert regRs", c->regRs == REG_T0);
-    mu_assert(_FL "bad assert regRt", c->regRt == REG_RA);
-    mu_assert(_FL "bad assert immed", c->immed == 0x0000);
-    //mu_assert(_FL "bad assert regDst", c->regDst == 0);
-    mu_assert(_FL "bad assert regWrite", c->regWrite == 0);
-    mu_assert(_FL "bad assert ALUSrc", c->ALUSrc == 1);
-    mu_assert(_FL "bad assert PCSrc", c->PCSrc == 0);
-    mu_assert(_FL "bad assert memRead", c->memRead == 0);
-    mu_assert(_FL "bad assert memWrite", c->memWrite == 1);
-    // mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
-    mu_assert(_FL "bad assert ALUop", c->ALUop == OPR_SW);
-    mu_assert(_FL "bad assert jump", c->jump == 0);
-    mu_assert(_FL "bad assert pcNext", c->pcNext == 0x8);
-    free(c);
+    ifid = (control_t *)malloc(sizeof(control_t));
+    idex = (control_t *)malloc(sizeof(control_t));
+    ifid->opCode = OPC_SW;
+    ifid->regRs = REG_T0;
+    ifid->regRt = REG_RA;
+    ifid->pcNext = p+4;
+    decode(ifid, idex);
+
+    mu_assert(_FL "Instruction: sw $ra, 0($t0) regWrite", idex->regWrite == 0);
+    mu_assert(_FL "Instruction: sw $ra, 0($t0) ALUSrc", idex->ALUSrc == 1);
+    mu_assert(_FL "Instruction: sw $ra, 0($t0) PCSrc", idex->PCSrc == 0);
+    mu_assert(_FL "Instruction: sw $ra, 0($t0) memRead", idex->memRead == 0);
+    mu_assert(_FL "Instruction: sw $ra, 0($t0) memWrite", idex->memWrite == 1);
+    mu_assert(_FL "Instruction: sw $ra, 0($t0) ALUop", idex->ALUop == OPR_ADDU);
+    mu_assert(_FL "Instruction: sw $ra, 0($t0) jump", idex->jump == 0);
+    mu_assert(_FL "Instruction: sw $ra, 0($t0) pcNext", idex->pcNext == 0x8);
+
+    free(ifid);
+    free(idex);
 
     return 0;
 }
+
 
 
 static char * test_decode_slti() {
     i = 0x2a28f000;                  //slti $t0, $s1, 0xf000
-    printf("Instruction: slti $t0, $s1, 0xf000\n");
     p = 0x4;
-    c = (control_t *)malloc(sizeof(control_t));
-    decode(i, p, c);
-    mu_assert(_FL "bad assert opCode", c->opCode == OPC_SLTI);
-    mu_assert(_FL "bad assert regRs", c->regRs == REG_S1);
-    mu_assert(_FL "bad assert regRt", c->regRt == REG_T0);
-    mu_assert(_FL "bad assert immed", c->immed == 0xfffff000);
-    mu_assert(_FL "bad assert regDst", c->regDst == 0);
-    mu_assert(_FL "bad assert regWrite", c->regWrite == 1);
-    mu_assert(_FL "bad assert ALUSrc", c->ALUSrc == 1);
-    mu_assert(_FL "bad assert PCSrc", c->PCSrc == 0);
-    mu_assert(_FL "bad assert memRead", c->memRead == 0);
-    mu_assert(_FL "bad assert memWrite", c->memWrite == 0);
-    mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
-    mu_assert(_FL "bad assert ALUop", c->ALUop == OPR_SLT);
-    mu_assert(_FL "bad assert jump", c->jump == 0);
-    mu_assert(_FL "bad assert pcNext", c->pcNext == 0x8);
-    free(c);
+    ifid = (control_t *)malloc(sizeof(control_t));
+    idex = (control_t *)malloc(sizeof(control_t));
+    ifid->opCode = OPC_SLTI;
+    ifid->regRs = REG_S1;
+    ifid->regRt = REG_T0;
+    ifid->immed = 0xfffff000;
+    ifid->pcNext = p + 4;
+    decode(ifid, idex);
+    mu_assert(_FL "slti $t0, $s1, 0xf000 regDst", idex->regDst == 0);
+    mu_assert(_FL "slti $t0, $s1, 0xf000 regWrite", idex->regWrite == 1);
+    mu_assert(_FL "slti $t0, $s1, 0xf000 ALUSrc", idex->ALUSrc == 1);
+    mu_assert(_FL "slti $t0, $s1, 0xf000 PCSrc", idex->PCSrc == 0);
+    mu_assert(_FL "slti $t0, $s1, 0xf000 memRead", idex->memRead == 0);
+    mu_assert(_FL "slti $t0, $s1, 0xf000 memWrite", idex->memWrite == 0);
+    mu_assert(_FL "slti $t0, $s1, 0xf000 memToReg", idex->memToReg == 0);
+    mu_assert(_FL "slti $t0, $s1, 0xf000 ALUop", idex->ALUop == OPR_SLT);
+    mu_assert(_FL "slti $t0, $s1, 0xf000 jump", idex->jump == 0);
+    mu_assert(_FL "slti $t0, $s1, 0xf000 pcNext", idex->pcNext == 0x8);
+    free(ifid);
+    free(idex);
 
     return 0;
 }
+
+
 static char * test_decode_sltiu() {
     i = 0x2e28f000;                  //sltiu $t0, $s1, 0xf000
-    printf("Instruction: sltiu $t0, $s1, 0xf000\n");
     p = 0x4;
-    c = (control_t *)malloc(sizeof(control_t));
-    decode(i, p, c);
-    mu_assert(_FL "bad assert opCode", c->opCode == OPC_SLTIU);
-    mu_assert(_FL "bad assert regRs", c->regRs == REG_S1);
-    mu_assert(_FL "bad assert regRt", c->regRt == REG_T0);
-    mu_assert(_FL "bad assert immed", c->immed == 0xf000);
-    mu_assert(_FL "bad assert regDst", c->regDst == 0);
-    mu_assert(_FL "bad assert regWrite", c->regWrite == 1);
-    mu_assert(_FL "bad assert ALUSrc", c->ALUSrc == 1);
-    mu_assert(_FL "bad assert PCSrc", c->PCSrc == 0);
-    mu_assert(_FL "bad assert memRead", c->memRead == 0);
-    mu_assert(_FL "bad assert memWrite", c->memWrite == 0);
-    mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
-    mu_assert(_FL "bad assert ALUop", c->ALUop == OPR_SLTU);
-    mu_assert(_FL "bad assert jump", c->jump == 0);
-    mu_assert(_FL "bad assert pcNext", c->pcNext == 0x8);
-    free(c);
+    ifid = (control_t *)malloc(sizeof(control_t));
+    idex = (control_t *)malloc(sizeof(control_t));
+    ifid->opCode = OPC_SLTIU;
+    ifid->regRs = REG_S1;
+    ifid->regRt = REG_T0;
+    ifid->immed = 0x0000f000;
+    ifid->pcNext = p + 4;
+    decode(ifid, idex);
+    mu_assert(_FL "sltiu $t0, $s1, 0xf000 regDst", idex->regDst == 0);
+    mu_assert(_FL "sltiu $t0, $s1, 0xf000 regWrite", idex->regWrite == 1);
+    mu_assert(_FL "sltiu $t0, $s1, 0xf000 ALUSrc", idex->ALUSrc == 1);
+    mu_assert(_FL "sltiu $t0, $s1, 0xf000 PCSrc", idex->PCSrc == 0);
+    mu_assert(_FL "sltiu $t0, $s1, 0xf000 memRead", idex->memRead == 0);
+    mu_assert(_FL "sltiu $t0, $s1, 0xf000 memWrite", idex->memWrite == 0);
+    mu_assert(_FL "sltiu $t0, $s1, 0xf000 memToReg", idex->memToReg == 0);
+    mu_assert(_FL "sltiu $t0, $s1, 0xf000 ALUop", idex->ALUop == OPR_SLTU);
+    mu_assert(_FL "sltiu $t0, $s1, 0xf000 jump", idex->jump == 0);
+    mu_assert(_FL "sltiu $t0, $s1, 0xf000 pcNext", idex->pcNext == 0x8);
+    free(ifid);
+    free(idex);
 
     return 0;
 }
+
+
 
 static char * test_decode_j() {
     i = 0x08000804;                  //j 0x2011
-    printf("Instruction: j 0x2011\n");
     p = 0x600A1100;
-    c = (control_t *)malloc(sizeof(control_t));
-    decode(i, p, c);
-    mu_assert(_FL "bad assert opCode", c->opCode == OPC_J);
-    mu_assert(_FL "bad assert regRs", c->regRs == 0);
-    mu_assert(_FL "bad assert regRt", c->regRt == 0);
-    mu_assert(_FL "bad assert regRd", c->regRd == 0);
-    //mu_assert(_FL "bad assert immed", c->immed == 0x0000);
-    mu_assert(_FL "bad assert regDst", c->regDst == 1);
-    mu_assert(_FL "bad assert regWrite", c->regWrite == 1);
-    mu_assert(_FL "bad assert ALUSrc", c->ALUSrc == 0);
-    mu_assert(_FL "bad assert PCSrc", c->PCSrc == 0);
-    mu_assert(_FL "bad assert memRead", c->memRead == 0);
-    mu_assert(_FL "bad assert memWrite", c->memWrite == 0);
-    mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
-    mu_assert(_FL "bad assert ALUop", c->ALUop == OPR_ADDU);
-    mu_assert(_FL "bad assert jump", c->jump == 1);
-    mu_assert(_FL "bad assert address", c->address == 0x00002010);
-    mu_assert(_FL "bad assert pcNext", c->pcNext == 0x60002010);
-    free(c);
+    ifid = (control_t *)malloc(sizeof(control_t));
+    idex = (control_t *)malloc(sizeof(control_t));
+    ifid->opCode = OPC_J;
+    ifid->address = 0x00002010;
+    ifid->pcNext = p + 4;
+    decode(ifid, idex);
+    mu_assert(_FL "j 0x2011 regDst", idex->regDst == 1);
+    mu_assert(_FL "j 0x2011 regWrite", idex->regWrite == 1);
+    mu_assert(_FL "j 0x2011 ALUSrc", idex->ALUSrc == 0);
+    mu_assert(_FL "j 0x2011 PCSrc", idex->PCSrc == 0);
+    mu_assert(_FL "j 0x2011 memRead", idex->memRead == 0);
+    mu_assert(_FL "j 0x2011 memWrite", idex->memWrite == 0);
+    mu_assert(_FL "j 0x2011 memToReg", idex->memToReg == 0);
+    mu_assert(_FL "j 0x2011 ALUop", idex->ALUop == OPR_ADDU);
+    mu_assert(_FL "j 0x2011 jump", idex->jump == 1);
+    mu_assert(_FL "j 0x2011 address", idex->address == 0x00008040);
+    mu_assert(_FL "j 0x2011 pcNext", idex->pcNext == 0x60008040);
+    free(ifid);
+    free(idex);
 
 
     return 0;
 }
 
-static char * test_decode_jal() {
-    i = 0x0c000804;                  //jal 0x2011
-    printf("Instruction: jal 0x2011\n");
-    p = 0x600A1100;
-    c = (control_t *)malloc(sizeof(control_t));
-    decode(i, p, c);
-    mu_assert(_FL "bad assert opCode", c->opCode == OPC_JAL);
-    mu_assert(_FL "bad assert regRs", c->regRs == REG_ZERO);
-    mu_assert(_FL "bad assert regRt", c->regRt == REG_ZERO);
-    mu_assert(_FL "bad assert regRd", c->regRd == REG_RA);
-    //mu_assert(_FL "bad assert immed", c->immed == 0x0000);
-    mu_assert(_FL "bad assert regDst", c->regDst == 1);
-    mu_assert(_FL "bad assert regWrite", c->regWrite == 1);
-    mu_assert(_FL "bad assert ALUSrc", c->ALUSrc == 0);
-    mu_assert(_FL "bad assert PCSrc", c->PCSrc == 0);
-    mu_assert(_FL "bad assert memRead", c->memRead == 0);
-    mu_assert(_FL "bad assert memWrite", c->memWrite == 0);
-    mu_assert(_FL "bad assert memToReg", c->memToReg == 0);
-    mu_assert(_FL "bad assert ALUop", c->ALUop == OPR_ADDU);
-    mu_assert(_FL "bad assert jump", c->jump == 1);
-    mu_assert(_FL "bad assert address", c->address == 0x00002010);
-    mu_assert(_FL "bad assert pcNext", c->pcNext == 0x60002010);
-    free(c);
-
-
-    return 0;
-}
-
-*/
 static char * all_tests() {
 
     reg_init();
@@ -352,6 +332,10 @@ static char * all_tests() {
     mu_run_test(test_decode_beq);
     mu_run_test(test_decode_bne);
     mu_run_test(test_decode_lw);
+    mu_run_test(test_decode_sw);
+    mu_run_test(test_decode_slti);
+    mu_run_test(test_decode_sltiu);
+    mu_run_test(test_decode_j);
 
 
     return 0;
