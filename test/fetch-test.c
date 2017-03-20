@@ -271,7 +271,7 @@ static char * test_fetch_sltiu() {
 }
 
 static char * test_fetch_xori() {
-    i = 0x239d25555; // xori $s2, $t6, 0x5555
+    i = 0x39d25555; // xori $s2, $t6, 0x5555
     p = 0x4;
     ifid = (control_t *)malloc(sizeof(control_t));
     mem_write_w(p, &i);

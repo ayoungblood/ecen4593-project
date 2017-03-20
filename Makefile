@@ -31,6 +31,7 @@ all: $(TARGET)
 
 test: $(OBJECTS)
 		$(CC) src/alu.o src/util.o -Wall $(LIBS) -o test/alu-test test/alu-test.c
+		$(CC) src/fetch.o src/util.o src/registers.o src/main_memory.o -Wall $(LIBS) -o test/fetch-test test/fetch-test.c
 		$(CC) src/registers.o -Wall $(LIBS) -o test/registers-test test/registers-test.c
 		$(CC) src/decode.o src/registers.o src/util.o -Wall $(LIBS) -o test/decode-test test/decode-test.c
 		$(CC) src/main_memory.o -Wall $(LIBS) -o test/main-memory-test test/main-memory-test.c
@@ -65,6 +66,10 @@ test-fetch: $(OBJECTS)
 		$(CC) src/fetch.o src/registers.o src/main_memory.o -Wall $(LIBS) -o test/fetch-test test/fetch-test.c
 		test/fetch-test
 
+test-hazard: $(OBJECTS)
+		$(CC) src/hazard.o src/util.o src/registers.o -Wall $(LIBS) -o test/hazard-test test/hazard-test.c
+		test/hazard-test
+
 test-main: all
 		./sim asm/disjoint.s
 		./sim -v asm/disjoint.s
@@ -81,6 +86,7 @@ clean:
 		-rm -f test/main-memory-test
 		-rm -f test/memory-test
 		-rm -f test/fetch-test
+		-rm -f test/hazard-test
 		-rm -f sandbox/test-decode
 		-rm -f sandbox/main-sandbox
 		-rm -rf sim.dSYM

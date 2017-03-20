@@ -181,9 +181,9 @@ static char * test_decode_lw() {
     ifid = (control_t *)malloc(sizeof(control_t));
     idex = (control_t *)malloc(sizeof(control_t));
     ifid->opCode = OPC_LW;
-    ifid->regRs == REG_T0;
-    ifid->regRt == REG_S2;
-    ifid->immed == 0x0004;
+    ifid->regRs = REG_T0;
+    ifid->regRt = REG_S2;
+    ifid->immed = 0x0004;
     ifid->pcNext = p + 4;
     decode(ifid, idex);
 

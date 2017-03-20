@@ -39,7 +39,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
 
 
     if(memwb->regWrite && memwb->regRd != 0 && memwb->regRd == idex->regRs &&
-        !(exmem->regWrite && exmem->regRd != 0 && exmem->regRd != idex->regRs)){
+        !(exmem->regWrite && exmem->regRd != 0 && exmem->regRd == idex->regRs)){
             if(memwb->memToReg){
                 //Comes from data memory result
                 idex->regRsValue = memwb->memData;
@@ -51,7 +51,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
     }
 
     if(memwb->regWrite && memwb->regRd != 0 && memwb->regRd == idex->regRt &&
-        !(exmem->regWrite && exmem->regRd != 0 && exmem->regRd != idex->regRt)){
+        !(exmem->regWrite && exmem->regRd != 0 && exmem->regRd == idex->regRt)){
             if(memwb->memToReg){
                 //Forward comes from data memory
                 idex->regRtValue = memwb->memData;
