@@ -46,14 +46,7 @@ void execute_pipeline(){
 }
 
 static char * test_basic_add(){
-    ifid = (control_t*)malloc(sizeof(control_t));
-    idex = (control_t*)malloc(sizeof(control_t));
-    exmem = (control_t*)malloc(sizeof(control_t));
-    memwb = (control_t*)malloc(sizeof(control_t));
-    ifid->regName = "ifid";
-    idex->regName = "idex";
-    exmem->regName = "exme";
-    memwb->regName = "mewb";
+    pipeline_init(&ifid, &idex, &exmem, &memwb, &pc, & stall, 0);
     //Load instructions
     pc = 0x00000000;
     word_t data = 0x20110064;       //addi $s1, $zero, 100
@@ -79,22 +72,12 @@ static char * test_basic_add(){
     reg_read(REG_S3, &data);
     mu_assert(_FL "$S3 does not equal 149!", data == 149);
 
-    free(ifid);
-    free(idex);
-    free(exmem);
-    free(memwb);
+    pipeline_destroy(&ifid, &idex, &exmem, &memwb);
     return 0;
 }
 
 static char * test_bne(){
-    ifid = (control_t*)malloc(sizeof(control_t));
-    idex = (control_t*)malloc(sizeof(control_t));
-    exmem = (control_t*)malloc(sizeof(control_t));
-    memwb = (control_t*)malloc(sizeof(control_t));
-    ifid->regName = "ifid";
-    idex->regName = "idex";
-    exmem->regName = "exme";
-    memwb->regName = "mewb";
+    pipeline_init(&ifid, &idex, &exmem, &memwb, &pc, & stall, 0);
     //Load instructions
     pc = 0x00000000;
     word_t data = 0x20110064;       //addi $s1, $zero, 100
@@ -122,16 +105,13 @@ static char * test_bne(){
     reg_read(REG_S1, &data);
     mu_assert(_FL "$S1 does not equal 100!", data == 100);
     reg_read(REG_S2, &data);
-    mu_assert(_FL "$S2 does not equal 49!", data == 49);
+    mu_assert(_FL "$S2 does not equal 64!", data == 64);
     reg_read(REG_T4, &data);
-    mu_assert(_FL "$T4 does not equal 800!", data == 800);
+    mu_assert(_FL "$T4 does not equal 12!", data == 12);
     reg_read(REG_T0, &data);
     mu_assert(_FL "Incorrect instruction executed: $T0 = 36", data != 36);
 
-    free(ifid);
-    free(idex);
-    free(exmem);
-    free(memwb);
+    pipeline_destroy(&ifid, &idex, &exmem, &memwb);
     return 0;
 }
 
