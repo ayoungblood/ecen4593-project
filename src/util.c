@@ -84,7 +84,7 @@ void flush(control_t* reg){
     reg->memData        = 0;
 }
 
-void pipeline_init(control_t** ifid, control_t** idex, control_t** exmem, control_t** memwb, pc_t* pc, bool* stall) {
+void pipeline_init(control_t** ifid, control_t** idex, control_t** exmem, control_t** memwb, pc_t* pc, bool* stall, pc_t pc_start) {
     // Instantiate pipeline registers
     *ifid  = (control_t*)malloc(sizeof(control_t));
     *idex  = (control_t*)malloc(sizeof(control_t));
@@ -113,7 +113,7 @@ void pipeline_init(control_t** ifid, control_t** idex, control_t** exmem, contro
     // Clear stall flag
     *stall = false;
     // Initialize program counter from first memory address
-    *pc = (pc_t)mem_start();
+    *pc = pc_start;
 }
 
 void pipeline_destroy(control_t** ifid, control_t** idex, control_t** exmem, control_t** memwb) {
@@ -127,4 +127,9 @@ void pipeline_destroy(control_t** ifid, control_t** idex, control_t** exmem, con
     free(*idex);
     free(*exmem);
     free(*memwb);
+    // Clear pointers to fail fast if re-used
+    *ifid  = NULL;
+    *idex  = NULL;
+    *exmem = NULL;
+    *memwb = NULL;
 }

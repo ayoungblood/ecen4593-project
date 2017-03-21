@@ -36,14 +36,16 @@ test: $(OBJECTS)
 		$(CC) src/decode.o src/registers.o src/util.o -Wall $(LIBS) -o test/decode-test test/decode-test.c
 		$(CC) src/main_memory.o -Wall $(LIBS) -o test/main-memory-test test/main-memory-test.c
 		$(CC) src/memory.o src/main_memory.o src/util.o -Wall $(LIBS) -o test/memory-test test/memory-test.c
+		$(CC) src/fetch.o src/registers.o src/main_memory.o -Wall $(LIBS) -o test/fetch-test test/fetch-test.c
 		test/alu-test
 		test/registers-test
 		test/decode-test
 		test/main-memory-test
 		test/memory-test
+		test/fetch-test
 
 test-alu: $(OBJECTS)
-		$(CC) src/alu.o -Wall $(LIBS) -o test/alu-test test/alu-test.c
+		$(CC) src/alu.o src/util.o -Wall $(LIBS) -o test/alu-test test/alu-test.c
 		test/alu-test
 
 test-registers: $(OBJECTS)
@@ -75,9 +77,9 @@ test-pipeline: $(OBJECTS)
 		test/pipeline-test
 
 test-main: all
-		./sim asm/disjoint.s
-		./sim -v asm/disjoint.s
-		./sim -d -v asm/disjoint.s
+		#./sim asm/disjoint.s
+		#./sim -v asm/disjoint.s
+		./sim -d -v asm/handcoded.s
 
 clean:
 		-rm -f *.bc *.i *.s

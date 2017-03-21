@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
     // Initialize the register file
     reg_init();
     // Initialize the pipeline registers
-    pipeline_init(&ifid, &idex, &exmem, &memwb, &pc, &stall);
+    pipeline_init(&ifid, &idex, &exmem, &memwb, &pc, &stall, (pc_t)mem_start());
     // Run the simulation
     int cycles = 0;
     while (1) {
