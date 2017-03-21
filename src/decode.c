@@ -151,7 +151,6 @@ int decode( control_t * ifid , control_t * idex) {
     reg_read((int)(idex->regRt), &(idex->regRtValue));
 
 
-
     //Jump address calculation
     idex->address = ( idex->address << 2 );         //Word aligned
     //Don't think i need to bitmask the address since in theory it shouldn't be
@@ -181,6 +180,7 @@ int decode( control_t * ifid , control_t * idex) {
 
 
     if(flags & MASK_DEBUG){
+        printf(ANSI_C_CYAN "DECODE: \n" ANSI_C_RESET);
         print_pipeline_register(idex);
     }
 

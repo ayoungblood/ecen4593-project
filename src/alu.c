@@ -31,13 +31,19 @@ int execute(control_t *idex, control_t *exmem){
 
     alu(idex->ALUop, ALUArg1, ALUArg2, idex->shamt, &ALUresult, &zero);
 
+    if(flags & MASK_DEBUG){
+        printf(ANSI_C_CYAN "EXECUTE: \n" ANSI_C_RESET);
+        printf("\tInstruction: 0x%08x\n", idex->instr);
+        printf("\tALUOp: 0x%08x\n", idex->ALUop);
+        printf("\tArg1: 0x%08x, Arg2: 0x%08x\n", ALUArg1, ALUArg2);
+        printf("\tshamt: %d (10)\n", idex->shamt);
+        printf("\tALUresult: 0x%08x\n", ALUresult);
+    }
+
     //Copy the results into the next pipeline register
     copy_pipeline_register(idex, exmem);
     exmem->ALUresult = ALUresult;
 
-    if(flags & MASK_DEBUG){
-        print_pipeline_register(exmem);
-    }
 
     return 0;
 }

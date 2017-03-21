@@ -7,6 +7,10 @@
 extern int flags;
 
 void memory(control_t * exmem, control_t * memwb) {
+    if(flags & MASK_DEBUG){
+        printf(ANSI_C_CYAN "MEMORY:\n" ANSI_C_RESET);
+        printf("\tInstruction: 0x%08x\n", exmem->instr);
+    }
     copy_pipeline_register(exmem, memwb);
     word_t temp;
     if (exmem->memRead) {
@@ -28,6 +32,9 @@ void memory(control_t * exmem, control_t * memwb) {
                 printf(ANSI_C_RED "Illegal memory operation, opcode 0x%02x, (memRead asserted). Halting.\n" ANSI_C_RESET, exmem->opCode);
                 assert(0);
         }
+        if(flags & MASK_DEBUG){
+            printf("\tLoaded 0x%08x from address 0x%08x\n", temp, exmem->ALUresult);
+        }
         memwb->memData = temp;
     }
     if (exmem->memWrite) {
@@ -47,6 +54,9 @@ void memory(control_t * exmem, control_t * memwb) {
             default: // We should not get here. Complain and crash.
                 printf(ANSI_C_RED "Illegal memory operation, opcode 0x%02x, (memWrite asserted). Halting.\n" ANSI_C_RESET, exmem->opCode);
                 assert(0);
+        }
+        if(flags & MASK_DEBUG){
+            printf("\tStored 0x%08x to address 0x%08x\n", temp, exmem->ALUresult);
         }
     }
 }

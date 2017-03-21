@@ -8,12 +8,20 @@ extern int flags;
 
 void fetch(control_t * ifid, pc_t * pc, bool *stall){
     if(*stall){
+        if(flags & MASK_DEBUG){
+            printf(ANSI_C_CYAN "FETCH:\n" ANSI_C_RESET);
+            printf("\tStalling Pipeline, PC = 0x%08x\n", *pc);
+        }
         //Don't incrememnt the PC, leave the same instruction in ifid
         return;
     }
     else{
         //Read the instruction at the current program counter
         mem_read_w(*pc, &(ifid->instr));
+        if(flags & MASK_DEBUG){
+            printf(ANSI_C_CYAN "FETCH:\n" ANSI_C_RESET);
+            printf("\tretrieved instruction 0x%08x at 0x%08x\n", ifid->instr, *pc);
+        }
 
         //Break the instruction into the specific fields
         ifid->opCode = ( ifid->instr & OP_MASK ) >> OP_SHIFT;

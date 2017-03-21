@@ -30,7 +30,9 @@ void writeback(control_t *memwb){
     if(memwb->regWrite){
 
         if(flags & MASK_VERBOSE){
-            printf("WB: writing 0x%08x to register %d(10)", writeRegisterValue, writeRegister);
+            printf(ANSI_C_CYAN "WRITE: \n" ANSI_C_RESET);
+            printf("\tInstruction: 0x%08x\n", memwb->instr);
+            printf("\twriting 0x%08x to register %d(10)\n", writeRegisterValue, writeRegister);
         }
 
         reg_write(writeRegister, &writeRegisterValue);

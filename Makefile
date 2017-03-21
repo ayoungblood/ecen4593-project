@@ -70,6 +70,10 @@ test-hazard: $(OBJECTS)
 		$(CC) src/hazard.o src/util.o src/registers.o -Wall $(LIBS) -o test/hazard-test test/hazard-test.c
 		test/hazard-test
 
+test-pipeline: $(OBJECTS)
+		$(CC) src/alu.o src/decode.o src/main_memory.o src/memory.o src/fetch.o src/write.o src/registers.o src/util.o src/hazard.o -Wall $(LIBS) -o test/pipeline-test test/pipeline-test.c
+		test/pipeline-test
+
 test-main: all
 		./sim asm/disjoint.s
 		./sim -v asm/disjoint.s
@@ -87,6 +91,7 @@ clean:
 		-rm -f test/memory-test
 		-rm -f test/fetch-test
 		-rm -f test/hazard-test
+		-rm -f test/pipeline-test
 		-rm -f sandbox/test-decode
 		-rm -f sandbox/main-sandbox
 		-rm -rf sim.dSYM
