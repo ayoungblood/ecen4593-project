@@ -7,6 +7,8 @@ extern int flags;
 
 int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb, pc_t *pc, bool *stall){
 
+    bool forward = false;
+
     if(flags & MASK_DEBUG){
         printf(ANSI_C_CYAN "HAZARD:\n" ANSI_C_RESET);
     }
@@ -25,19 +27,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
         *stall = true;
         flush(ifid);
     }
-    //Determine if a branch was taken by looking at the result in
-    //the idex pipeline register. If it was taken, udpate the program counter
-    //to the new calculated value and flush IFID. Jumps are also treated the
-    //as branches, so IFID will be flushed for all jump instructions.
-    if(idex->jump || idex->PCSrc){
-        //Jump or branch occured, flush ifid
-        if(flags & MASK_VERBOSE){
-            printf("\tBranching or Jumping: inserting nop and overriding pc\n");
-        }
-        flush(ifid);
-        *pc = idex->pcNext;
-    }
-    //Fetch increments the PC by 4 always, so there is no else case
+
 
     //Our destination register could be Rd or Rt
     uint32_t exDest = 0;
@@ -74,6 +64,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
 
     if(memwb->regWrite && (memDest != 0) && (memDest == idex->regRs) &&
         !(exmem->regWrite && (exDest != 0) && (exDest == idex->regRs))){
+            forward = true;
             if(memwb->memToReg){
                 //Comes from data memory result
                 if(flags & MASK_VERBOSE){
@@ -92,6 +83,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
 
     if(memwb->regWrite && (memDest != 0) && (memDest == idex->regRt) &&
         !(exmem->regWrite && (exDest != 0) && (exDest == idex->regRt))){
+            forward = true;
             if(memwb->memToReg){
                 //Forward comes from data memory
                 if(flags & MASK_VERBOSE){
@@ -106,6 +98,41 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
                 }
                 idex->regRtValue = memwb->ALUresult;
             }
+    }
+
+    //Recheck the outcome of the branch if there was a forward that occured.
+    if(forward){
+        if(idex->opCode == OPC_BNE){
+            if(idex->regRsValue != idex->regRtValue){
+                //Branch taken!
+                idex->PCSrc = true;
+            }
+            else{
+                idex->PCSrc = false;
+            }
+        }
+        else if(idex->opCode == OPC_BEQ){
+            if(idex->regRsValue == idex->regRtValue){
+                //Branch taken!
+                idex->PCSrc = true;
+            }
+            else{
+                idex->PCSrc = false;
+            }
+        }
+    }
+
+    //Determine if a branch was taken by looking at the result in
+    //the idex pipeline register. If it was taken, udpate the program counter
+    //to the new calculated value and flush IFID. Jumps are also treated the
+    //as branches, so IFID will be flushed for all jump instructions.
+    if(idex->jump || idex->PCSrc){
+        //Jump or branch occured, flush ifid
+        if(flags & MASK_VERBOSE){
+            printf("\tBranching or Jumping: inserting nop and overriding pc\n");
+        }
+        flush(ifid);
+        *pc = idex->pcNext;
     }
 
     return 0;

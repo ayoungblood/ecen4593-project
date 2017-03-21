@@ -36,7 +36,7 @@ bool stall;
 int clock;
 
 void execute_pipeline(){
-    printf(ANSI_C_CYAN "\nPC: " ANSI_C_RESET "0x%08x\n", pc);
+    printf(ANSI_C_CYAN "\nPC:\n\t" ANSI_C_RESET "0x%08x\n", pc);
     writeback(memwb);
     memory(exmem, memwb);
     execute(idex, exmem);
@@ -46,6 +46,7 @@ void execute_pipeline(){
 }
 
 static char * test_basic_add(){
+    reg_init();
     pipeline_init(&ifid, &idex, &exmem, &memwb, &pc, & stall, 0);
     //Load instructions
     pc = 0x00000000;
@@ -65,6 +66,7 @@ static char * test_basic_add(){
         execute_pipeline();
     }
     //Check that the registers have expected values
+    reg_dump();
     reg_read(REG_S1, &data);
     mu_assert(_FL "$S1 does not equal 100!", data == 100);
     reg_read(REG_S2, &data);
@@ -77,6 +79,7 @@ static char * test_basic_add(){
 }
 
 static char * test_bne(){
+    reg_init();
     pipeline_init(&ifid, &idex, &exmem, &memwb, &pc, & stall, 0);
     //Load instructions
     pc = 0x00000000;
@@ -96,12 +99,14 @@ static char * test_bne(){
     mem_write_w(pc+24, &data);
     mem_write_w(pc+28, &data);
     mem_write_w(pc+32, &data);
+    mem_write_w(pc+36, &data);
     //Execute pipeline six times
     clock = 0;
-    for(clock = 0; clock <= 8; clock++){
+    for(clock = 0; clock <= 9; clock++){
         execute_pipeline();
     }
     //Check that the registers have expected values
+    reg_dump();
     reg_read(REG_S1, &data);
     mu_assert(_FL "$S1 does not equal 100!", data == 100);
     reg_read(REG_S2, &data);
@@ -110,6 +115,49 @@ static char * test_bne(){
     mu_assert(_FL "$T4 does not equal 12!", data == 12);
     reg_read(REG_T0, &data);
     mu_assert(_FL "Incorrect instruction executed: $T0 = 36", data != 36);
+
+
+    pipeline_destroy(&ifid, &idex, &exmem, &memwb);
+    return 0;
+}
+
+static char * test_beq(){
+    reg_init();
+    pipeline_init(&ifid, &idex, &exmem, &memwb, &pc, & stall, 0);
+    //Load instructions
+    pc = 0x00000000;
+    word_t data = 0x20110064;       //addi $s1, $zero, 100
+    mem_write_w(pc, &data);
+    data = 0x20120064;              //addi $s2, $zero, 100
+    mem_write_w(pc+4, &data);
+    data = 0x12320002;              //beq $s1, $s2, 0x14
+    mem_write_w(pc+8, &data);
+    data = 0xae510000;              //sw $s1, 0($s2)
+    mem_write_w(pc+12, &data);
+    data = 0x2008ffec;              //addi $t0, $zero, -20
+    mem_write_w(pc+16, &data);
+    data = 0x001160c2;              //srl $t4, $s1, 3
+    mem_write_w(pc+20, &data);
+    data = 0x00000000;              //nop
+    mem_write_w(pc+24, &data);
+    mem_write_w(pc+28, &data);
+    mem_write_w(pc+32, &data);
+    //Execute pipeline six times
+    clock = 0;
+    for(clock = 0; clock <= 9; clock++){
+        execute_pipeline();
+    }
+    //Check that the registers have expected values
+    reg_dump();
+    reg_read(REG_S1, &data);
+    mu_assert(_FL "$S1 does not equal 100!", data == 100);
+    reg_read(REG_S2, &data);
+    mu_assert(_FL "$S2 does not equal 64!", data == 100);
+    reg_read(REG_T4, &data);
+    mu_assert(_FL "$T4 does not equal 12!", data == 12);
+    reg_read(REG_T0, &data);
+    mu_assert(_FL "Incorrect instruction executed: $T0 = -20", data != -20);
+
 
     pipeline_destroy(&ifid, &idex, &exmem, &memwb);
     return 0;
@@ -126,6 +174,7 @@ static char * all_tests() {
     //Tests
     mu_run_test(test_basic_add);
     mu_run_test(test_bne);
+    mu_run_test(test_beq);
     return 0;
 }
 
