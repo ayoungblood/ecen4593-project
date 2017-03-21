@@ -60,6 +60,7 @@ int main(int argc, char *argv[]) {
     for (i = 0; i < MEMORY_SIZE; ++i) lines[i].type = 0; // initialize all invalid
     // Parse the ASM file, parse() initializes the memory
     parse(asm_fp, lines);
+    printf("memory start: 0x%08x; memory end: 0x%08x\n",mem_start(),mem_end());
     /*
     printf("Calculated offset: 0x%08x, printing 32 words from offset\n",mem_start());
     word_t temp;
@@ -87,8 +88,8 @@ int main(int argc, char *argv[]) {
         // Check for a magic halt number
         if (ifid->instr == 0x1000ffff) break;
     }
-    printf("Pipeline halted after %d cycles (address 0x%08x)\n",cycles,pc);
-
+    printf("\nPipeline halted after %d cycles (address 0x%08x)\n",cycles,pc);
+    reg_dump();
     // Close memory, and cleanup register files (we don't need to clean up registers)
     pipeline_destroy(&ifid, &idex, &exmem, &memwb);
     mem_close();
