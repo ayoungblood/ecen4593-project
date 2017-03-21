@@ -6,6 +6,14 @@
 
 int flags = 0; // Global flags register, shared across all files
 
+// CPU state
+control_t* ifid  = NULL; // IF/ID pipeline register
+control_t* idex  = NULL; // ID/EX pipeline register
+control_t* exmem = NULL; // EX/MEM pipeline register
+control_t* memwb = NULL; // MEM/WB pipeline register
+pc_t pc = 0;             // Program counter
+bool stall = false;      // Stall flag
+
 int main(int argc, char *argv[]) {
     int i;
     // Validate args, if they exist
@@ -50,9 +58,9 @@ int main(int argc, char *argv[]) {
     // Create an array to hold all the debug information
     asm_line_t lines[MEMORY_SIZE];
     for (i = 0; i < MEMORY_SIZE; ++i) lines[i].type = 0; // initialize all invalid
-
+    // Parse the ASM file, parse() initializes the memory
     parse(asm_fp, lines);
-
+    /*
     printf("Calculated offset: 0x%08x, printing 32 words from offset\n",mem_start());
     word_t temp;
     for (i = 0; i < 32; ++i) {
@@ -60,10 +68,29 @@ int main(int argc, char *argv[]) {
         printf("    0x%08x: %08x\n", mem_start() + (i<<2), temp);
         printf("(%1x) 0x%08x: %08x\t%s\n", lines[i].type, lines[i].addr, lines[i].inst, lines[i].comment);
     }
+    */
     // Initialize the register file
     reg_init();
-    // @TODO start simulation
+    // Initialize the pipeline registers
+    pipeline_init(&ifid, &idex, &exmem, &memwb, &pc, &stall);
+    // Run the simulation
+    int cycles = 0;
+    while (1) {
+        // Run a pipeline cycle
+        writeback(memwb);
+        memory(exmem, memwb);
+        execute(idex, exmem);
+        decode(ifid, idex);
+        fetch(ifid, &pc, &stall);
+        hazard(ifid, idex, exmem, memwb, &pc, &stall);
+        ++cycles;
+        // Check for a magic halt number
+        if (ifid->instr == 0x1000ffff) break;
+    }
+    printf("Pipeline halted after %d cycles (address 0x%08x)\n",cycles,pc);
 
+    // Close memory, and cleanup register files (we don't need to clean up registers)
+    pipeline_destroy(&ifid, &idex, &exmem, &memwb);
     mem_close();
     return 0; // exit without errors
 }
@@ -92,6 +119,6 @@ int parse(FILE *fp, asm_line_t *lines) {
         }
     }
     fclose(fp); // close the file
-    printf("Succesfully extracted %d instructions\n",count);
+    printf("Successfully extracted %d instructions\n",count);
     return count;
 }

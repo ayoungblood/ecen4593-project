@@ -82,3 +82,48 @@
      reg->ALUresult = 0;
      reg->pcNext = 0;
  }
+
+void pipeline_init(control_t** ifid, control_t** idex, control_t** exmem, control_t** memwb, pc_t* pc, bool* stall) {
+    // Instantiate pipeline registers
+    *ifid  = (control_t*)malloc(sizeof(control_t));
+    *idex  = (control_t*)malloc(sizeof(control_t));
+    *exmem = (control_t*)malloc(sizeof(control_t));
+    *memwb = (control_t*)malloc(sizeof(control_t));
+    if (*ifid == NULL || *idex == NULL || *exmem == NULL || *memwb == NULL) {
+        printf("Failed to allocate pipeline registers\n");
+    }
+    // Allocate and assign pipeline register names
+    (*ifid)->regName  = (char*)malloc(7*sizeof(char));
+    (*idex)->regName  = (char*)malloc(7*sizeof(char));
+    (*exmem)->regName = (char*)malloc(7*sizeof(char));
+    (*memwb)->regName = (char*)malloc(7*sizeof(char));
+    if ((*ifid)->regName == NULL || (*idex)->regName == NULL || (*exmem)->regName == NULL || (*memwb)->regName == NULL) {
+        printf("Failed to allocate register name strings\n");
+    }
+    (*ifid)->regName  = "IF/ID";
+    (*idex)->regName  = "ID/EX";
+    (*exmem)->regName = "EX/MEM";
+    (*memwb)->regName = "MEM/WB";
+    // Flush registers to initialize
+    flush(*ifid);
+    flush(*idex);
+    flush(*exmem);
+    flush(*memwb);
+    // Clear stall flag
+    *stall = false;
+    // Initialize program counter from first memory address
+    *pc = (pc_t)mem_start();
+}
+
+void pipeline_destroy(control_t** ifid, control_t** idex, control_t** exmem, control_t** memwb) {
+    // Clean up pipeline register name space (malloced in pipeline_init())
+    free((*ifid)->regName);
+    //free((*idex)->regName);
+    //free((*exmem)->regName);
+    //free((*memwb)->regName);
+    // Clean up pipeline registers
+    free(*ifid);
+    free(*idex);
+    free(*exmem);
+    free(*memwb);
+}

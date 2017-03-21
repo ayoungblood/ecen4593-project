@@ -11,6 +11,11 @@
 #include "types.h"
 #include "decode.h"
 #include "main_memory.h"
+#include "write.h"
+#include "memory.h"
+#include "alu.h"
+#include "fetch.h"
+#include "hazard.h"
 
 #define MEMORY_SIZE 4096
 
