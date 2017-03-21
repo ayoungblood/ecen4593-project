@@ -44,7 +44,6 @@ static char * test_decode_add() {
     mu_assert(_FL "instruction add, $s1, $s2, $s1 bad memToReg", idex->memToReg == 0);
     mu_assert(_FL "instruction add, $s1, $s2, $s1 bad ALUop", idex->ALUop == 0);
     mu_assert(_FL "instruction add, $s1, $s2, $s1 bad jump", idex->jump == 0);
-    mu_assert(_FL "instruction add, $s1, $s2, $s1 bad pcNext", idex->pcNext == 0x8);
     mu_assert(_FL "instruction add, $s1, $s2, $s1 bad regRsValue", idex->regRsValue == 18);
     mu_assert(_FL "instruction add, $s1, $s2, $s1 bad regRtValue", idex->regRtValue == 17);
 
@@ -75,7 +74,6 @@ static char * test_decode_addi() {
     mu_assert(_FL "instruction addi $t0, $s5, -100 bad memToReg", idex->memToReg == 0);
     mu_assert(_FL "instruction addi $t0, $s5, -100 bad ALUop", idex->ALUop == OPR_ADD);
     mu_assert(_FL "instruction addi $t0, $s5, -100 bad jump", idex->jump == 0);
-    mu_assert(_FL "instruction addi $t0, $s5, -100 bad pcNext", idex->pcNext == 0x8);
     mu_assert(_FL "instruction addi $t0, $s5, -100 bad regRsValue", idex->regRsValue == 21);
 
     pipeline_destroy(&ifid, &idex, &dummy_exmem, &dummy_memwb);
@@ -123,7 +121,7 @@ static char * test_decode_beq() {
     mu_assert(_FL "instruction beq $s0, $s1, 0x4000 (not equal) memToReg", idex->memToReg == 0);
     mu_assert(_FL "instruction beq $s0, $s1, 0x4000 (not equal) ALUop", idex->ALUop == OPR_SUB);
     mu_assert(_FL "instruction beq $s0, $s1, 0x4000 (not equal) jump", idex->jump == 0);
-    mu_assert(_FL "instruction beq $s0, $s1, 0x4000 (not equal) pcNext", idex->pcNext == 0x8);
+    mu_assert(_FL "instruction beq $s0, $s1, 0x4000 (not equal) pcNext", idex->pcNext == 0x4004);
 
     pipeline_destroy(&ifid, &idex, &dummy_exmem, &dummy_memwb);
     return 0;
@@ -170,7 +168,7 @@ static char * test_decode_bne() {
     mu_assert(_FL "Instruction: bne $a0, $v1, -32 (equal) memToReg", idex->memToReg == 0);
     mu_assert(_FL "Instruction: bne $a0, $v1, -32 (equal) ALUop", idex->ALUop == OPR_SUB);
     mu_assert(_FL "Instruction: bne $a0, $v1, -32 (equal) jump", idex->jump == 0);
-    mu_assert(_FL "Instruction: bne $a0, $v1, -32 (equal) pcNext", idex->pcNext == 0x40006024);
+    mu_assert(_FL "Instruction: bne $a0, $v1, -32 (equal) pcNext", idex->pcNext == 0x40006000);
 
     pipeline_destroy(&ifid, &idex, &dummy_exmem, &dummy_memwb);
     return 0;
@@ -201,7 +199,7 @@ static char * test_decode_lw() {
     mu_assert(_FL "Instruction: lw $s2, 4($t0) memToReg", idex->memToReg == 1);
     mu_assert(_FL "Instruction: lw $s2, 4($t0) ALUop", idex->ALUop == OPR_ADDU);
     mu_assert(_FL "Instruction: lw $s2, 4($t0) jump", idex->jump == 0);
-    mu_assert(_FL "Instruction: lw $s2, 4($t0) pcNext", idex->pcNext == 0x8);
+
 
     pipeline_destroy(&ifid, &idex, &dummy_exmem, &dummy_memwb);
     return 0;
@@ -228,7 +226,7 @@ static char * test_decode_sw() {
     mu_assert(_FL "Instruction: sw $ra, 0($t0) memWrite", idex->memWrite == 1);
     mu_assert(_FL "Instruction: sw $ra, 0($t0) ALUop", idex->ALUop == OPR_ADDU);
     mu_assert(_FL "Instruction: sw $ra, 0($t0) jump", idex->jump == 0);
-    mu_assert(_FL "Instruction: sw $ra, 0($t0) pcNext", idex->pcNext == 0x8);
+
 
     pipeline_destroy(&ifid, &idex, &dummy_exmem, &dummy_memwb);
     return 0;
@@ -258,7 +256,6 @@ static char * test_decode_slti() {
     mu_assert(_FL "slti $t0, $s1, 0xf000 memToReg", idex->memToReg == 0);
     mu_assert(_FL "slti $t0, $s1, 0xf000 ALUop", idex->ALUop == OPR_SLT);
     mu_assert(_FL "slti $t0, $s1, 0xf000 jump", idex->jump == 0);
-    mu_assert(_FL "slti $t0, $s1, 0xf000 pcNext", idex->pcNext == 0x8);
 
     pipeline_destroy(&ifid, &idex, &dummy_exmem, &dummy_memwb);
     return 0;
@@ -287,7 +284,6 @@ static char * test_decode_sltiu() {
     mu_assert(_FL "sltiu $t0, $s1, 0xf000 memToReg", idex->memToReg == 0);
     mu_assert(_FL "sltiu $t0, $s1, 0xf000 ALUop", idex->ALUop == OPR_SLTU);
     mu_assert(_FL "sltiu $t0, $s1, 0xf000 jump", idex->jump == 0);
-    mu_assert(_FL "sltiu $t0, $s1, 0xf000 pcNext", idex->pcNext == 0x8);
 
     pipeline_destroy(&ifid, &idex, &dummy_exmem, &dummy_memwb);
     return 0;
@@ -316,7 +312,6 @@ static char * test_decode_j() {
     mu_assert(_FL "j 0x2011 ALUop", idex->ALUop == OPR_ADDU);
     mu_assert(_FL "j 0x2011 jump", idex->jump == 1);
     mu_assert(_FL "j 0x2011 address", idex->address == 0x00008040);
-    mu_assert(_FL "j 0x2011 pcNext", idex->pcNext == 0x60008040);
 
     pipeline_destroy(&ifid, &idex, &dummy_exmem, &dummy_memwb);
     return 0;
