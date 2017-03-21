@@ -6,6 +6,8 @@ test/alu-test
 test/registers-test
 test/decode-test
 test/memory-test
+test/fetch-test
+test/main-memory-test
 
 # Object files
 *.o
