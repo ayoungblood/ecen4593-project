@@ -34,9 +34,7 @@ static char * test_decode_add() {
     ifid->regRd = REG_S1;
     ifid->funct = FNC_ADD;
     ifid->pcNext = p + 4;
-    printf("post init test_decode_add()\n");
     decode(ifid, idex);
-    printf("post decode test_decode_add()\n");
     mu_assert(_FL "instruction add, $s1, $s2, $s1 bad regDst", idex->regDst == 1);
     mu_assert(_FL "instruction add, $s1, $s2, $s1 badregWrite", idex->regWrite == 1);
     mu_assert(_FL "instruction add, $s1, $s2, $s1 bad ALUSrc", idex->ALUSrc == 0);
