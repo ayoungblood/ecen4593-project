@@ -204,9 +204,6 @@ static char * test_load_dependency(){
     clock = 0;
     for(clock = 0; clock <= 13; clock++){
         execute_pipeline();
-        printf("Post Cycle Print\n");
-        print_pipeline_register(exmem);
-        printf("\n\n\n");
     }
     //Check that the registers have expected values
     reg_dump();
