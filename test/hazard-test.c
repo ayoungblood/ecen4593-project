@@ -17,7 +17,6 @@ int tests_run = 0;
 int flags = MASK_DEBUG | MASK_VERBOSE | MASK_SANITY;
 
 pc_t pc;
-bool stall;
 control_t *ifid, *idex, *exmem, *memwb;
 
 
@@ -29,7 +28,6 @@ static char * test_forwarding_exmem(){
     exmem = (control_t *)malloc(sizeof(control_t));
     memwb = (control_t *)malloc(sizeof(control_t));
     pc = 4;
-    stall = false;
     /*Case where exmem has data that will be written to the reg file and another
     instruction in idex needs the result from the ALU*/
     exmem->regWrite = true;
@@ -39,7 +37,7 @@ static char * test_forwarding_exmem(){
     idex->regRs = REG_T0;
     idex->regRsValue = 0;       //Make sure this isn't 100 before test is run
 
-    hazard(ifid, idex, exmem, memwb, &pc, &stall);
+    hazard(ifid, idex, exmem, memwb, &pc);
 
     mu_assert(_FL "Incorrect exmem forwarding ALUresult Rd->Rs", idex->regRsValue == 0x64);
 
@@ -52,7 +50,7 @@ static char * test_forwarding_exmem(){
     idex->regRt = REG_S3;
     idex->regRtValue = 0;
 
-    hazard(ifid, idex, exmem, memwb, &pc, &stall);
+    hazard(ifid, idex, exmem, memwb, &pc);
 
     mu_assert(_FL "Incorrect exmem forwarding ALUresult Rd->Rt", idex->regRtValue == 0x69);
 
@@ -66,7 +64,7 @@ static char * test_forwarding_exmem(){
     idex->regRs = REG_S3;
     idex->regRsValue = 0;
 
-    hazard(ifid, idex, exmem, memwb, &pc, &stall);
+    hazard(ifid, idex, exmem, memwb, &pc,);
 
     mu_assert(_FL "Incorrect exmem forwarding ALUresult (both) Rd->Rt", idex->regRtValue == 0x23);
     mu_assert(_FL "Incorrect exmem forwarding ALUresult (both) Rd->Rs", idex->regRsValue == 0x23);
@@ -87,7 +85,6 @@ static char * test_forwarding_memwb(){
     exmem = (control_t *)malloc(sizeof(control_t));
     memwb = (control_t *)malloc(sizeof(control_t));
     pc = 4;
-    stall = false;
 
     //Case where memwb has result an instruction in idex needs from memory data
     //Rs forwarding
@@ -98,7 +95,7 @@ static char * test_forwarding_memwb(){
     exmem->regWrite = false;
     idex->regRs = REG_T5;
     idex->regRsValue = 0;
-    hazard(ifid, idex, exmem, memwb, &pc, &stall);
+    hazard(ifid, idex, exmem, memwb, &pc);
     mu_assert(_FL "Incorrect memwb forwarding memData Rd->Rs", idex->regRsValue == 0x16);
 
     //Rt Forwarding
@@ -109,7 +106,7 @@ static char * test_forwarding_memwb(){
     exmem->regWrite = false;
     idex->regRt = REG_A0;
     idex->regRtValue = 0;
-    hazard(ifid, idex, exmem, memwb, &pc, &stall);
+    hazard(ifid, idex, exmem, memwb, &pc);
     mu_assert(_FL "Incorrect memwb forwarding memData Rd->Rt", idex->regRtValue == 0x92);
 
     //Forwarding to both rs and rt
@@ -122,7 +119,7 @@ static char * test_forwarding_memwb(){
     idex->regRtValue = 0;
     idex->regRs = REG_V1;
     idex->regRsValue = 0;
-    hazard(ifid, idex, exmem, memwb, &pc, &stall);
+    hazard(ifid, idex, exmem, memwb, &pc;
     mu_assert(_FL "Incorrect memwb forwarding memData (both) Rd->Rt", idex->regRtValue == 0xff);
     mu_assert(_FL "Incorrect memwb forwarding memData (both) Rd->Rs", idex->regRsValue == 0xff);
 
@@ -136,7 +133,7 @@ static char * test_forwarding_memwb(){
     exmem->regWrite = false;
     idex->regRs = REG_T5;
     idex->regRsValue = 0;
-    hazard(ifid, idex, exmem, memwb, &pc, &stall);
+    hazard(ifid, idex, exmem, memwb, &pc);
     mu_assert(_FL "Incorrect memwb forwarding ALUresult Rd->Rs", idex->regRsValue == 0x56);
 
     //Rt Forwarding
@@ -147,7 +144,7 @@ static char * test_forwarding_memwb(){
     exmem->regWrite = false;
     idex->regRt = REG_A0;
     idex->regRtValue = 0;
-    hazard(ifid, idex, exmem, memwb, &pc, &stall);
+    hazard(ifid, idex, exmem, memwb, &pc);
     mu_assert(_FL "Incorrect memwb forwarding ALUresult Rd->Rt", idex->regRtValue == 0x22);
 
     //Forwarding to both rs and rt
@@ -160,7 +157,7 @@ static char * test_forwarding_memwb(){
     idex->regRtValue = 0;
     idex->regRs = REG_V1;
     idex->regRsValue = 0;
-    hazard(ifid, idex, exmem, memwb, &pc, &stall);
+    hazard(ifid, idex, exmem, memwb, &pc);
     mu_assert(_FL "Incorrect memwb forwarding ALUresult (both) Rd->Rt", idex->regRtValue == 0xa7);
     mu_assert(_FL "Incorrect memwb forwarding ALUresult (both) Rd->Rs", idex->regRsValue == 0xa7);
 
@@ -184,7 +181,6 @@ static char * test_forwarding_exmem_not_memwb(){
     exmem = (control_t *)malloc(sizeof(control_t));
     memwb = (control_t *)malloc(sizeof(control_t));
     pc = 4;
-    stall = false;
     //Forwarding from rd in exmem to rs in idex despite memwb rd
     memwb->regWrite = true;
     memwb->regRd = REG_S6;
@@ -195,7 +191,7 @@ static char * test_forwarding_exmem_not_memwb(){
     exmem->ALUresult = 0x56;
     idex->regRs = REG_S6;
     idex->regRsValue = 0;
-    hazard(ifid, idex, exmem, memwb, &pc, &stall);
+    hazard(ifid, idex, exmem, memwb, &pc);
     mu_assert(_FL "Incorrect exmem (not memwb) forwarding ALUresult Rd->Rs", idex->regRsValue == 0x56);
 
     //Forwarding from rd in exmem to rt in idex despite memwb rd
@@ -208,7 +204,7 @@ static char * test_forwarding_exmem_not_memwb(){
     exmem->ALUresult = 0x6f;
     idex->regRt = REG_S6;
     idex->regRtValue = 0;
-    hazard(ifid, idex, exmem, memwb, &pc, &stall);
+    hazard(ifid, idex, exmem, memwb, &pc);
     mu_assert(_FL "Incorrect exmem (not memwb) forwarding ALUresult Rd->Rt", idex->regRtValue == 0x6f);
 
     //Forwarding from rd in exmem to rt and rs in idex despite memwb rd
@@ -223,7 +219,7 @@ static char * test_forwarding_exmem_not_memwb(){
     idex->regRsValue = 0;
     idex->regRt = REG_S6;
     idex->regRtValue = 0;
-    hazard(ifid, idex, exmem, memwb, &pc, &stall);
+    hazard(ifid, idex, exmem, memwb, &pc;
     mu_assert(_FL "Incorrect exmem (not memwb) forwarding ALUresult Rd->Rs", idex->regRsValue == 0x1883);
     mu_assert(_FL "Incorrect exmem (not memwb) forwarding ALUresult Rd->Rt", idex->regRtValue == 0x1883);
 
@@ -239,7 +235,7 @@ static char * test_forwarding_exmem_not_memwb(){
     idex->regRsValue = 0;
     idex->regRt = REG_T3;
     idex->regRtValue = 0;
-    hazard(ifid, idex, exmem, memwb, &pc, &stall);
+    hazard(ifid, idex, exmem, memwb, &pc);
     mu_assert(_FL "Incorrect memwb forwarding ALUresult Rd->Rs", idex->regRsValue == 0x9);
     mu_assert(_FL "Incorrect exmem (not memwb) forwarding ALUresult Rd->Rt", idex->regRtValue == 0x13);
 
@@ -262,7 +258,6 @@ static char * test_branch_flush(){
     exmem = (control_t *)malloc(sizeof(control_t));
     memwb = (control_t *)malloc(sizeof(control_t));
     pc = 4;
-    stall = false;
     //Data that will override the pc and insert a nop
     idex->PCSrc = true;
     idex->pcNext = 0x02345678;
@@ -273,7 +268,7 @@ static char * test_branch_flush(){
     ifid->regRt = REG_S2;
     ifid->immed = 0x0004;
     ifid->pcNext = pc + 4;
-    hazard(ifid, idex, exmem, memwb, &pc, &stall);
+    hazard(ifid, idex, exmem, memwb, &pc);
     mu_assert(_FL "no nop in ifid! instr", ifid->instr == 0);
     mu_assert(_FL "no nop in ifid! opCode", ifid->opCode == 0);
     mu_assert(_FL "no nop in ifid! regRs", ifid->regRs == 0);
@@ -281,7 +276,6 @@ static char * test_branch_flush(){
     mu_assert(_FL "no nop in ifid! immed", ifid->immed == 0);
     mu_assert(_FL "no nop in ifid! pcNext", ifid->pcNext == 0);
     mu_assert(_FL "incorrect program counter", pc == 0x02345678);
-    mu_assert(_FL "incorrect stall", stall == false);
 
     free(ifid);
     free(idex);
@@ -297,21 +291,19 @@ static char * test_load_data_dependency(){
     exmem = (control_t *)malloc(sizeof(control_t));
     memwb = (control_t *)malloc(sizeof(control_t));
     pc = 4;
-    stall = false;
     //Load instruction detected in idex
     idex->memRead = true;
     idex->regRt = REG_S2;
     //Next instruction in ifid that depends on value from Load
     ifid->opCode = OPC_ADDI;
     ifid->regRs = REG_S2;
-    hazard(ifid, idex, exmem, memwb, &pc, &stall);
+    hazard(ifid, idex, exmem, memwb, &pc);
     mu_assert(_FL "no nop in ifid! instr", ifid->instr == 0);
     mu_assert(_FL "no nop in ifid! opCode", ifid->opCode == 0);
     mu_assert(_FL "no nop in ifid! regRs", ifid->regRs == 0);
     mu_assert(_FL "no nop in ifid! regRt", ifid->regRt == 0);
     mu_assert(_FL "no nop in ifid! immed", ifid->immed == 0);
     mu_assert(_FL "no nop in ifid! pcNext", ifid->pcNext == 0);
-    mu_assert(_FL "incorrect stall", stall == true);
 
 
     free(ifid);

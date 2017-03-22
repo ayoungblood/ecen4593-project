@@ -12,7 +12,6 @@ control_t* idex  = NULL; // ID/EX pipeline register
 control_t* exmem = NULL; // EX/MEM pipeline register
 control_t* memwb = NULL; // MEM/WB pipeline register
 pc_t pc = 0;             // Program counter
-bool stall = false;      // Stall flag
 
 int main(int argc, char *argv[]) {
     int i;
@@ -73,7 +72,7 @@ int main(int argc, char *argv[]) {
     // Initialize the register file
     reg_init();
     // Initialize the pipeline registers
-    pipeline_init(&ifid, &idex, &exmem, &memwb, &pc, &stall, (pc_t)mem_start());
+    pipeline_init(&ifid, &idex, &exmem, &memwb, &pc,  (pc_t)mem_start());
     // Run the simulation
     int cycles = 0;
     while (1) {
@@ -82,8 +81,8 @@ int main(int argc, char *argv[]) {
         memory(exmem, memwb);
         execute(idex, exmem);
         decode(ifid, idex);
-        fetch(ifid, &pc, &stall);
-        hazard(ifid, idex, exmem, memwb, &pc, &stall);
+        fetch(ifid, &pc);
+        hazard(ifid, idex, exmem, memwb, &pc);
         ++cycles;
         // Check for a magic halt number
         if (ifid->instr == 0x1000ffff) break;

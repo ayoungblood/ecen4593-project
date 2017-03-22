@@ -38,7 +38,7 @@ void copy_pipeline_register(control_t *orig, control_t *copy);
 
 void flush(control_t *reg);
 
-void pipeline_init(control_t** ifid, control_t** idex, control_t** exmem, control_t** memwb, pc_t* pc, bool* stall, pc_t pc_start);
+void pipeline_init(control_t** ifid, control_t** idex, control_t** exmem, control_t** memwb, pc_t* pc, pc_t pc_start);
 
 void pipeline_destroy(control_t** ifid, control_t** idex, control_t** exmem, control_t** memwb);
 

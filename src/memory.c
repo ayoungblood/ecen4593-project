@@ -40,15 +40,15 @@ void memory(control_t * exmem, control_t * memwb) {
     if (exmem->memWrite) {
         switch (exmem->opCode) {
             case OPC_SB:
-                temp = exmem->regRt;
+                temp = exmem->regRtValue;
                 mem_write_b(exmem->ALUresult,&temp);
                 break;
             case OPC_SH:
-                temp = exmem->regRt;
+                temp = exmem->regRtValue;
                 mem_write_h(exmem->ALUresult,&temp);
                 break;
             case OPC_SW:
-                temp = exmem->regRt;
+                temp = exmem->regRtValue;
                 mem_write_w(exmem->ALUresult,&temp);
                 break;
             default: // We should not get here. Complain and crash.

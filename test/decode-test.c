@@ -17,13 +17,12 @@ int flags = MASK_DEBUG | MASK_VERBOSE | MASK_SANITY;
 
 word_t i, p;
 control_t *ifid, *idex, *dummy_exmem, *dummy_memwb; // dummy vars for pipeline_init
-bool dummy_stall;
 pc_t dummy_pc;
 
 /* Some R-type instructions*/
 static char * test_decode_add() {
     // Initialize/clear pipeline registers
-    pipeline_init(&ifid, &idex, &dummy_exmem, &dummy_memwb, &dummy_pc, &dummy_stall, 0);
+    pipeline_init(&ifid, &idex, &dummy_exmem, &dummy_memwb, &dummy_pc, 0);
 
     i = 0x02518820; // add, $s1, $s2, $s1
     p = 0x4;
@@ -55,7 +54,7 @@ static char * test_decode_add() {
 /* Some I-type instructions*/
 static char * test_decode_addi() {
     // Initialize/clear pipeline registers
-    pipeline_init(&ifid, &idex, &dummy_exmem, &dummy_memwb, &dummy_pc, &dummy_stall, 0);
+    pipeline_init(&ifid, &idex, &dummy_exmem, &dummy_memwb, &dummy_pc, 0);
 
     i = 0x22a8ff9c;                  //addi $t0, $s5, -100
     p = 0x4;
@@ -83,7 +82,7 @@ static char * test_decode_addi() {
 
 static char * test_decode_beq() {
     // Initialize/clear pipeline registers
-    pipeline_init(&ifid, &idex, &dummy_exmem, &dummy_memwb, &dummy_pc, &dummy_stall, 0);
+    pipeline_init(&ifid, &idex, &dummy_exmem, &dummy_memwb, &dummy_pc, 0);
 
     i = 0x12110fff;                  //beq $s0, $s1, 0x4000
     p = 0x4;
@@ -131,7 +130,7 @@ static char * test_decode_beq() {
 
 static char * test_decode_bne() {
     // Initialize/clear pipeline registers
-    pipeline_init(&ifid, &idex, &dummy_exmem, &dummy_memwb, &dummy_pc, &dummy_stall, 0);
+    pipeline_init(&ifid, &idex, &dummy_exmem, &dummy_memwb, &dummy_pc, 0);
 
     i = 0x1483fff7;                  //bne $a0, $v1, -32
     printf("Instruction: bne $a0, $v1, -32 (taken)\n");
@@ -179,7 +178,7 @@ static char * test_decode_bne() {
 
 static char * test_decode_lw() {
     // Initialize/clear pipeline registers
-    pipeline_init(&ifid, &idex, &dummy_exmem, &dummy_memwb, &dummy_pc, &dummy_stall, 0);
+    pipeline_init(&ifid, &idex, &dummy_exmem, &dummy_memwb, &dummy_pc, 0);
 
     i = 0x8d120005;                  //lw $s2, 4($t0)
     p = 0x4;
@@ -209,7 +208,7 @@ static char * test_decode_lw() {
 
 static char * test_decode_sw() {
     // Initialize/clear pipeline registers
-    pipeline_init(&ifid, &idex, &dummy_exmem, &dummy_memwb, &dummy_pc, &dummy_stall, 0);
+    pipeline_init(&ifid, &idex, &dummy_exmem, &dummy_memwb, &dummy_pc, 0);
 
     i = 0xad1f0000;                  //sw $ra, 0($t0)
     p = 0x4;
@@ -236,7 +235,7 @@ static char * test_decode_sw() {
 
 static char * test_decode_slti() {
     // Initialize/clear pipeline registers
-    pipeline_init(&ifid, &idex, &dummy_exmem, &dummy_memwb, &dummy_pc, &dummy_stall, 0);
+    pipeline_init(&ifid, &idex, &dummy_exmem, &dummy_memwb, &dummy_pc, 0);
 
     i = 0x2a28f000;                  //slti $t0, $s1, 0xf000
     p = 0x4;
@@ -264,7 +263,7 @@ static char * test_decode_slti() {
 
 static char * test_decode_sltiu() {
     // Initialize/clear pipeline registers
-    pipeline_init(&ifid, &idex, &dummy_exmem, &dummy_memwb, &dummy_pc, &dummy_stall, 0);
+    pipeline_init(&ifid, &idex, &dummy_exmem, &dummy_memwb, &dummy_pc, 0);
 
     i = 0x2e28f000;                  //sltiu $t0, $s1, 0xf000
     p = 0x4;
@@ -293,7 +292,7 @@ static char * test_decode_sltiu() {
 
 static char * test_decode_j() {
     // Initialize/clear pipeline registers
-    pipeline_init(&ifid, &idex, &dummy_exmem, &dummy_memwb, &dummy_pc, &dummy_stall, 0);
+    pipeline_init(&ifid, &idex, &dummy_exmem, &dummy_memwb, &dummy_pc, 0);
 
     i = 0x08000804;                  //j 0x2011
     p = 0x600A1100;

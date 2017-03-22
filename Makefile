@@ -37,12 +37,14 @@ test: $(OBJECTS)
 		$(CC) src/main_memory.o -Wall $(LIBS) -o test/main-memory-test test/main-memory-test.c
 		$(CC) src/memory.o src/main_memory.o src/util.o -Wall $(LIBS) -o test/memory-test test/memory-test.c
 		$(CC) src/fetch.o src/registers.o src/main_memory.o -Wall $(LIBS) -o test/fetch-test test/fetch-test.c
+		$(CC) src/alu.o src/decode.o src/main_memory.o src/memory.o src/fetch.o src/write.o src/registers.o src/util.o src/hazard.o -Wall $(LIBS) -o test/pipeline-test test/pipeline-test.c
 		test/alu-test
 		test/registers-test
 		test/decode-test
 		test/main-memory-test
 		test/memory-test
 		test/fetch-test
+		test/pipeline-test
 
 test-alu: $(OBJECTS)
 		$(CC) src/alu.o src/util.o -Wall $(LIBS) -o test/alu-test test/alu-test.c

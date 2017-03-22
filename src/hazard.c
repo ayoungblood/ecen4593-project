@@ -5,7 +5,7 @@
 
 extern int flags;
 
-int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb, pc_t *pc, bool *stall){
+int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb, pc_t *pc){
 
     bool forward = false;
 
@@ -14,19 +14,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
     }
 
     //Reset stall
-    *stall = false;
-
-    //Hazard detection logic
-    //If a load is immediately followed be an instruction that uses the result
-    //Of the load, then detect it, stall the pipeline, and flush ifid to become nop
-    if(idex->memRead && ((idex->regRt == ifid->regRs) || (idex->regRt == ifid->regRt)) && !(ifid->opCode == OPC_J || ifid->opCode == OPC_JAL)){
-        //Stall the pipeline, data dependency after a load
-        if(flags & MASK_VERBOSE){
-            printf("\tFound dependency on load result: stalling pipeline\n");
-        }
-        *stall = true;
-        flush(ifid);
-    }
+    bool stall = false;
 
 
     //Our destination register could be Rd or Rt
@@ -122,6 +110,20 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
         }
     }
 
+    //Hazard detection logic
+    //If a load is immediately followed be an instruction that uses the result
+    //Of the load, then detect it, stall the pipeline, and flush ifid to become nop
+    if(idex->memRead && ((idex->regRt == ifid->regRs) || (idex->regRt == ifid->regRt)) && !(ifid->opCode == OPC_J || ifid->opCode == OPC_JAL)){
+        //Stall the pipeline, data dependency after a load
+        if(flags & MASK_VERBOSE){
+            printf("\tFound dependency on load result: stalling pipeline\n");
+        }
+        stall = true;
+        flush(ifid);
+    }
+
+
+    /*Updating the Prgram Counter*/
     //Determine if a branch was taken by looking at the result in
     //the idex pipeline register. If it was taken, udpate the program counter
     //to the new calculated value and flush IFID. Jumps are also treated the
@@ -133,6 +135,14 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
         }
         flush(ifid);
         *pc = idex->pcNext;
+    }
+    else if(stall){
+        //Stall the pipeline by not updating pc and flushing ifid
+        flush(ifid);
+    }
+    else{
+        //Normal operation update the program counter by 4
+        *pc = *pc + 4;
     }
 
     return 0;

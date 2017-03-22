@@ -31,43 +31,43 @@ static char * test_mem_small_store() {
     exmem->memWrite = true; // assert write
     exmem->memRead = false; // de-assert read
     exmem->ALUresult = 0x80; // the memory address
-    exmem->regRt = 0xdeadbeef; // the value to write
+    exmem->regRtValue = 0xdeadbeef; // the value to write
     memory(exmem, memwb);
     exmem->opCode = OPC_SW; // store word
     exmem->memWrite = true; // assert write
     exmem->memRead = false; // de-assert read
     exmem->ALUresult = 0x84; // the memory address
-    exmem->regRt = 0xfa5f4444; // the value to write
+    exmem->regRtValue = 0xfa5f4444; // the value to write
     memory(exmem, memwb);
     exmem->opCode = OPC_SH; // store halfword
     exmem->memWrite = true; // assert write
     exmem->memRead = false; // de-assert read
     exmem->ALUresult = 0x88; // the memory address
-    exmem->regRt = 0xff88; // the value to write
+    exmem->regRtValue = 0xff88; // the value to write
     memory(exmem, memwb);
     exmem->opCode = OPC_SH; // store halfword
     exmem->memWrite = true; // assert write
     exmem->memRead = false; // de-assert read
     exmem->ALUresult = 0x8a; // the memory address
-    exmem->regRt = 0xffaa; // the value to write
+    exmem->regRtValue = 0xffaa; // the value to write
     memory(exmem, memwb);
     exmem->opCode = OPC_SB; // store byte
     exmem->memWrite = true; // assert write
     exmem->memRead = false; // de-assert read
     exmem->ALUresult = 0x8c; // the memory address
-    exmem->regRt = 0xfc; // the value to write
+    exmem->regRtValue = 0xfc; // the value to write
     memory(exmem, memwb);
     exmem->opCode = OPC_SB; // store byte
     exmem->memWrite = true; // assert write
     exmem->memRead = false; // de-assert read
     exmem->ALUresult = 0x8d; // the memory address
-    exmem->regRt = 0xfd; // the value to write
+    exmem->regRtValue = 0xfd; // the value to write
     memory(exmem, memwb);
     exmem->opCode = OPC_SH; // store halfword
     exmem->memWrite = true; // assert write
     exmem->memRead = false; // de-assert read
     exmem->ALUresult = 0x8e; // the memory address
-    exmem->regRt = 0xfeef; // the value to write
+    exmem->regRtValue = 0xfeef; // the value to write
     memory(exmem, memwb);
 
     mem_dump();

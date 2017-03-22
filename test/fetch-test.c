@@ -20,15 +20,13 @@ int flags = MASK_DEBUG | MASK_VERBOSE | MASK_SANITY;
 
 word_t i, p;
 control_t  *ifid;
-bool stall;
 
 static char * test_fetch_add() {
     i = 0x02518820; // add, $s1, $s2, $s1
     p = 0x4;
-    stall = false;
     ifid = (control_t *)malloc(sizeof(control_t));
     mem_write_w(p, &i);
-    fetch(ifid, &p, &stall);
+    fetch(ifid, &p);
     mu_assert(_FL "instruction add $s1, $s2, $s1 bad opCode", ifid->opCode == OPC_RTYPE);
     mu_assert(_FL "instruction add $s1, $s2, $s1 bad funct", ifid->funct == FNC_ADD);
     mu_assert(_FL "instruction add $s1, $s2, $s1 bad Rd", ifid->regRd == REG_S1);
@@ -44,7 +42,7 @@ static char * test_fetch_sub() {
     p = 0x4;
     ifid = (control_t *)malloc(sizeof(control_t));
     mem_write_w(p, &i);
-    fetch(ifid, &p, &stall);
+    fetch(ifid, &p);
     mu_assert(_FL "instruction sub $sp, $ra, $v0 bad opCode", ifid->opCode == OPC_RTYPE);
     mu_assert(_FL "instruction sub $sp, $ra, $v0 bad funct", ifid->funct == FNC_SUB);
     mu_assert(_FL "instruction sub $sp, $ra, $v0 bad Rd", ifid->regRd == REG_SP);
@@ -60,7 +58,7 @@ static char * test_fetch_sll() {
     p = 0x4;
     ifid = (control_t *)malloc(sizeof(control_t));
     mem_write_w(p, &i);
-    fetch(ifid, &p, &stall);
+    fetch(ifid, &p);
     mu_assert(_FL "instruction sll $s0, $t1, 10 bad opCode", ifid->opCode == OPC_RTYPE);
     mu_assert(_FL "instruction sll $s0, $t1, 10 bad funct", ifid->funct == FNC_SLL);
     mu_assert(_FL "instruction sll $s0, $t1, 10 bad Rd", ifid->regRd == REG_S0);
@@ -76,7 +74,7 @@ static char * test_fetch_jr() {
     p = 0x4;
     ifid = (control_t *)malloc(sizeof(control_t));
     mem_write_w(p, &i);
-    fetch(ifid, &p, &stall);
+    fetch(ifid, &p);
     mu_assert(_FL "instruction jr $ra bad opCode", ifid->opCode == OPC_RTYPE);
     mu_assert(_FL "instruction jr $ra bad funct", ifid->funct == FNC_JR);
     mu_assert(_FL "instruction jr $ra bad Rs", ifid->regRs == REG_RA);
@@ -90,7 +88,7 @@ static char * test_fetch_nor() {
     p = 0x4;
     ifid = (control_t *)malloc(sizeof(control_t));
     mem_write_w(p, &i);
-    fetch(ifid, &p, &stall);
+    fetch(ifid, &p);
     mu_assert(_FL "instruction nor $t4, $s7, $v0 bad opCode", ifid->opCode == OPC_RTYPE);
     mu_assert(_FL "instruction nor $t4, $s7, $v0 bad funct", ifid->funct == FNC_NOR);
     mu_assert(_FL "instruction nor $t4, $s7, $v0 bad Rd", ifid->regRd == REG_T4);
@@ -106,7 +104,7 @@ static char * test_fetch_sltu() {
     p = 0x4;
     ifid = (control_t *)malloc(sizeof(control_t));
     mem_write_w(p, &i);
-    fetch(ifid, &p, &stall);
+    fetch(ifid, &p);
     mu_assert(_FL "instruction sltu $t1, $a0, $a1 bad opCode", ifid->opCode == OPC_RTYPE);
     mu_assert(_FL "instruction sltu $t1, $a0, $a1 bad funct", ifid->funct == FNC_SLTU);
     mu_assert(_FL "instruction sltu $t1, $a0, $a1 bad Rd", ifid->regRd == REG_T1);
@@ -122,7 +120,7 @@ static char * test_fetch_xor() {
     p = 0x4;
     ifid = (control_t *)malloc(sizeof(control_t));
     mem_write_w(p, &i);
-    fetch(ifid, &p, &stall);
+    fetch(ifid, &p);
     mu_assert(_FL "instruction xor $t3, $gp, $sp bad opCode", ifid->opCode == OPC_RTYPE);
     mu_assert(_FL "instruction xor $t3, $gp, $sp bad funct", ifid->funct == FNC_XOR);
     mu_assert(_FL "instruction xor $t3, $gp, $sp bad Rd", ifid->regRd == REG_T3);
@@ -140,7 +138,7 @@ static char * test_fetch_addi() {
     p = 0x4;
     ifid = (control_t *)malloc(sizeof(control_t));
     mem_write_w(p, &i);
-    fetch(ifid, &p, &stall);
+    fetch(ifid, &p);
     mu_assert(_FL "instruction addi $s2, $s2, -100 bad opCode", ifid->opCode == OPC_ADDI);
     mu_assert(_FL "instruction addi $s2, $s2, -100 bad Rs", ifid->regRs == REG_S2);
     mu_assert(_FL "instruction addi $s2, $s2, -100 bad Rt", ifid->regRt == REG_S2);
@@ -155,7 +153,7 @@ static char * test_fetch_andi() {
     p = 0x4;
     ifid = (control_t *)malloc(sizeof(control_t));
     mem_write_w(p, &i);
-    fetch(ifid, &p, &stall);
+    fetch(ifid, &p);
     mu_assert(_FL "instruction andi $t0, $s4, 0x8000 bad opCode", ifid->opCode == OPC_ANDI);
     mu_assert(_FL "instruction andi $t0, $s4, 0x8000 bad Rs", ifid->regRs == REG_S4);
     mu_assert(_FL "instruction andi $t0, $s4, 0x8000 bad Rt", ifid->regRt == REG_T0);
@@ -170,7 +168,7 @@ static char * test_fetch_beq() {
     p = 0x4;
     ifid = (control_t *)malloc(sizeof(control_t));
     mem_write_w(p, &i);
-    fetch(ifid, &p, &stall);
+    fetch(ifid, &p);
     mu_assert(_FL "instruction beq $s2, $s7, -6 bad opCode", ifid->opCode == OPC_BEQ);
     mu_assert(_FL "instruction beq $s2, $s7, -6 bad Rs", ifid->regRs == REG_S2);
     mu_assert(_FL "instruction beq $s2, $s7, -6 bad Rt", ifid->regRt == REG_S7);
@@ -185,7 +183,7 @@ static char * test_fetch_lb() {
     p = 0x4;
     ifid = (control_t *)malloc(sizeof(control_t));
     mem_write_w(p, &i);
-    fetch(ifid, &p, &stall);
+    fetch(ifid, &p);
     mu_assert(_FL "instruction lb $t0, 12($s0) bad opCode", ifid->opCode == OPC_LB);
     mu_assert(_FL "instruction lb $t0, 12($s0) bad Rs", ifid->regRs == REG_S0);
     mu_assert(_FL "instruction lb $t0, 12($s0) bad Rt", ifid->regRt == REG_T0);
@@ -200,7 +198,7 @@ static char * test_fetch_lhu() {
     p = 0x4;
     ifid = (control_t *)malloc(sizeof(control_t));
     mem_write_w(p, &i);
-    fetch(ifid, &p, &stall);
+    fetch(ifid, &p);
     mu_assert(_FL "instruction lb $t0, 0($s0) bad opCode", ifid->opCode == OPC_LHU);
     mu_assert(_FL "instruction lb $t0, 0($s0) bad Rs", ifid->regRs == REG_T0);
     mu_assert(_FL "instruction lb $t0, 0($s0) bad Rt", ifid->regRt == REG_T6);
@@ -215,7 +213,7 @@ static char * test_fetch_ori() {
     p = 0x4;
     ifid = (control_t *)malloc(sizeof(control_t));
     mem_write_w(p, &i);
-    fetch(ifid, &p, &stall);
+    fetch(ifid, &p);
     mu_assert(_FL "instruction ori $t6, $a0, 0x8000 bad opCode", ifid->opCode == OPC_ORI);
     mu_assert(_FL "instruction ori $t6, $a0, 0x8000 bad Rs", ifid->regRs == REG_A0);
     mu_assert(_FL "instruction ori $t6, $a0, 0x8000 bad Rt", ifid->regRt == REG_T6);
@@ -230,7 +228,7 @@ static char * test_fetch_sb() {
     p = 0x4;
     ifid = (control_t *)malloc(sizeof(control_t));
     mem_write_w(p, &i);
-    fetch(ifid, &p, &stall);
+    fetch(ifid, &p);
     mu_assert(_FL "instruction sb $s1, 3($s2) bad opCode", ifid->opCode == OPC_SB);
     mu_assert(_FL "instruction sb $s1, 3($s2) bad Rs", ifid->regRs == REG_S2);
     mu_assert(_FL "instruction sb $s1, 3($s2) bad Rt", ifid->regRt == REG_S1);
@@ -245,7 +243,7 @@ static char * test_fetch_sw() {
     p = 0x4;
     ifid = (control_t *)malloc(sizeof(control_t));
     mem_write_w(p, &i);
-    fetch(ifid, &p, &stall);
+    fetch(ifid, &p);
     mu_assert(_FL "instruction sw $s1, 3($s2) bad opCode", ifid->opCode == OPC_SW);
     mu_assert(_FL "instruction sw $s1, 3($s2) bad Rs", ifid->regRs == REG_S2);
     mu_assert(_FL "instruction sw $s1, 3($s2) bad Rt", ifid->regRt == REG_S1);
@@ -260,7 +258,7 @@ static char * test_fetch_sltiu() {
     p = 0x4;
     ifid = (control_t *)malloc(sizeof(control_t));
     mem_write_w(p, &i);
-    fetch(ifid, &p, &stall);
+    fetch(ifid, &p);
     mu_assert(_FL "instruction sltiu $t2, $s1, 68719476637 bad opCode", ifid->opCode == OPC_SLTIU);
     mu_assert(_FL "instruction sltiu $t2, $s1, 68719476637 bad Rs", ifid->regRs == REG_S1);
     mu_assert(_FL "instruction sltiu $t2, $s1, 68719476637 bad Rt", ifid->regRt == REG_T2);
@@ -275,7 +273,7 @@ static char * test_fetch_xori() {
     p = 0x4;
     ifid = (control_t *)malloc(sizeof(control_t));
     mem_write_w(p, &i);
-    fetch(ifid, &p, &stall);
+    fetch(ifid, &p);
     mu_assert(_FL "instruction xori $s2, $t6, 0x5555 bad opCode", ifid->opCode == OPC_XORI);
     mu_assert(_FL "instruction xori $s2, $t6, 0x5555 bad Rs", ifid->regRs == REG_T6);
     mu_assert(_FL "instruction xori $s2, $t6, 0x5555 bad Rt", ifid->regRt == REG_S2);
@@ -292,7 +290,7 @@ static char * test_fetch_j() {
     p = 0x4;
     ifid = (control_t *)malloc(sizeof(control_t));
     mem_write_w(p, &i);
-    fetch(ifid, &p, &stall);
+    fetch(ifid, &p);
     mu_assert(_FL "instruction j 0x1234 bad opCode", ifid->opCode == OPC_J);
     mu_assert(_FL "instruction j 0x1234 bad address", ifid->address == 0x48d);
     mu_assert(_FL "instruction j 0x1234 bad pcNext", ifid->pcNext == 0x8);
@@ -305,7 +303,7 @@ static char * test_fetch_jal() {
     p = 0x4;
     ifid = (control_t *)malloc(sizeof(control_t));
     mem_write_w(p, &i);
-    fetch(ifid, &p, &stall);
+    fetch(ifid, &p);
     mu_assert(_FL "instruction j 0x1234 bad opCode", ifid->opCode == OPC_JAL);
     mu_assert(_FL "instruction j 0x1234 bad address", ifid->address == 0x1a5a58);
     mu_assert(_FL "instruction j 0x1234 bad pcNext", ifid->pcNext == 0x8);
@@ -313,30 +311,6 @@ static char * test_fetch_jal() {
     return 0;
 }
 
-static char * test_fetch_stall() {
-    ifid = (control_t *)malloc(sizeof(control_t));
-    i = 0x02518820; // add, $s1, $s2, $s1
-    p = 0x4;
-    mem_write_w(p, &i);
-    i = 0x69696969; // lol
-    mem_write_w(p + 4, &i);
-
-    //Want two instructions in memory to show that we dont fetch the lol instruction on stall
-
-    fetch(ifid, &p, &stall);    //This fetches the add
-    stall = true;               //Say the add depends on a previous load
-    fetch(ifid, &(ifid->pcNext), &stall);   //Should not advance pc nor get lol
-    //Should still see the add in ifid
-    mu_assert(_FL "instruction add $s1, $s2, $s1 bad opCode", ifid->opCode == OPC_RTYPE);
-    mu_assert(_FL "instruction add $s1, $s2, $s1 bad funct", ifid->funct == FNC_ADD);
-    mu_assert(_FL "instruction add $s1, $s2, $s1 bad Rd", ifid->regRd == REG_S1);
-    mu_assert(_FL "instruction add $s1, $s2, $s1 bad Rs", ifid->regRs == REG_S2);
-    mu_assert(_FL "instruction add $s1, $s2, $s1 bad Rt", ifid->regRt == REG_S1);
-    //PC should still point to 0x8 which will get the lol after the stall is clear
-    mu_assert(_FL "instruction add $s1, $s2, $s1 bad pcNext", ifid->pcNext == 0x8);
-    free(ifid);
-    return 0;
-}
 
 static char * all_tests() {
     uint64_t size = 0x140;
@@ -364,7 +338,6 @@ static char * all_tests() {
     mu_run_test(test_fetch_xori);
     mu_run_test(test_fetch_j);
     mu_run_test(test_fetch_jal);
-    mu_run_test(test_fetch_stall);
 
 
     return 0;

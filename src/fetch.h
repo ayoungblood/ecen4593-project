@@ -12,7 +12,7 @@
 #include "util.h"
 #include "main_memory.h"
 
-void fetch(control_t *, pc_t * pc, bool *stall);
+void fetch(control_t *, pc_t * pc);
 
 //Instruction decoding bitmasks
 #define OP_MASK 0xFC000000

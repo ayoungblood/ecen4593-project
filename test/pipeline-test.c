@@ -32,7 +32,6 @@ control_t * exmem;
 control_t * memwb;
 
 pc_t pc;
-bool stall;
 int clock;
 
 void execute_pipeline(){
@@ -41,13 +40,14 @@ void execute_pipeline(){
     memory(exmem, memwb);
     execute(idex, exmem);
     decode(ifid, idex);
-    fetch(ifid, &pc, &stall);
-    hazard(ifid, idex, exmem, memwb, &pc, &stall);
+    fetch(ifid, &pc);
+    hazard(ifid, idex, exmem, memwb, &pc);
+    printf("\n\n\n");
 }
 
 static char * test_basic_add(){
     reg_init();
-    pipeline_init(&ifid, &idex, &exmem, &memwb, &pc, & stall, 0);
+    pipeline_init(&ifid, &idex, &exmem, &memwb, &pc, 0);
     //Load instructions
     pc = 0x00000000;
     word_t data = 0x20110064;       //addi $s1, $zero, 100
@@ -80,7 +80,7 @@ static char * test_basic_add(){
 
 static char * test_bne(){
     reg_init();
-    pipeline_init(&ifid, &idex, &exmem, &memwb, &pc, & stall, 0);
+    pipeline_init(&ifid, &idex, &exmem, &memwb, &pc, 0);
     //Load instructions
     pc = 0x00000000;
     word_t data = 0x20110064;       //addi $s1, $zero, 100
@@ -123,7 +123,7 @@ static char * test_bne(){
 
 static char * test_beq(){
     reg_init();
-    pipeline_init(&ifid, &idex, &exmem, &memwb, &pc, & stall, 0);
+    pipeline_init(&ifid, &idex, &exmem, &memwb, &pc, 0);
     //Load instructions
     pc = 0x00000000;
     word_t data = 0x20110064;       //addi $s1, $zero, 100
@@ -163,18 +163,82 @@ static char * test_beq(){
     return 0;
 }
 
+static char * test_load_dependency(){
+    //0x20100800        addi $s0, $zero, 2048
+    //0x2011000a        addi $s1, $zero, 10
+    //0xae110000        sw $s1, 0($s0)
+    //0x22310001        addi $s1, $s1, 1
+    //0xae110004        sw $s1, 4($s0)
+    //0x22310001        addi $s1, $s1, 1
+    //0x8e120000        lw $s2, 0($s0)
+    //0x8e130004        lw $s3, 4($s0)
+    //0x0253a020        add $s4, $s2, $s3
+    reg_init();
+    pipeline_init(&ifid, &idex, &exmem, &memwb, &pc, 0);
+    //Load instructions
+    pc = 0x00000000;
+    word_t data = 0x20100800;       //addi $s0, $zero, 2048
+    mem_write_w(pc, &data);
+    data = 0x2011000a;              //addi $s1, $zero, 10
+    mem_write_w(pc+4, &data);
+    data = 0xae110000;              //sw $s1, 0($s0)
+    mem_write_w(pc+8, &data);
+    data = 0x22310001;              //addi $s1, $s1, 1
+    mem_write_w(pc+12, &data);
+    data = 0xae110004;              //sw $s1, 4($s0)
+    mem_write_w(pc+16, &data);
+    data = 0x22310001;              //addi $s1, $s1, 1
+    mem_write_w(pc+20, &data);
+    data = 0x8e120000;              //lw $s2, 0($s0)
+    mem_write_w(pc+24, &data);
+    data = 0x8e130004;              //lw $s3, 4($s0)
+    mem_write_w(pc+28, &data);
+    data = 0x0253a020;              //add $s4, $s2, $s3
+    mem_write_w(pc+32, &data);
+    data = 0x00000000;              //nop
+    mem_write_w(pc+36, &data);
+    mem_write_w(pc+40, &data);
+    mem_write_w(pc+44, &data);
+    mem_write_w(pc+48, &data);
+    //Execute pipeline six times
+    clock = 0;
+    for(clock = 0; clock <= 13; clock++){
+        execute_pipeline();
+        printf("Post Cycle Print\n");
+        print_pipeline_register(exmem);
+        printf("\n\n\n");
+    }
+    //Check that the registers have expected values
+    reg_dump();
+    reg_read(REG_S0, &data);
+    mu_assert(_FL "$S0 does not equal 2048!", data == 2048);
+    reg_read(REG_S1, &data);
+    mu_assert(_FL "$S1 does not equal 12!", data == 12);
+    reg_read(REG_S2, &data);
+    mu_assert(_FL "$S2 does not equal 10!", data == 10);
+    reg_read(REG_S3, &data);
+    mu_assert(_FL "$S3 does not equal 11!", data == 11);
+    reg_read(REG_S4, &data);
+    mu_assert(_FL "$S4 does not equal 21!", data == 21);
+
+
+    pipeline_destroy(&ifid, &idex, &exmem, &memwb);
+    return 0;
+}
+
 
 
 static char * all_tests() {
     //Pipeline initialization
     reg_init();
-    uint64_t size = 0x140;
+    uint64_t size = 0x3000;
     uint64_t offs = 0x00;
     mem_init(size,offs);
     //Tests
     mu_run_test(test_basic_add);
     mu_run_test(test_bne);
     mu_run_test(test_beq);
+    mu_run_test(test_load_dependency);
     return 0;
 }
 
