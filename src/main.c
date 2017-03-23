@@ -20,6 +20,7 @@ int main(int argc, char *argv[]) {
         printf("Nothing to execute.\nUsage:\n");
         printf("    sim [options] infile\n\n");
         printf("    Options:\n");
+        printf("    -i: Interactive stepping mode\n");
         printf("    -d: Enable debug mode\n");
         printf("    -v: Enable verbose output\n");
         printf("\n");
@@ -28,6 +29,10 @@ int main(int argc, char *argv[]) {
         // Stone-age command-line argument parsing
         for (i=0; i<argc-2; ++i) {
             switch (argv[i+1][1]) { // add command line option flags here
+                case 'i': // -i: interactive debug (step)
+                    flags |= MASK_INTERACTIVE;
+                    printf("Interactive mode enabled (flags = 0x%04x).\n",flags);
+                    break;
                 case 'd': // -d: debug
                     flags |= MASK_DEBUG;
                     printf("Debug mode enabled (flags = 0x%04x).\n",flags);
@@ -86,6 +91,13 @@ int main(int argc, char *argv[]) {
         ++cycles;
         // Check for a magic halt number
         if (ifid->instr == 0x1000ffff) break;
+        if (flags & MASK_DEBUG) { // show a debug message each pipeline cycle
+            printf(ANSI_C_CYAN "(end cycle) ifid->instr: 0x%08x, pc: 0x%08x ####"\
+                "##############################\n" ANSI_C_RESET, ifid->instr, pc);
+        }
+        if (flags & MASK_INTERACTIVE) { // Run interactive step
+            if (interactive(lines) !=0) return 1;
+        }
     }
     printf("\nPipeline halted after %d cycles (address 0x%08x)\n",cycles,pc);
     reg_dump();
@@ -96,7 +108,7 @@ int main(int argc, char *argv[]) {
 }
 
 int parse(FILE *fp, asm_line_t *lines) {
-    uint32_t addr, inst, start;
+    uint32_t addr, inst, data, start;
     int count = 0;
     char buf[120]; // for storing a line from the source file
     char str[80]; // for the comment part of a line from the source file
@@ -114,11 +126,79 @@ int parse(FILE *fp, asm_line_t *lines) {
             lines[(addr>>2)-(start>>2)].addr = addr;
             lines[(addr>>2)-(start>>2)].inst = inst;
             strcpy(lines[(addr>>2)-(start>>2)].comment, str);
+            lines[(addr>>2)-(start>>2)].type = 3;
+            ++count;
+        } else if (sscanf(buf,"%x: %x\n",&addr,&data) == 2) {
+            // write extracted data into memory and also into lines array
+            mem_write_w(addr,&data);
+            lines[(addr>>2)-(start>>2)].addr = addr;
+            lines[(addr>>2)-(start>>2)].inst = data;
             lines[(addr>>2)-(start>>2)].type = 2;
             ++count;
         }
     }
     fclose(fp); // close the file
-    printf("Successfully extracted %d instructions\n",count);
+    printf("Successfully extracted %d lines\n",count);
     return count;
+}
+
+// Provides a crude interactive debugger for the simulator
+int interactive(asm_line_t* lines) {
+    uint32_t i_addr = 0, i_data;
+    asm_line_t line;
+PROMPT: // LOL gotos
+    printf(ANSI_C_GREEN "(interactive) > " ANSI_C_RESET);
+    system ("/bin/stty raw"); // set terminal to raw/unbuffered
+    char c = getchar();
+    system ("/bin/stty sane"); // set back to sane
+    printf("%c\n",c);
+    switch(c) {
+        case 'd': // disable interactive
+            flags &= ~(MASK_INTERACTIVE);
+            printf(ANSI_C_GREEN "Interactive stepping disabled.\n" ANSI_C_RESET);
+            break;
+        case 'h': // help
+            printf("Available interactive commands: \n" \
+                "\td: disable interactive mode\n" \
+                "\tl: print the original disassembly for a given memory address\n" \
+                "\tm: print a memory word for a given memory address\n" \
+                "\ts: single-step the pipeline\n" \
+                "\tr: dump registers\n" \
+                "\tx: exit simulation run\n");
+            goto PROMPT;
+        case 'l': // print the original disassembly for a given address
+            printf(ANSI_C_GREEN "input address: " ANSI_C_RESET);
+            scanf("%x",&i_addr); getchar();
+            line = lines[(i_addr>>2)-(mem_start()>>2)];
+            if (line.type == 3) {
+                printf("\t0x%08x: 0x%08x %s\n",line.addr,line.inst,line.comment);
+            } else if (line.type == 2) {
+                printf("\t0x%08x: 0x%08x\n",line.addr,line.inst);
+            } else {
+                printf("\tNot a valid input line\n");
+            }
+            goto PROMPT;
+        case 'm': // view a word of memory
+            printf(ANSI_C_GREEN "memory address: " ANSI_C_RESET);
+            scanf("%x",&i_addr); getchar();
+            if (i_addr < mem_start() || i_addr > mem_end()) {
+                printf("Address out of range\n");
+                goto PROMPT;
+            }
+            mem_read_w(i_addr, &i_data);
+            printf("mem[0x%08x]: 0x%08x\n",i_addr,i_data);
+            goto PROMPT;
+        case 's': // step
+            break;
+        case 'r': // dump registers
+            reg_dump();
+            goto PROMPT;
+        case 'x': // exit
+            printf(ANSI_C_GREEN "Simulation halted in interactive mode.\n" ANSI_C_RESET);
+            return 1;
+        default:
+            printf("Unrecognized interactive command (%c).\n", c);
+            goto PROMPT;
+    }
+    return 0;
 }

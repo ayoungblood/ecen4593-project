@@ -24,7 +24,9 @@ typedef struct ASMLine {
     uint32_t addr;        // address
     uint32_t inst;        // instruction
     char     comment[80]; // remaining string data
-    char     type;        // 0: invalid, 2: valid
+    char     type;        // 0: invalid, 2/3: valid
 } asm_line_t;
 
 int parse(FILE *fp, asm_line_t *lines);
+
+int interactive(asm_line_t *lines);
