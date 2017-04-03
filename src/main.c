@@ -22,6 +22,7 @@ int main(int argc, char *argv[]) {
         printf("    Options:\n");
         printf("    -i: Interactive stepping mode\n");
         printf("    -d: Enable debug mode\n");
+        printf("    -s: Enable sanity checks\n");
         printf("    -v: Enable verbose output\n");
         printf("\n");
         return 0; // exit without errors
@@ -36,6 +37,10 @@ int main(int argc, char *argv[]) {
                 case 'd': // -d: debug
                     flags |= MASK_DEBUG;
                     printf("Debug mode enabled (flags = 0x%04x).\n",flags);
+                    break;
+                case 's': // -s: sanity
+                    flags |= MASK_SANITY;
+                    printf("Sanity checks enabled (flags = 0x%04x).\n",flags);
                     break;
                 case 'v': // -v: verbose
                     flags |= MASK_VERBOSE;
