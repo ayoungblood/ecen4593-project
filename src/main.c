@@ -13,6 +13,8 @@ control_t* exmem = NULL; // EX/MEM pipeline register
 control_t* memwb = NULL; // MEM/WB pipeline register
 pc_t pc = 0;             // Program counter
 
+uint32_t temp = 0;
+
 int main(int argc, char *argv[]) {
     int i;
     // Validate args, if they exist
@@ -20,8 +22,9 @@ int main(int argc, char *argv[]) {
         printf("Nothing to execute.\nUsage:\n");
         printf("    sim [options] infile\n\n");
         printf("    Options:\n");
-        printf("    -i: Interactive stepping mode\n");
+        printf("    -a: Alternate program format\n");
         printf("    -d: Enable debug mode\n");
+        printf("    -i: Interactive stepping mode\n");
         printf("    -s: Enable sanity checks\n");
         printf("    -v: Enable verbose output\n");
         printf("\n");
@@ -30,13 +33,17 @@ int main(int argc, char *argv[]) {
         // Stone-age command-line argument parsing
         for (i=0; i<argc-2; ++i) {
             switch (argv[i+1][1]) { // add command line option flags here
-                case 'i': // -i: interactive debug (step)
-                    flags |= MASK_INTERACTIVE;
-                    printf("Interactive mode enabled (flags = 0x%04x).\n",flags);
+                case 'a': // -a: alternate format
+                    flags |= MASK_ALTFORMAT;
+                    printf("Alternate assembly format selected (flags = 0x%04x).\n",flags);
                     break;
                 case 'd': // -d: debug
                     flags |= MASK_DEBUG;
                     printf("Debug mode enabled (flags = 0x%04x).\n",flags);
+                    break;
+                case 'i': // -i: interactive debug (step)
+                    flags |= MASK_INTERACTIVE;
+                    printf("Interactive mode enabled (flags = 0x%04x).\n",flags);
                     break;
                 case 's': // -s: sanity
                     flags |= MASK_SANITY;
@@ -63,7 +70,8 @@ int main(int argc, char *argv[]) {
      * Beginning the actual simulation                                        *
      * All initialization and state configuration happens below here          *
      **************************************************************************/
-
+    // Initialize the register file
+    reg_init();
     // Create an array to hold all the debug information
     asm_line_t lines[MEMORY_SIZE];
     for (i = 0; i < MEMORY_SIZE; ++i) lines[i].type = 0; // initialize all invalid
@@ -79,10 +87,13 @@ int main(int argc, char *argv[]) {
         printf("(%1x) 0x%08x: %08x\t%s\n", lines[i].type, lines[i].addr, lines[i].inst, lines[i].comment);
     }
     */
-    // Initialize the register file
-    reg_init();
     // Initialize the pipeline registers
     pipeline_init(&ifid, &idex, &exmem, &memwb, &pc,  (pc_t)mem_start());
+    if (flags & MASK_ALTFORMAT) {
+        // set the program counter based on the fifth word of memory
+        mem_read_w(5, &temp);
+        pc = temp;
+    }
     // Run the simulation
     int cycles = 0;
     while (1) {
@@ -115,31 +126,60 @@ int main(int argc, char *argv[]) {
 int parse(FILE *fp, asm_line_t *lines) {
     uint32_t addr, inst, data, start;
     int count = 0;
-    char buf[120]; // for storing a line from the source file
-    char str[80]; // for the comment part of a line from the source file
-    // iterate through file line-by-line
-    while (fgets(buf, sizeof(buf), fp) != NULL ) {
-        // scanf magic to extract an address, colon, instruction, and the remaining line
-        if (sscanf(buf,"%x: %x %[^\n]",&addr,&inst,str) == 3) {
-            if (count == 0) { // first instruction, set offset and initialize memory
-                if (flags & MASK_VERBOSE) printf("First instruction found. %s",buf);
-                mem_init(MEMORY_SIZE,addr);
-                start = addr;
+    char buf[180]; // for storing a line from the source file
+    char str[120]; // for the comment part of a line from the source file
+    if (flags & MASK_ALTFORMAT) { // .txt "array" format
+        addr = 0;
+        mem_init(MEMORY_SIZE,0); // memory is assumed to start at 0x0
+        // Iterate through file line-by-line
+        while (fgets(buf, sizeof(buf), fp) != NULL ) {
+            // Read the instruction into memory
+            if (sscanf(buf,"0x%x",&inst) == 1) {
+                mem_write_w(addr,&inst);
+                lines[count].addr = addr;
+                lines[count].inst = inst;
+                lines[count].type = 2;
+                addr += 4;
+                // Read the comment if it exists
+                if (sscanf(buf,"0x%*x, // %[^\n]", str) == 1) {
+                    strcpy(lines[count].comment, str);
+                    lines[count].type = 3;
+                }
+                ++count;
             }
-            // write extracted instruction into memory and also into lines array
-            mem_write_w(addr,&inst);
-            lines[(addr>>2)-(start>>2)].addr = addr;
-            lines[(addr>>2)-(start>>2)].inst = inst;
-            strcpy(lines[(addr>>2)-(start>>2)].comment, str);
-            lines[(addr>>2)-(start>>2)].type = 3;
-            ++count;
-        } else if (sscanf(buf,"%x: %x\n",&addr,&data) == 2) {
-            // write extracted data into memory and also into lines array
-            mem_write_w(addr,&data);
-            lines[(addr>>2)-(start>>2)].addr = addr;
-            lines[(addr>>2)-(start>>2)].inst = data;
-            lines[(addr>>2)-(start>>2)].type = 2;
-            ++count;
+        }
+        // Set registers
+        mem_read_w(0x0,&data);
+        reg_write(REG_SP, &data);
+        mem_read_w(0x1,&data);
+        reg_write(REG_FP, &data);
+        // (program counter is set after initializing pipeline)
+    } else { // .s format
+        // iterate through file line-by-line
+        while (fgets(buf, sizeof(buf), fp) != NULL ) {
+
+            // scanf magic to extract an address, colon, instruction, and the remaining line
+            if (sscanf(buf,"%x: %x %[^\n]",&addr,&inst,str) == 3) {
+                if (count == 0) { // first instruction, set offset and initialize memory
+                    if (flags & MASK_VERBOSE) printf("First instruction found. %s",buf);
+                    mem_init(MEMORY_SIZE,addr);
+                    start = addr;
+                }
+                // write extracted instruction into memory and also into lines array
+                mem_write_w(addr,&inst);
+                lines[(addr>>2)-(start>>2)].addr = addr;
+                lines[(addr>>2)-(start>>2)].inst = inst;
+                strcpy(lines[(addr>>2)-(start>>2)].comment, str);
+                lines[(addr>>2)-(start>>2)].type = 3;
+                ++count;
+            } else if (sscanf(buf,"%x: %x\n",&addr,&data) == 2) {
+                // write extracted data into memory and also into lines array
+                mem_write_w(addr,&data);
+                lines[(addr>>2)-(start>>2)].addr = addr;
+                lines[(addr>>2)-(start>>2)].inst = data;
+                lines[(addr>>2)-(start>>2)].type = 2;
+                ++count;
+            }
         }
     }
     fclose(fp); // close the file

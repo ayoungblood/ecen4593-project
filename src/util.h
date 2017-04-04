@@ -20,6 +20,7 @@
 #define MASK_VERBOSE    0x2 // Show verbose messages
 #define MASK_SANITY     0x4 // Do extra checking (bounds checking, etc)
 #define MASK_INTERACTIVE 0x8 // Interactive stepping
+#define MASK_ALTFORMAT  0x10 // Alternate assembly input format
 
 // ANSI colour escapes
 #define ANSI_C_BLACK   "\x1b[1;30m"
