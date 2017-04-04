@@ -77,16 +77,7 @@ int main(int argc, char *argv[]) {
     for (i = 0; i < MEMORY_SIZE; ++i) lines[i].type = 0; // initialize all invalid
     // Parse the ASM file, parse() initializes the memory
     parse(asm_fp, lines);
-    printf("memory start: 0x%08x; memory end: 0x%08x\n",mem_start(),mem_end());
-    /*
-    printf("Calculated offset: 0x%08x, printing 32 words from offset\n",mem_start());
-    word_t temp;
-    for (i = 0; i < 32; ++i) {
-        mem_read_w(mem_start() + (i<<2), &temp);
-        printf("    0x%08x: %08x\n", mem_start() + (i<<2), temp);
-        printf("(%1x) 0x%08x: %08x\t%s\n", lines[i].type, lines[i].addr, lines[i].inst, lines[i].comment);
-    }
-    */
+    mem_dump();
     // Initialize the pipeline registers
     pipeline_init(&ifid, &idex, &exmem, &memwb, &pc,  (pc_t)mem_start());
     if (flags & MASK_ALTFORMAT) {
@@ -105,8 +96,8 @@ int main(int argc, char *argv[]) {
         fetch(ifid, &pc);
         hazard(ifid, idex, exmem, memwb, &pc);
         ++cycles;
-        // Check for a magic halt number
-        if (ifid->instr == 0x1000ffff) break;
+        // Check for a magic halt number (beq zero zero -1 or jr zero)
+        if (ifid->instr == 0x1000ffff || ifid->instr == 0x00000008) break;
         if (flags & MASK_DEBUG) { // show a debug message each pipeline cycle
             printf(ANSI_C_CYAN "(end cycle) ifid->instr: 0x%08x, pc: 0x%08x ####"\
                 "##############################\n" ANSI_C_RESET, ifid->instr, pc);
