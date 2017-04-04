@@ -73,7 +73,7 @@ uint32_t mem_end(void) {
 void mem_read_w(uint32_t address, word_t *data) {
     uint32_t index = (address>>2) - (start>>2);
     if (flags & MASK_SANITY && index >= length) {
-        printf(ANSI_C_RED "mem_read_w: out of range (0x%08x > 0x%08x)\n" ANSI_C_RESET,index,length + start);
+        printf(ANSI_C_RED "mem_read_w: out of range address 0x%08x (index %d >= length %d)\n" ANSI_C_RESET,address,index,length);
         assert(!(index >= length)); // fail fast
     }
     *data = mem[index];
@@ -86,7 +86,7 @@ void mem_read_h(uint32_t address, word_t *data) {
     uint32_t index = (address>>2) - (start>>2);
     uint32_t shift = ((2-(address & 0x2))<<3); // shift amount based on byte position
     if (flags & MASK_SANITY && index >= length) {
-        printf(ANSI_C_RED "mem_read_h: out of range (0x%08x > 0x%08x)\n" ANSI_C_RESET,index,length + start);
+        printf(ANSI_C_RED "mem_read_h: out of range address 0x%08x (index %d >= length %d)\n" ANSI_C_RESET,address,index,length);
         assert(!(index >= length)); // fail fast
     }
     *data = mem[index];
@@ -101,7 +101,7 @@ void mem_read_b(uint32_t address, word_t *data) {
     uint32_t index = (address>>2) - (start>>2);
     uint32_t shift = ((3-(address & 0x3))<<3); // shift amount based on byte position
     if (flags & MASK_SANITY && index >= length) {
-        printf(ANSI_C_RED "mem_read_b: out of range (0x%08x > 0x%08x)\n" ANSI_C_RESET,index,length + start);
+        printf(ANSI_C_RED "mem_read_b: out of range address 0x%08x (index %d >= length %d)\n" ANSI_C_RESET,address,index,length);
         assert(!(index >= length)); // fail fast
     }
     *data = mem[index];
@@ -115,7 +115,7 @@ void mem_read_b(uint32_t address, word_t *data) {
 void mem_write_w(uint32_t address, word_t *data) {
     uint32_t index = (address>>2) - (start>>2);
     if (flags & MASK_SANITY && index >= length) {
-        printf(ANSI_C_RED "mem_write_w: out of range (0x%08x > 0x%08x)\n" ANSI_C_RESET,index,length + start);
+        printf(ANSI_C_RED "mem_write_w: out of range address 0x%08x (index %d >= length %d)\n" ANSI_C_RESET,address,index,length);
         assert(!(index >= length)); // fail fast
     }
     mem[index] = *data;
@@ -128,7 +128,7 @@ void mem_write_h(uint32_t address, word_t *data) {
     uint32_t index = (address>>2) - (start>>2);
     uint32_t shift = ((2-(address & 0x2))<<3); // shift amount based on byte position
     if (flags & MASK_SANITY && index >= length) {
-        printf(ANSI_C_RED "mem_write_h: out of range (0x%08x > 0x%08x)\n" ANSI_C_RESET,index,length + start);
+        printf(ANSI_C_RED "mem_write_h: out of range address 0x%08x (index %d >= length %d)\n" ANSI_C_RESET,address,index,length);
         assert(!(index >= length)); // fail fast
     }
     mem[index] &= ~(0xffff << shift); // clear the byte we are writing to
@@ -142,7 +142,7 @@ void mem_write_b(uint32_t address, word_t *data) {
     uint32_t index = (address>>2) - (start>>2);
     uint32_t shift = ((3-(address & 0x3))<<3); // shift amount based on byte position
     if (flags & MASK_SANITY && index >= length) {
-        printf(ANSI_C_RED "mem_write_b: out of range (0x%08x > 0x%08x)\n" ANSI_C_RESET,index,length + start);
+        printf(ANSI_C_RED "mem_write_h: out of range address 0x%08x (index %d >= length %d)\n" ANSI_C_RESET,address,index,length);
         assert(!(index >= length)); // fail fast
     }
     mem[index] &= ~(0xff << shift); // clear the byte we are writing to
