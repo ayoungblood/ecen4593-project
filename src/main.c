@@ -20,13 +20,13 @@ int main(int argc, char *argv[]) {
     // Validate args, if they exist
     if (argc == 1) {
         printf("Nothing to execute.\nUsage:\n");
-        printf("    sim [options] infile\n\n");
-        printf("    Options:\n");
-        printf("    -a: Alternate program format\n");
-        printf("    -d: Enable debug mode\n");
-        printf("    -i: Interactive stepping mode\n");
-        printf("    -s: Enable sanity checks\n");
-        printf("    -v: Enable verbose output\n");
+        printf("\tsim [options] infile\n");
+        printf("Options:\n");
+        printf("\t-a: Alternate program format\n");
+        printf("\t-d: Enable debug mode\n");
+        printf("\t-i: Interactive stepping mode\n");
+        printf("\t-s: Enable sanity checks\n");
+        printf("\t-v: Enable verbose output\n");
         printf("\n");
         return 0; // exit without errors
     } else {
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
     pipeline_init(&ifid, &idex, &exmem, &memwb, &pc,  (pc_t)mem_start());
     if (flags & MASK_ALTFORMAT) {
         // set the program counter based on the fifth word of memory
-        mem_read_w(5, &temp);
+        mem_read_w(5<<2, &temp);
         pc = temp;
     }
     // Run the simulation
@@ -148,7 +148,6 @@ int parse(FILE *fp, asm_line_t *lines) {
     } else { // .s format
         // iterate through file line-by-line
         while (fgets(buf, sizeof(buf), fp) != NULL ) {
-
             // scanf magic to extract an address, colon, instruction, and the remaining line
             if (sscanf(buf,"%x: %x %[^\n]",&addr,&inst,str) == 3) {
                 if (count == 0) { // first instruction, set offset and initialize memory
@@ -193,7 +192,7 @@ PROMPT: // LOL gotos
             flags &= ~(MASK_INTERACTIVE);
             printf(ANSI_C_GREEN "Interactive stepping disabled.\n" ANSI_C_RESET);
             break;
-        case 'h': // help
+        case '?': // help
             printf("Available interactive commands: \n" \
                 "\td: disable interactive mode\n" \
                 "\tl: print the original disassembly for a given memory address\n" \
@@ -233,7 +232,7 @@ PROMPT: // LOL gotos
             printf(ANSI_C_GREEN "Simulation halted in interactive mode.\n" ANSI_C_RESET);
             return 1;
         default:
-            printf("Unrecognized interactive command (%c).\n", c);
+            printf("Unrecognized interactive command \"%c\", press \"?\" for help.\n", c);
             goto PROMPT;
     }
     return 0;
