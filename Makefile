@@ -81,7 +81,7 @@ test-pipeline: $(OBJECTS)
 test-main: all
 		#./sim asm/disjoint.s
 		#./sim -v asm/disjoint.s
-		./sim -s -a asm/program1file.txt
+		./sim -s -a -i -d -v asm/handcoded.txt
 
 clean:
 		-rm -f *.bc *.i *.s
