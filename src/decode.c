@@ -50,7 +50,7 @@ int decode( control_t * ifid , control_t * idex) {
                     idex->ALUop = OPR_XOR;
                     break;
                 default:
-                    printf(ANSI_C_RED "Illegal R-type instruction 0x%02x. Halting.\n" ANSI_C_RESET, idex->funct);
+                    printf(ANSI_C_RED "Illegal R-type instruction, funct 0x%02x (instruction 0x%08x). Halting.\n" ANSI_C_RESET, idex->funct, idex->instr);
                     assert(0);
             }
             idex->regDst = true;
@@ -141,7 +141,7 @@ int decode( control_t * ifid , control_t * idex) {
             idex->jump = true;
 
         default:
-            printf(ANSI_C_RED "Illegal instruction, opcode 0x%02x. Halting.\n" ANSI_C_RESET, idex->opCode);
+            printf(ANSI_C_RED "Illegal instruction, opcode 0x%02x (instruction 0x%08x). Halting.\n" ANSI_C_RESET, idex->opCode,idex->instr);
             assert(0);
     }
 
