@@ -8,6 +8,7 @@ test/decode-test
 test/memory-test
 test/fetch-test
 test/main-memory-test
+test/pipeline-test
 
 # Object files
 *.o
