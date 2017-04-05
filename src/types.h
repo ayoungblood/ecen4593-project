@@ -16,11 +16,7 @@ typedef uint32_t pc_t;
 typedef uint32_t word_t;
 
 // Ignored MIPS I instructions
-// BGEZ: Branch on Greater Than or Equal to Zero
 // BGEZAL: Branch on Greater Than or Equal to Zero and Link
-// BGTZ: Branch on Greater Than Zero
-// BLEZ: Branch on Less Than or Equal to Zero
-// BLTZ: Branch on Less Than Zero
 // BLTZAL: Branch on Less Than Zero And Link
 // BREAK: Breakpoint
 // COPz: Coprocessor Operation
@@ -53,6 +49,9 @@ typedef enum OpCodes {
     OPC_ANDI    = 0x0c, // 0b001100, And Immediate
     OPC_BEQ     = 0x04, // 0b000100, Branch on Equal
     OPC_BNE     = 0x05, // 0b000101, Branch on Not Equal
+    OPC_BLTZ    = 0x01, // 0b000001, Branch on less than zero
+    OPC_BGTZ    = 0x07, // 0b000111, Branch on greater than zero
+    OPC_BLEZ    = 0x06, // 0b000110, Branch on less than equal to zero
     OPC_J       = 0x02, // 0b000010, Jump
     OPC_JAL     = 0x03, // 0b000011, Jump And Link
     OPC_LB      = 0x20, // 0b100000, Load Byte

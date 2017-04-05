@@ -12,6 +12,14 @@ int decode( control_t * ifid , control_t * idex) {
 
     switch(idex->opCode){
         case OPC_RTYPE:
+            idex->regDst = true;
+            idex->ALUSrc = false;
+            idex->memToReg = false;
+            idex->regWrite = true;
+            idex->memRead = false;
+            idex->memWrite = false;
+            idex->jump = false;
+            idex->PCSrc = false;
             switch(idex->funct){
                 case FNC_ADD:
                     idex->ALUop = OPR_ADD;
@@ -21,6 +29,12 @@ int decode( control_t * ifid , control_t * idex) {
                     break;
                 case FNC_AND:
                     idex->ALUop = OPR_AND;
+                    break;
+                case FNC_JR:
+                    idex->ALUop = OPR_ADD;
+                    idex->jump = true;
+                    //Make sure we don't accidentally write back, although rd = $zero
+                    idex->regWrite = false;
                     break;
                 case FNC_NOR:
                     idex->ALUop = OPR_NOR;
@@ -53,14 +67,7 @@ int decode( control_t * ifid , control_t * idex) {
                     printf(ANSI_C_RED "Illegal R-type instruction, funct 0x%02x (instruction 0x%08x). Halting.\n" ANSI_C_RESET, idex->funct, idex->instr);
                     assert(0);
             }
-            idex->regDst = true;
-            idex->ALUSrc = false;
-            idex->memToReg = false;
-            idex->regWrite = true;
-            idex->memRead = false;
-            idex->memWrite = false;
-            idex->jump = false;
-            idex->PCSrc = false;
+
             break;
         case OPC_LW:
         case OPC_LHU:
@@ -76,6 +83,9 @@ int decode( control_t * ifid , control_t * idex) {
             break;
         case OPC_BEQ:
         case OPC_BNE:
+        case OPC_BLTZ:
+        case OPC_BGTZ:
+        case OPC_BLEZ:
             idex->ALUop = OPR_SUB;
             idex->ALUSrc = false;
             idex->regWrite = false;
@@ -155,11 +165,17 @@ int decode( control_t * ifid , control_t * idex) {
     idex->address = ( idex->address << 2 );         //Word aligned
     //Don't think i need to bitmask the address since in theory it shouldn't be
     //"signed"
-    if(idex->jump){
+    if(idex->jump & (idex->opCode != OPC_RTYPE)){
         idex->pcNext = ( idex->pcNext & 0xF0000000 ) | idex->address;
     }
-    //branch determination in ID phase
-    idex->pcNext = idex->pcNext + ( idex->immed << 2 );
+    else if(idex->jump & (idex->opCode == OPC_RTYPE)){
+        //This is a jr instruction, pc comes from rs
+        idex->pcNext = idex->regRsValue;
+    }
+    else {
+        //branch determination in ID phase, dont want to overwrite jump
+        idex->pcNext = idex->pcNext + ( idex->immed << 2 );
+    }
     if(idex->opCode == OPC_BEQ){
         if(idex->regRsValue == idex->regRtValue){
             idex->PCSrc = true; //Branch is taken, use pcNext for address
@@ -174,6 +190,30 @@ int decode( control_t * ifid , control_t * idex) {
         }
         else{
             idex->PCSrc = false; //Branch not taken
+        }
+    }
+    else if (idex->opCode == OPC_BLTZ){
+        if((int)idex->regRsValue < 0){
+            idex->PCSrc = true;
+        }
+        else{
+            idex->PCSrc = false;
+        }
+    }
+    else if (idex->opCode == OPC_BGTZ){
+        if((int)idex->regRsValue > 0){
+            idex->PCSrc = true;
+        }
+        else{
+            idex->PCSrc = false;
+        }
+    }
+    else if (idex->opCode == OPC_BLEZ){
+        if((int)idex->regRsValue <= 0){
+            idex->PCSrc = true;
+        }
+        else{
+            idex->PCSrc = false;
         }
     }
 
