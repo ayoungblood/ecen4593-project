@@ -149,7 +149,7 @@ int decode( control_t * ifid , control_t * idex) {
             idex->memToReg = false;
             idex->PCSrc = false;
             idex->jump = true;
-
+            break;
         default:
             printf(ANSI_C_RED "Illegal instruction, opcode 0x%02x (instruction 0x%08x). Halting.\n" ANSI_C_RESET, idex->opCode,idex->instr);
             assert(0);
