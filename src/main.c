@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
         hazard(ifid, idex, exmem, memwb, &pc);
         ++cycles;
         // Check for a magic halt number (beq zero zero -1 or jr zero)
-        if (ifid->instr == 0x1000ffff || ifid->instr == 0x00000008) break;
+        if (ifid->instr == 0x1000ffff || ifid->instr == 0x00000008 || pc == 0) break;
         if (flags & MASK_DEBUG) { // show a debug message each pipeline cycle
             printf(ANSI_C_CYAN "(end cycle) ifid->instr: 0x%08x, pc: 0x%08x ####"\
                 "##############################\n" ANSI_C_RESET, ifid->instr, pc);

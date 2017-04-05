@@ -155,7 +155,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
                 idex->PCSrc = false;
             }
         }
-        else if((idex->opCode == OPC_RTYPE) & (idex->funct == FNC_JR)){
+        else if((idex->opCode == OPC_RTYPE) && (idex->funct == FNC_JR)){
             if(flags & MASK_DEBUG){
                 printf("\tRecalculating JR\n");
             }
@@ -192,7 +192,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
         if(flags & MASK_VERBOSE){
             printf("\tBranching or Jumping: inserting nop and overriding pc\n");
         }
-        flush(ifid);
+        //flush(ifid);
         *pc = idex->pcNext;
     }
     else if(stall){

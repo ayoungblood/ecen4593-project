@@ -165,10 +165,10 @@ int decode( control_t * ifid , control_t * idex) {
     idex->address = ( idex->address << 2 );         //Word aligned
     //Don't think i need to bitmask the address since in theory it shouldn't be
     //"signed"
-    if(idex->jump & (idex->opCode != OPC_RTYPE)){
+    if(idex->jump && (idex->opCode != OPC_RTYPE)){
         idex->pcNext = ( idex->pcNext & 0xF0000000 ) | idex->address;
     }
-    else if(idex->jump & (idex->opCode == OPC_RTYPE)){
+    else if(idex->jump && (idex->opCode == OPC_RTYPE)){
         //This is a jr instruction, pc comes from rs
         idex->pcNext = idex->regRsValue;
     }

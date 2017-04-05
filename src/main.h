@@ -17,7 +17,7 @@
 #include "fetch.h"
 #include "hazard.h"
 
-#define MEMORY_SIZE (2<<12)
+#define MEMORY_SIZE (2<<14)
 
 // For storing debugging information per line
 typedef struct ASMLine {
