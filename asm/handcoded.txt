@@ -3,7 +3,7 @@
 0x00000000,
 0x00000000,
 0x00000000,
-0x00000020, // $pc = 0x20
+0x00000008, // $pc = 0x20 (multiplied by 4)
 0x00000000,
 0x00000000,
 0x24100010, // addiu $s0 $zero 0x10 ; s0 = 0x10 (0x0020)
@@ -28,32 +28,32 @@
 0x8e8e0000, // lw $t6 0($s4)        ; t6 = mem[0x0108] forward
 0x26940004, // addiu $s4 $s4 0x4    ; s4 = 0x010c forward
 0x8e8f0000, // lw $t7 0($s4)        ; t7 = mem[0x010c] forward
+0x26940004, // addiu $s4 $s4 0x4    ; s4 = 0x0110 forward
+0x86980000, // lh $t8 0(s4)         ; t8 = mem[0x0110] forward
+0x26940002, // addiu $s4 $s4 0x2    ; s4 = 0x0112 forward
+0x86990000, // lh $t9 0(s4)         ; t9 = mem[0x0112] forward
+0x26940002, // addiu $s4 $s4 0x2    ; s4 = 0x0114 forward
+0x96960000, // lhu $s6 0(s4)        ; s6 = mem[0x0114] forward
+0x26940002, // addiu $s4 $s4 0x2    ; s4 = 0x0116 forward
+0x96970000, // lhu $s7 0(s4)        ; s7 = mem[0x0116] forward
+0x26940002, // addiu $s4 $s4 0x2    ; s4 = 0x0118 forward
 0x00000000, // nop
 0x00000000, // nop
 0x00000000, // nop
 0x00000000, // nop
-0x00000000, // nop
-0x00000000, // nop
-0x00000000, // nop
-0x00000000, // nop
-0x00000000, // nop
-0x00000000, // nop
-0x00000000, // nop
-0x00000000, // nop
-0x00000000, // nop
-0x00000000, // nop
-0x00000000, // nop
-0x00000000, // nop
-0x00000000, // nop
-0x00000000, // nop
-0x00000000, // nop
-0x00000000, // nop
-0x00000000, // nop
-0x00000000, // nop
-0x00000000, // nop
-0x00000000, // nop
-0x00000000, // nop
-0x00000000, // nop
+0x24010000, // addiu $at $zero 0x0  ; at = 0
+0x10000002, // beq $zero $zero 0x2  ; branch taken
+0x24210001, // addiu $at $at 0x1    ; delay slot
+0x24210002, // addiu $at $at 0x2    ; not executed
+0x10000002, // bne $zero $at 0x2    ; branch taken
+0x24210004, // addiu $at $at 0x4    ; delay slot
+0x24210008, // addiu $at $at 0x8    ; not executed
+0x10010002, // beq $zero $at 0x2    ; not taken
+0x24210010, // addiu $at $at 0x10   ; delay slot
+0x24210020, // addiu $at $at 0x20   ; executed
+0x14000002, // bne $zero $zero 0x2  ; not taken
+0x24210040, // addiu $at $at 0x40   ; delay slot
+0x24210080, // addiu $at $at 0x80   ; executed
 0x00000000, // nop
 0x00000000, // nop
 0x00000000, // nop
@@ -66,8 +66,8 @@
 0xfa5f0044,
 0xfa5f0088,
 0xfa5f00cc,
-0x1ff12ff2,
-0x3ff34ff4,
+0xf11f0220,
+0xf33f0440,
 0x11223344,
 0x55667788,
 0x00000000,

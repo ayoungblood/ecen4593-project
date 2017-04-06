@@ -70,6 +70,8 @@ int decode( control_t * ifid , control_t * idex) {
 
             break;
         case OPC_LW:
+        case OPC_LH:
+        case OPC_LB:
         case OPC_LHU:
         case OPC_LBU:
             idex->ALUop = OPR_ADDU;
