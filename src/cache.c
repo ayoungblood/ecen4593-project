@@ -64,6 +64,10 @@ void d_cache_init(void){
     d_cache->tag_mask = ~d_cache->index_mask;
     d_cache->index_mask &= ~3;
 
+    //Set up the fetch variables
+    d_cache->fetching = false;
+    d_cache->penalty_count = 0;
+
     //Invalidate all data in the cache
     uint32_t i = 0;
     for(i = 0; i < d_cache->num_blocks; i++){
@@ -80,17 +84,106 @@ void i_cache_init(void){
 void cache_destroy(void){
 #ifdef DIRECT_MAPPED
     //free the cache
-    free(d_cache->blocks);//helper functions do not call directly
+    free(d_cache->blocks);
     d_cache->num_blocks = 0;
+    d_cache->tag_size = 0;
+    d_cache->tag_mask = 0;
+    d_cache->index_size = 0;
+    d_cache->index_mask = 0;
 #endif /* DIRECT_MAPPED */
     return;
 }
 
+/* void cache_digest(void)
+ * processes the cache on each cycle
+ * handles the business logic of fetching data from main memory,
+ * waiting the specified cache miss penalty, retreiving subsequent lines from
+ * memory.
+*/
+
+void cache_digest(void){
+    if(flags & MASK_DEBUG){
+        printf(ANSI_C_CYAN "CACHE DIGEST:\n" ANSI_C_RESET);
+    }
+
+#ifdef DIRECT_MAPPED
+    uint32_t index = 0;
+    uint32_t tag = 0;
+    direct_cache_get_tag_and_index(&(d_cache->target_address), &index, &tag);
+
+    direct_cache_block_t block = d_cache->blocks[index];
+    if(d_cache->fetching){
+        //Increment the wait count
+        d_cache->penalty_count++;
+        if(flags & MASK_DEBUG){
+            printf("\tPenalty counter: %d\n", d_cache->penalty_count);
+        }
+        if((d_cache->penalty_count == CACHE_MISS_PENALTY) && (d_cache->subsequent_fetching == 0)){
+            //Finished waiting, get data and return it
+            uint32_t temp = 0;
+            mem_read_w(d_cache->target_address, &temp);
+            if(flags & MASK_DEBUG){
+                printf("\tFilling block index %d with data 0x%08x and tag 0x%08x\n", index, temp, tag);
+            }
+            //fill block line
+            block.data = temp;
+            block.tag = tag;
+            block.valid = true;
+            d_cache->fetching = false;
+            d_cache->penalty_count = 0;
+            if(LINE_FILL != 1){
+                d_cache->subsequent_fetching = 1;
+                //Start retrieving data from the next address and restart the penalty counter
+                d_cache->target_address += 4;
+                d_cache->fetching = true;
+            }
+            return;
+        }
+        else if((d_cache->penalty_count == CACHE_MISS_SUBSEQUENT_PENALTY) && (d_cache->subsequent_fetching != 0) && (LINE_FILL != 1)){
+            //We have data from a block line following a previous cache miss
+            uint32_t temp = 0;
+            mem_read_w(d_cache->target_address, &temp);
+            if(flags & MASK_DEBUG){
+                printf("\tFilling block index %d with data 0x%08x and tag 0x%08x\n", index, temp, tag);
+            }
+            block.data = temp;
+            block.tag = tag;
+            block.valid = true;
+            d_cache->subsequent_fetching++;
+            if(d_cache->subsequent_fetching == (LINE_FILL - 1)){
+                if(flags & MASK_DEBUG){
+                    printf("\tDone retrieving block\n");
+                }
+                //We have retrieved the whole block. Relenquish the fetching flag
+                d_cache->fetching = false;
+                d_cache->subsequent_fetching = 0;
+                d_cache->penalty_count = 0;
+                return;
+            }
+            else {
+                //Start fetching the next address
+                d_cache->target_address+=4;
+                d_cache->penalty_count = 0;
+                if(flags & MASK_DEBUG){
+                    printf("\tBeggining subsequent fetch of address 0x%08x\n", d_cache->target_address);
+                }
+                return;
+            }
+        }
+    }
+
+#endif /* DIRECT_MAPPED */
+}
+
 cache_status_t d_cache_get_word(uint32_t *address, word_t *data){
+    if(flags & MASK_DEBUG){
+        printf(ANSI_C_CYAN "D_CACHE GET WORD:\n" ANSI_C_RESET);
+    }
     //Get data from the data cache
 #ifdef DIRECT_MAPPED
-    uint32_t index = (*address & d_cache->index_mask) >> 2;
-    uint32_t tag = (*address & d_cache->tag_mask) >> (2 + d_cache->index_size);
+    uint32_t index = 0;
+    uint32_t tag = 0;
+    direct_cache_get_tag_and_index(address, &index, &tag);
 
     //Some index checking to make sure we don't seg fault
     if(index > d_cache->num_blocks){
@@ -111,9 +204,39 @@ cache_status_t d_cache_get_word(uint32_t *address, word_t *data){
         *data = block.data;
         return CACHE_HIT;
     } else {
-
+        //Data is not in the cache. Either start the retrieval, wait, or fill depending on the stall count
+        if(d_cache->fetching){
+            if(flags & MASK_DEBUG){
+                printf("\tCache is busy\n");
+            }
+            //Not the first request for this address, continue the penalty count
+            //Make sure its the same address request from when the stall started
+            //Not sure if this will ever happen or if we should crash on this
+            //My thought is no, because in a unified memory, we could request an instruction and data from the same cache in the same cycle
+            if(*address != d_cache->target_address){
+                printf(ANSI_C_RED "d_cache_get_word: RESOURCE IN USE! Cache already retrieving memory at address 0x%08x and cannot retreive memory at address 0x%08x\n" ANSI_C_RESET, d_cache->target_address, *address);
+            }
+        }
+        else {
+            //Start the fetch stall
+            if(flags & MASK_DEBUG){
+                printf("\tCACHE MISS! Starting main memory data retreival for address 0x%08x\n",*address);
+            }
+            d_cache->fetching = true;
+            d_cache->target_address = *address;
+            d_cache->penalty_count = 0;
+        }
         return CACHE_MISS;
     }
 
 #endif /* DIRECT_MAPPED */
 }
+
+
+#ifdef DIRECT_MAPPED
+/* Helper functions specific to the direct mapped cache */
+void direct_cache_get_tag_and_index(uint32_t *address, uint32_t *index, uint32_t *tag){
+    *index = (*address & d_cache->index_mask) >> 2;
+    *tag = (*address & d_cache->tag_mask) >> (2 + d_cache->index_size);
+}
+#endif /* DIRECT_MAPPED */
