@@ -10,21 +10,22 @@
 0x00000000,
 0x24100000, // addiu s0 zero 0x0
 0x24110000, // addiu s1 zero 0x0
-0x0C000017, // jal 0x17 <subroutine>
+0x0C00001A, // jal 0x1a <subroutine>
 0x00000000, // nop (delay slot)
 0x2408FFFF, // addiu t0 zero 0xffff
 0x00000000, // nop
 0x00000000, // nop
-0x0C000017, // jal 0x17 <subroutine>
+0x0C00001A, // jal 0x1a <subroutine>
 0x00000000, // nop (delay slot)
 0x2409FFFF, // addiu t1 zero 0xffff
 0x00000000, // nop
 0x00000000, // nop
+0x00000000, // nop
 0x1000FFFF, // HALT
-0x00000000, // nop
-0x00000000, // nop
-0x24101111, // addiu s0 zero 0x1111 <subroutine>
-0x24111111, // addiu s1 zero 0x1111
+0x1000FFFF, // HALT
+0x1000FFFF, // HALT
+0x26101111, // addiu s0 s0 0x1111 <subroutine>
+0x26311111, // addiu s1 s1 0x1111
 0x03E00008, // jr ra
 0x00000000, // nop
 0x00000000, // nop
