@@ -44,4 +44,7 @@ void pipeline_init(control_t** ifid, control_t** idex, control_t** exmem, contro
 
 void pipeline_destroy(control_t** ifid, control_t** idex, control_t** exmem, control_t** memwb);
 
+// Provides a reverse mapping (register number to string) for debugging
+char* get_register_name_string(int reg);
+
 #endif /* _TYPES_H */

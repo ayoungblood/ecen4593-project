@@ -6,32 +6,31 @@
 
 // Print all of the struct fields of a pipeline register
 void print_pipeline_register(control_t * reg){
-    printf("Pipeline Register: %s\n", reg->regName);
-    printf("Instruction: 0x%08x\n", reg->instr);
-    printf("Decoded Instruction: \n");
-    printf("\treg->opCode:     0x%02x\n", reg->opCode);
-    printf("\treg->regRs:      0x%02x\n", reg->regRs);
-    printf("\treg->regRt:      0x%02x\n", reg->regRt);
-    printf("\treg->regRd:      0x%02x\n", reg->regRd);
-    printf("\treg->shamt:      0x%02x\n", reg->shamt);
-    printf("\treg->funct:      0x%02x\n", reg->funct);
-    printf("\treg->immed:      0x%04x\n", reg->immed);
-    printf("\treg->address:    0x%08x\n", reg->address);
-    printf("\treg->pcNext:     0x%08x\n", reg->pcNext);
-    printf("\treg->regRtValue: 0x%08x\n", reg->regRtValue);
-    printf("\treg->regRsValue: 0x%08x\n", reg->regRsValue);
-    printf("\treg->ALUresult:  0x%08x\n", reg->ALUresult);
-    //printf("Global Program Counter:\n");
-    printf("Register control bits:\n");
-    printf("\treg->regDst:     %01d\n", reg->regDst);
-    printf("\treg->ALUSrc:     %01d\n", reg->ALUSrc);
-    printf("\treg->memToReg:   %01d\n", reg->memToReg);
-    printf("\treg->regWrite:   %01d\n", reg->regWrite);
-    printf("\treg->memRead:    %01d\n", reg->memRead);
-    printf("\treg->memWrite:   %01d\n", reg->memWrite);
-    //printf("\treg->ALUop:      %02d\n", reg->ALUop);
-    printf("\treg->PCSrc:      %01d\n", reg->PCSrc);
-    printf("\treg->jump:       %01d\n\n", reg->jump);
+    printf("\tInstruction: 0x%08x\n", reg->instr);
+    printf("\tPipeline Register: %s\n", reg->regName);
+    printf("\tDecoded Instruction: \n");
+    printf("\t    reg->opCode:     0x%02x\n", reg->opCode);
+    printf("\t    reg->regRs:      0x%02x\t(0d%d, $%s)\n", reg->regRs, reg->regRs, get_register_name_string(reg->regRs));
+    printf("\t    reg->regRt:      0x%02x\t(0d%d, $%s)\n", reg->regRt, reg->regRt, get_register_name_string(reg->regRt));
+    printf("\t    reg->regRd:      0x%02x\t(0d%d, $%s)\n", reg->regRd, reg->regRd, get_register_name_string(reg->regRd));
+    printf("\t    reg->shamt:      0x%02x\t(0d%d)\n", reg->shamt, reg->shamt);
+    printf("\t    reg->funct:      0x%02x\n", reg->funct);
+    printf("\t    reg->immed:      0x%04x\t(0d%d)\n", reg->immed, reg->immed);
+    printf("\t    reg->address:    0x%08x\n", reg->address);
+    printf("\t    reg->pcNext:     0x%08x\n", reg->pcNext);
+    printf("\t    reg->regRtValue: 0x%08x\t(0d%d)\n", reg->regRtValue, reg->regRtValue);
+    printf("\t    reg->regRsValue: 0x%08x\t(0d%d)\n", reg->regRsValue, reg->regRsValue);
+    printf("\t    reg->ALUresult:  0x%08x\t(0d%d)\n", reg->ALUresult , reg->ALUresult);
+    printf("\tRegister control bits:\n");
+    printf("\t    reg->regDst:     %01d\n", reg->regDst);
+    printf("\t    reg->ALUSrc:     %01d\n", reg->ALUSrc);
+    printf("\t    reg->memToReg:   %01d\n", reg->memToReg);
+    printf("\t    reg->regWrite:   %01d\n", reg->regWrite);
+    printf("\t    reg->memRead:    %01d\n", reg->memRead);
+    printf("\t    reg->memWrite:   %01d\n", reg->memWrite);
+    //printf("\t    reg->ALUop:      %02d\n", reg->ALUop);
+    printf("\t    reg->PCSrc:      %01d\n", reg->PCSrc);
+    printf("\t    reg->jump:       %01d\n\n", reg->jump);
 }
 
 void copy_pipeline_register(control_t* orig, control_t* copy){
@@ -130,4 +129,42 @@ void pipeline_destroy(control_t** ifid, control_t** idex, control_t** exmem, con
     *idex  = NULL;
     *exmem = NULL;
     *memwb = NULL;
+}
+
+char* get_register_name_string(int reg) {
+    char* names[] = {
+        "zero",
+        "at",
+        "v0",
+        "v1",
+        "a0",
+        "a1",
+        "a2",
+        "a3",
+        "t0",
+        "t1",
+        "t2",
+        "t3",
+        "t4",
+        "t5",
+        "t6",
+        "t7",
+        "s0",
+        "s1",
+        "s2",
+        "s3",
+        "s4",
+        "s5",
+        "s6",
+        "s7",
+        "t8",
+        "t9",
+        "k0",
+        "k1",
+        "gp",
+        "sp",
+        "fp",
+        "ra"
+    };
+    return names[reg];
 }

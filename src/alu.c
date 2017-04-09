@@ -30,10 +30,11 @@ int execute(control_t *idex, control_t *exmem){
     if(flags & MASK_DEBUG){
         printf(ANSI_C_CYAN "EXECUTE: \n" ANSI_C_RESET);
         printf("\tInstruction: 0x%08x\n", idex->instr);
-        printf("\tALUOp: 0x%08x\n", idex->ALUop);
-        printf("\tArg1: 0x%08x, Arg2: 0x%08x\n", ALUArg1, ALUArg2);
-        printf("\tshamt: %d (10)\n", idex->shamt);
-        printf("\tALUresult: 0x%08x\n", ALUresult);
+        printf("\tALUOp:     0x%08x\n", idex->ALUop);
+        printf("\tArg1:      0x%08x\t(0d%d)\n", ALUArg1, ALUArg1);
+        printf("\tArg2:      0x%08x\t(0d%d)\n", ALUArg2, ALUArg2);
+        printf("\tshamt:     0x%02x\t\t(0d%d)\n", idex->shamt, idex->shamt);
+        printf("\tALUresult: 0x%08x\t(0d%d)\n", ALUresult, ALUresult);
     }
 
     //Copy the results into the next pipeline register
