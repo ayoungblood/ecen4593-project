@@ -168,6 +168,7 @@ int decode( control_t * ifid , control_t * idex) {
     //Don't think i need to bitmask the address since in theory it shouldn't be
     //"signed"
     if(idex->jump && (idex->opCode != OPC_RTYPE)){
+        idex->regRtValue = idex->pcNext; // RA value goes into ALU, gets added to zero to set RA
         idex->pcNext = ( idex->pcNext & 0xF0000000 ) | idex->address;
     }
     else if(idex->jump && (idex->opCode == OPC_RTYPE)){

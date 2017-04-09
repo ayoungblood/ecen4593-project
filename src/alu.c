@@ -20,10 +20,6 @@ int execute(control_t *idex, control_t *exmem){
         //Second argument comes from immediate 16 value
         ALUArg2 =  idex->immed;
     }
-    else if(idex->opCode == OPC_JAL){
-        //For JAL, put the pc+4 through and add with zero then write back to $ra
-        ALUArg2 = idex->pcNext;
-    }
     else {
         //Second argument comes from Rt
         ALUArg2 = idex->regRtValue;
