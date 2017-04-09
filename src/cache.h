@@ -63,7 +63,6 @@ typedef struct DIRECT_CACHE {
 } direct_cache_t;
 
 #ifdef DIRECT_MAPPED
-direct_cache_t *d_cache;
 void direct_cache_get_tag_and_index(uint32_t *address, uint32_t *index, uint32_t *tag);
 #endif /* DIRECT_MAPPED */
 

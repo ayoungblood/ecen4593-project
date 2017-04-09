@@ -7,6 +7,8 @@
 
 extern int flags;
 
+direct_cache_t *d_cache;
+
 
 void cache_init(void){
 
@@ -24,7 +26,7 @@ void cache_init(void){
 void d_cache_init(void){
 
     //Check if cache size is a power of two
-    if((D_CACHE_SIZE & (D_CACHE_SIZE - 1)) == 0) {
+    if((D_CACHE_SIZE & (D_CACHE_SIZE - 1)) != 0) {
         printf(ANSI_C_RED "cache_init: D_CACHE_SIZE %d not a power of two\n" ANSI_C_RESET, D_CACHE_SIZE);
         assert(0);
     }
@@ -33,9 +35,11 @@ void d_cache_init(void){
     //Each block contains a word of data
     uint32_t num_blocks = D_CACHE_SIZE >> 2;
 
-    direct_cache_block_t *blocks = (direct_cache_block_t *)malloc(sizeof(direct_cache_block_t) * num_blocks);
-    d_cache->blocks = blocks;
+    d_cache = (direct_cache_t *)malloc(sizeof(direct_cache_t));
 
+    direct_cache_block_t *blocks = (direct_cache_block_t *)malloc(sizeof(direct_cache_block_t) * num_blocks);
+
+    d_cache->blocks = blocks;
     //crash if unable to allocate memory
     if(d_cache->blocks == NULL){
         printf(ANSI_C_RED "cache_init: Unable to allocate data cache\n" ANSI_C_RESET);
@@ -67,6 +71,7 @@ void d_cache_init(void){
     //Set up the fetch variables
     d_cache->fetching = false;
     d_cache->penalty_count = 0;
+    d_cache->subsequent_fetching = 0;
 
     //Invalidate all data in the cache
     uint32_t i = 0;
@@ -90,6 +95,7 @@ void cache_destroy(void){
     d_cache->tag_mask = 0;
     d_cache->index_size = 0;
     d_cache->index_mask = 0;
+    free(d_cache);
 #endif /* DIRECT_MAPPED */
     return;
 }
@@ -111,7 +117,6 @@ void cache_digest(void){
     uint32_t tag = 0;
     direct_cache_get_tag_and_index(&(d_cache->target_address), &index, &tag);
 
-    direct_cache_block_t block = d_cache->blocks[index];
     if(d_cache->fetching){
         //Increment the wait count
         d_cache->penalty_count++;
@@ -126,9 +131,14 @@ void cache_digest(void){
                 printf("\tFilling block index %d with data 0x%08x and tag 0x%08x\n", index, temp, tag);
             }
             //fill block line
-            block.data = temp;
-            block.tag = tag;
-            block.valid = true;
+            d_cache->blocks[index].data = temp;
+            d_cache->blocks[index].tag = tag;
+            d_cache->blocks[index].valid = true;
+            if(flags & MASK_DEBUG){
+                direct_cache_block_t block = d_cache->blocks[index];
+                printf("\tNEW Block data!\n");
+                printf("\tVALID BIT: %d\n\tTAG: 0x%06x\n\tINDEX: %d\n\tDATA: 0x%08x\n",block.valid, block.tag, index, block.data);
+            }
             d_cache->fetching = false;
             d_cache->penalty_count = 0;
             if(LINE_FILL != 1){
@@ -146,9 +156,9 @@ void cache_digest(void){
             if(flags & MASK_DEBUG){
                 printf("\tFilling block index %d with data 0x%08x and tag 0x%08x\n", index, temp, tag);
             }
-            block.data = temp;
-            block.tag = tag;
-            block.valid = true;
+            d_cache->blocks[index].data = temp;
+            d_cache->blocks[index].tag = tag;
+            d_cache->blocks[index].valid = true;
             d_cache->subsequent_fetching++;
             if(d_cache->subsequent_fetching == (LINE_FILL - 1)){
                 if(flags & MASK_DEBUG){
@@ -175,11 +185,16 @@ void cache_digest(void){
 #endif /* DIRECT_MAPPED */
 }
 
+
+
+
 cache_status_t d_cache_get_word(uint32_t *address, word_t *data){
     if(flags & MASK_DEBUG){
         printf(ANSI_C_CYAN "D_CACHE GET WORD:\n" ANSI_C_RESET);
     }
     //Get data from the data cache
+
+
 #ifdef DIRECT_MAPPED
     uint32_t index = 0;
     uint32_t tag = 0;
@@ -197,8 +212,13 @@ cache_status_t d_cache_get_word(uint32_t *address, word_t *data){
     }
 
     direct_cache_block_t block = d_cache->blocks[index];
+    if(flags & MASK_DEBUG){
+        printf("\tCurrent data in block at requested index\n");
+        printf("\tVALID BIT: %d \n\tTAG: 0x%06x\n\tINDEX: %d\n\tDATA: 0x%08x\n",block.valid, block.tag, index, block.data);
+    }
     if(block.valid && (tag == block.tag)){
         if(flags & MASK_DEBUG){
+            printf("\tCACHE HIT!\n");
             printf("\tFound valid data 0x%08x for address 0x%08x in d cache\n", block.data, *address);
         }
         *data = block.data;
@@ -230,6 +250,9 @@ cache_status_t d_cache_get_word(uint32_t *address, word_t *data){
     }
 
 #endif /* DIRECT_MAPPED */
+
+
+
 }
 
 
