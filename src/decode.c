@@ -152,9 +152,22 @@ int decode( control_t * ifid , control_t * idex) {
             idex->PCSrc = false;
             idex->jump = true;
             break;
+        case OPC_LUI:
+            idex->ALUop = OPR_SLL;
+            idex->regDst = false;
+            idex->ALUSrc = true;
+            idex->regWrite = true;
+            idex->memRead = false;
+            idex->memWrite = false;
+            idex->memToReg = false;
+            idex->PCSrc = false;
+            idex->jump = false;
+            idex->shamt = 16; // fixed shift amount
+            break;
         default:
-            printf(ANSI_C_RED "Illegal instruction, opcode 0x%02x (instruction 0x%08x). Halting.\n" ANSI_C_RESET, idex->opCode,idex->instr);
+            printf(ANSI_C_RED "Illegal instruction, opcode 0x%02x (instruction 0x%08x). Halting.\n" ANSI_C_RESET, idex->opCode, idex->instr);
             assert(0);
+            break; // never reached
     }
 
 

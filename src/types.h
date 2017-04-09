@@ -91,64 +91,56 @@ typedef enum FunctCodes {
 // These are used internally to represent operations between stages
 typedef enum Operations {
     // Arithmetic and logical
-    OPR_ADD,
-    OPR_ADDU,
-    OPR_ADDI,
-    OPR_ADDIU,
-    OPR_AND,
-    OPR_ANDI,
-    OPR_DIV,    // Probably not supported
-    OPR_DIVU,   // Probably not supported
-    OPR_MULT,
-    OPR_MULTU,
-    OPR_NOR,
-    OPR_OR,
-    OPR_ORI,
-    OPR_SLL,
-    OPR_SLLV,
-    OPR_SRA,
-    OPR_SRAV,
-    OPR_SRL,
-    OPR_SRLV,
-    OPR_SUB,
-    OPR_SUBU,
-    OPR_XOR,
-    OPR_XORI,
-    // Constant-manipulating
-    OPR_LHI,
-    OPR_LLO,
+    OPR_ADD,    // Add Word                                         (MIPS I)
+    OPR_ADDU,   // Add Unsigned Word                                (MIPS I)
+    OPR_ADDI,   // Add Immediate Word                               (MIPS I)
+    OPR_ADDIU,  // Add Immediate Unsigned Word                      (MIPS I)
+    OPR_AND,    // And                                              (MIPS I)
+    OPR_ANDI,   // And Immediate                                    (MIPS I)
+    OPR_NOR,    // Nor                                              (MIPS I)
+    OPR_LUI,    // Load Upper Immediate                             (MIPS I)
+    OPR_OR,     // Or                                               (MIPS I)
+    OPR_ORI,    // Or Immediate                                     (MIPS I)
+    OPR_SLL,    // Shift Word Left Logical                          (MIPS I)
+    OPR_SLLV,   // Shift Word Left Logical Variable                 (MIPS I)
+    OPR_SRA,    // Shift Word Right Arithmetic                      (MIPS I)
+    OPR_SRAV,   // Shift Word Right Arithmetic Variable             (MIPS I)
+    OPR_SRL,    // Shift Word Right Logical                         (MIPS I)
+    OPR_SRLV,   // Shift Word Right Logical Variable                (MIPS I)
+    OPR_SUB,    // Subtract Word                                    (MIPS I)
+    OPR_SUBU,   // Subtract Unsigned World                          (MIPS I)
+    OPR_XOR,    // Exclusive Or                                     (MIPS I)
+    OPR_XORI,   // Exclusive Or Immediate                           (MIPS I)
     // Comparison
-    OPR_SLT,
-    OPR_SLTU,
-    OPR_SLTI,
-    OPR_SLTIU,
+    OPR_SLT,    // Set on Less Than                                 (MIPS I)
+    OPR_SLTU,   // Set on Less Than Unsigned                        (MIPS I)
+    OPR_SLTI,   // Set on Less Than Immediate                       (MIPS I)
+    OPR_SLTIU,  // Set on Less Than Immediate Unsigned              (MIPS I)
     // Branch
-    OPR_BEQ,
-    OPR_BTGZ,
-    OPR_BLEZ,
-    OPR_BNE,
+    OPR_BEQ,    // Branch on Equal                                  (MIPS I)
+    OPR_BTGZ,   // Branch on Greater Than Zero                      (MIPS I)
+    OPR_BLEZ,   // Branch on Less Than or Equal to Zero             (MIPS I)
+    OPR_BNE,    // Branch on Not Equal                              (MIPS I)
+    OPR_BLTZ,   // Branch on Less Than Zero                         (MIPS I)
+    OPR_BGEZ,   // Branch on Greater Than or Equal to Zero          (MIPS I)
     // Jump
-    OPR_J,
-    OPR_JAL,
-    OPR_JALR,
-    OPR_JR,
+    OPR_J,      // Jump                                             (MIPS I)
+    OPR_JAL,    // Jump and Link                                    (MIPS I)
+    OPR_JR,     // Jump Register                                    (MIPS I)
+    OPR_JALR,   // Jump and Link Register                           (MIPS I)
     // Load
-    OPR_LB,
-    OPR_LBU,
-    OPR_LH,
-    OPR_LHU,
-    OPR_LW,
+    OPR_LB,     // Load Byte                                        (MIPS I)
+    OPR_LBU,    // Load Byte Unsigned                               (MIPS I)
+    OPR_LH,     // Load Halfword                                    (MIPS I)
+    OPR_LHU,    // Load Halfword Unsigned                           (MIPS I)
+    OPR_LW,     // Load Word                                        (MIPS I)
     // Store
-    OPR_SB,
-    OPR_SH,
-    OPR_SW,
+    OPR_SB,     // Store Byte                                       (MIPS I)
+    OPR_SH,     // Store Halfword                                   (MIPS I)
+    OPR_SW,     // Store Word                                       (MIPS I)
     // Data movement
-    OPR_MFHI,
-    OPR_MFLO,
-    OPR_MTHI,
-    OPR_MTLO,
-    // Exception/interrupt
-    OPR_TRAP
+    OPR_MOVN,   // Move Conditional on Not Zero                     (MIPS IV)
+    OPR_MOVZ    // Move Conditional on Zero                         (MIPS IV)
 } operation_t;
 
 typedef struct CONTROL_REGISTER {
