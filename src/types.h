@@ -75,6 +75,8 @@ typedef enum FunctCodes {
     FNC_ADDU    = 0x21, // 0b100001, Add Unsigned Word
     FNC_AND     = 0x24, // 0b100100, And
     FNC_JR      = 0x08, // 0b001000, Jump Register
+    FNC_MOVZ    = 0x0a, // 0b001010, Move Conditional on Zero
+    FNC_MOVN    = 0x0b, // 0b001011, Move Conditional on Not Zero
     FNC_NOR     = 0x27, // 0b100111, Not Or
     FNC_OR      = 0x25, // 0b100101, Or
     FNC_SLL     = 0x00, // 0b000000, Shift Word Left Logical
