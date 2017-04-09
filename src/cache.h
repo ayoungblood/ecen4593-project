@@ -64,6 +64,9 @@ typedef struct DIRECT_CACHE {
 
 #ifdef DIRECT_MAPPED
 void direct_cache_get_tag_and_index(uint32_t *address, uint32_t *index, uint32_t *tag);
+direct_cache_t * direct_cache_init(uint32_t num_blocks);
+void direct_cache_digest(direct_cache_t *cache);
+cache_status_t direct_cache_get_word(direct_cache_t *cache, uint32_t *address, uint32_t *data);
 #endif /* DIRECT_MAPPED */
 
 
@@ -73,12 +76,17 @@ void cache_init(void);
 void cache_destroy(void);
 void cache_digest(void);
 
-cache_status_t d_cache_get_word(uint32_t *address, word_t *data);
-
+cache_status_t d_cache_read_w(uint32_t *address, word_t *data);
+cache_status_t d_cache_read_h(uint32_t *address, word_t *data);
+cache_status_t d_cache_read_b(uint32_t *address, word_t *data);
 
 
 void d_cache_init(void);
+
+#ifndef UNIFIED
 void i_cache_init(void);
+cache_status_t i_cache_read_w(uint32_t *address, word_t *data);
+#endif /* UNIFIED */
 
 
 
