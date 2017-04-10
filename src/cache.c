@@ -1,6 +1,6 @@
 /* src/cache.c
- * Wrapper functions for all cache operations
- */
+* Wrapper functions for all cache operations
+*/
 
 
 #include "cache.h"
@@ -9,17 +9,28 @@ extern int flags;
 
 direct_cache_t *d_cache;
 direct_cache_t *i_cache;
+write_buffer_t *write_buffer;
+memory_status_t memory_status = MEM_IDLE;
+
+memory_status_t get_mem_status(void){
+    return memory_status;
+}
+void set_mem_status(memory_status_t status){
+    memory_status = status;
+}
 
 void cache_init(void){
 
-#ifdef UNIFIED
+    set_mem_status(MEM_IDLE);
+
+    #ifdef UNIFIED
     //The d cache will be the only cache that is used
     d_cache_init();
-#else
+    #else
     //separate instruction and data caches
     d_cache_init();
     i_cache_init();
-#endif /* UNIFIED */
+    #endif /* UNIFIED */
 
 }
 
@@ -31,11 +42,11 @@ void d_cache_init(void){
         assert(0);
     }
 
-#ifdef DIRECT_MAPPED
+    #ifdef DIRECT_MAPPED
     //Each block contains a word of data
     uint32_t num_blocks = D_CACHE_SIZE >> 2;
     d_cache = direct_cache_init(num_blocks);
-#endif /* DIRECT_MAPPED */
+    #endif /* DIRECT_MAPPED */
 }
 
 #ifndef UNIFIED
@@ -46,22 +57,234 @@ void i_cache_init(void){
         assert(0);
     }
 
-#ifdef DIRECT_MAPPED
+    #ifdef DIRECT_MAPPED
     uint32_t num_blocks = I_CACHE_SIZE >> 2;
     i_cache = direct_cache_init(num_blocks);
-#endif /* DIRECT_MAPPED */
+    #endif /* DIRECT_MAPPED */
 }
 #endif /* UNIFIED */
 
 
+void cache_destroy(void){
+    #ifdef DIRECT_MAPPED
+    //free the cache
+    free(d_cache->blocks);
+    free(d_cache);
+
+    #ifndef UNIFIED
+    free(i_cache->blocks);
+    free(i_cache);
+    #endif /* UNIFIED */
+
+    #endif /* DIRECT_MAPPED */
+    return;
+}
+
+/* void cache_digest(void)
+* processes the cache on each cycle
+* handles the business logic of fetching data from main memory,
+* waiting the specified cache miss penalty, retreiving subsequent lines from
+* memory.
+*/
+
+void cache_digest(void){
+    if(flags & MASK_DEBUG){
+        printf(ANSI_C_CYAN "CACHE DIGEST:\n" ANSI_C_RESET);
+    }
+
+    if(d_cache == NULL){
+        printf(ANSI_C_RED "cache_digest: data cache is not initialized\n" ANSI_C_RESET);
+        assert(0);
+    }
+    #ifndef UNIFIED
+    if(i_cache == NULL){
+        printf(ANSI_C_RED "cache_digest: instruction cache is not initialized\n" ANSI_C_RESET);
+        assert(0);
+    }
+    #endif
+    if(write_buffer == NULL){
+        printf(ANSI_C_RED "cache_digest: write buffer is not initialized\n" ANSI_C_RESET);
+        assert(0);
+    }
+
+    //State machine to ensure we do not have more than one memory access at a time
+    //This is a state that is consistent between all
+    switch (get_mem_status()) {
+        case MEM_IDLE:
+            //Ready to accept new memory accesses
+            //check for data cache read requests
+            if(d_cache->fetching){
+                set_mem_status(MEM_READING_D);
+            }
+            #ifndef UNIFIED
+            else if(i_cache->fetching){
+                set_mem_status(MEM_READING_I);
+            }
+            #endif /*UNIFIED*/
+            else if(write_buffer->writing){
+                set_mem_status(MEM_WRITING);
+            }
+            break;
+        case MEM_READING_D:
+            //Last digest cycle, we were reading into data cache. See if still reading
+            if(d_cache->fetching){
+                //Still reading, no state change
+                break;
+            }
+            #ifndef UNIFIED
+            else if(i_cache->fetching){
+                //Now instruction cache is reading
+                set_mem_status(MEM_READING_I);
+            }
+            #endif /*UNIFIED*/
+            else if(write_buffer->writing){
+                //writing from data cache to memory
+                set_mem_status(MEM_WRITING);
+            }
+            else {
+                set_mem_status(MEM_IDLE);
+            }
+            break;
+        #ifndef UNIFIED
+        case MEM_READING_I:
+            //Last cycle we were reading into instruction cache
+            if(i_cache->fetching){
+                //still reading into i cache
+                break;
+            }
+            else if(d_cache->fetching){
+                //now we are reading into d cache
+                set_mem_status(MEM_READING_D);
+            }
+            else if(write_buffer->writing){
+                //now we are writing into memory from d cache
+                set_mem_status(MEM_WRITING);
+            }
+            else {
+                //nothing to do
+                set_mem_status(MEM_IDLE);
+            }
+            break;
+        #endif /*UNIFIED*/
+        case MEM_WRITING:
+            //Last cycle we were writing to memory
+            if(write_buffer->writing){
+                //still writing
+                break;
+            }
+            else if(d_cache->fetching){
+                //Now reading into data cache
+                set_mem_status(MEM_READING_D);
+            }
+            #ifndef UNIFIED
+            else if(i_cache->fetching){
+                //Now reading into instruction cache
+                set_mem_status(MEM_READING_I);
+            }
+            #endif /*UNIFIED*/
+            else{
+                //nothing to do
+                set_mem_status(MEM_IDLE);
+            }
+            break;
+        default:
+            printf(ANSI_C_RED "cache_digest: Undefined Memory State %d" ANSI_C_RESET, get_mem_status());
+            assert(0);
+            break;
+    }
+
+    #ifdef DIRECT_MAPPED
+    direct_cache_digest(d_cache, MEM_READING_D);
+    #ifndef UNIFIED
+    direct_cache_digest(i_cache, MEM_READING_I);
+    #endif /* UNIFIED */
+    #endif /* DIRECT_MAPPED */
+}
+
+
+
+
+cache_status_t d_cache_read_w(uint32_t *address, word_t *data){
+    if(flags & MASK_DEBUG){
+        printf(ANSI_C_CYAN "D_CACHE GET WORD:\n" ANSI_C_RESET);
+    }
+    //Get data from the data cache
+    #ifdef DIRECT_MAPPED
+    cache_status_t status = direct_cache_get_word(d_cache, address, data);
+    #endif /* DIRECT_MAPPED */
+    return status;
+}
+
+cache_status_t d_cache_read_h(uint32_t *address, word_t *data){
+    if(flags & MASK_DEBUG){
+        printf(ANSI_C_CYAN "D_CACHE GET HALFWORD:\n" ANSI_C_RESET);
+    }
+    //Get data from the data cache
+    #ifdef DIRECT_MAPPED
+    cache_status_t status = direct_cache_get_word(d_cache, address, data);
+    #endif /* DIRECT_MAPPED */
+
+    //Make it a halfword
+    uint32_t shift = ((2-(*address & 0x2))<<3); // shift amount based on byte position
+    *data >>= shift;
+    *data &= 0xffff;
+    return status;
+}
+
+cache_status_t d_cache_read_b(uint32_t *address, word_t *data){
+    if(flags & MASK_DEBUG){
+        printf(ANSI_C_CYAN "D_CACHE GET BYTE:\n" ANSI_C_RESET);
+    }
+    //Get data from the data cache
+
+    #ifdef DIRECT_MAPPED
+    cache_status_t status = direct_cache_get_word(d_cache, address, data);
+    #endif /* DIRECT_MAPPED */
+
+    uint32_t shift = ((3-(*address & 0x3))<<3); // shift amount based on byte position
+    *data >>= shift;
+    *data &= 0xff;
+    return status;
+}
+
+cache_status_t d_cache_write_w(uint32_t *address, word_t *data){
+    if(flags & MASK_DEBUG){
+        printf(ANSI_C_CYAN "D_CACHE WRITE WORD:\n" ANSI_C_RESET);
+    }
+
+    #ifdef WRITETHROUGH
+    cache_status_t status = write_through(address, data);
+    #endif
+    return status;
+}
+
+#ifndef UNIFIED
+cache_status_t i_cache_read_w(uint32_t *address, word_t *data){
+    if(flags & MASK_DEBUG){
+        printf(ANSI_C_CYAN "I_CACHE GET WORD:\n" ANSI_C_RESET);
+    }
+    //Get data from the data cache
+    #ifdef DIRECT_MAPPED
+    cache_status_t status = direct_cache_get_word(i_cache, address, data);
+    #endif /* DIRECT_MAPPED */
+    return status;
+}
+#endif /* UNIFIED */
+
+
+/* END OF THE WRAPPER FUNCTIONS FOR THE CACHES.
+* Below are the implementations of the two different cache architectures
+*/
+
+
 #ifdef DIRECT_MAPPED
 /*
- * direct_cache_t * direct_cache_init(uint32_t num_blocks)
- * Creates an instance of a direct mapped cache with the number
- * of blocks as a parameter. From the number of blocks we can determine
- * dynamically the tag size. This function also initializes all of the
- * blocks to have invalid data and sets up bitmasks to easily obtain
- * index and tags from an address.
+* direct_cache_t * direct_cache_init(uint32_t num_blocks)
+* Creates an instance of a direct mapped cache with the number
+* of blocks as a parameter. From the number of blocks we can determine
+* dynamically the tag size. This function also initializes all of the
+* blocks to have invalid data and sets up bitmasks to easily obtain
+* index and tags from an address.
 */
 direct_cache_t * direct_cache_init(uint32_t num_blocks){
 
@@ -111,17 +334,19 @@ direct_cache_t * direct_cache_init(uint32_t num_blocks){
 }
 
 /*
- * void direct_cache_digest(direct_cache_t *cache)
- * function to be called every cycle of the clock to process the cache logic
- * This is specific to the direct mapped caches, but the logic is identical
- * for the instruction and data cache.
+* void direct_cache_digest(direct_cache_t *cache, memory_status_t proceed_condition)
+* function to be called every cycle of the clock.
+* No advancement on stall counters will occur if the memory state does not
+* match the given proceed condition
+* @params *cache is which cache the digest will operate on
+* @params proceed_condition is a memory state to ensure a read doesn't proceed
+*         if there is another memory operation occuring
 */
-void direct_cache_digest(direct_cache_t *cache){
+void direct_cache_digest(direct_cache_t *cache, memory_status_t proceed_condition){
     uint32_t index = 0;
     uint32_t tag = 0;
-    direct_cache_get_tag_and_index(&(cache->target_address), &index, &tag);
-
-    if(cache->fetching){
+    direct_cache_get_tag_and_index(cache, &(cache->target_address), &index, &tag);
+    if(get_mem_status() == proceed_condition){
         //Increment the wait count
         cache->penalty_count++;
         if(flags & MASK_DEBUG){
@@ -189,14 +414,14 @@ void direct_cache_digest(direct_cache_t *cache){
 }
 
 /* cache_status_t direct_cache_get_word(direct_cache_t *cache, uint32_t *address, uint32_t *data)
- * returns CACHE_HIT or CACHE_MISS depending on if the data is available in the cache
- * if there is a CACHE_MISS, function will set up the direct mapped cache to
- * start fetching the data from main memory.
- */
+* returns CACHE_HIT or CACHE_MISS depending on if the data is available in the cache
+* if there is a CACHE_MISS, function will set up the direct mapped cache to
+* start fetching the data from main memory.
+*/
 cache_status_t direct_cache_get_word(direct_cache_t *cache, uint32_t *address, uint32_t *data){
     uint32_t index = 0;
     uint32_t tag = 0;
-    direct_cache_get_tag_and_index(address, &index, &tag);
+    direct_cache_get_tag_and_index(cache, address, &index, &tag);
 
     //Some index checking to make sure we don't seg fault
     if(index >= cache->num_blocks){
@@ -249,104 +474,65 @@ cache_status_t direct_cache_get_word(direct_cache_t *cache, uint32_t *address, u
 }
 
 /* Helper functions specific to the direct mapped cache */
-void direct_cache_get_tag_and_index(uint32_t *address, uint32_t *index, uint32_t *tag){
-    *index = (*address & d_cache->index_mask) >> 2;
-    *tag = (*address & d_cache->tag_mask) >> (2 + d_cache->index_size);
+void direct_cache_get_tag_and_index(direct_cache_t *cache, uint32_t *address, uint32_t *index, uint32_t *tag){
+    *index = (*address & cache->index_mask) >> 2;
+    *tag = (*address & cache->tag_mask) >> (2 + cache->index_size);
 }
 
 #endif /* DIRECT_MAPPED */
 
-void cache_destroy(void){
-#ifdef DIRECT_MAPPED
-    //free the cache
-    free(d_cache->blocks);
-    free(d_cache);
-
-#ifndef UNIFIED
-    free(i_cache->blocks);
-    free(i_cache);
-#endif /* UNIFIED */
-
-#endif /* DIRECT_MAPPED */
-    return;
-}
-
-/* void cache_digest(void)
- * processes the cache on each cycle
- * handles the business logic of fetching data from main memory,
- * waiting the specified cache miss penalty, retreiving subsequent lines from
- * memory.
+/* WRITETHROUGH BUFFER FUNCTIONS */
+#ifdef WRITETHROUGH
+/*
+* @brief Puts data into the write buffer and attempts to initialze a write
+* to main memory.
+* @params the address of the data and the data to be written
+* @returns CACHE_HIT if the write is successfully placed in the buffer
+*          and a CACHE_MISS if the write buffer is full
 */
-
-void cache_digest(void){
-    if(flags & MASK_DEBUG){
-        printf(ANSI_C_CYAN "CACHE DIGEST:\n" ANSI_C_RESET);
+cache_status_t write_through(uint32_t *address, word_t *data){
+    if(write_buffer == NULL){
+        printf(ANSI_C_RED "write_through: Write Buffer not initialized\n" ANSI_C_RESET);
+        assert(0);
     }
-
-#ifdef DIRECT_MAPPED
-    direct_cache_digest(d_cache);
-#ifndef UNIFIED
-    direct_cache_digest(i_cache);
-#endif /* UNIFIED */
-#endif /* DIRECT_MAPPED */
-
+    if(write_buffer->writing){
+        printf("\twrite_through: Write Buffer is full\n");
+        write_buffer->overflow = true;
+        return CACHE_MISS;
+    }
+    else {
+        write_buffer->address = *address;
+        write_buffer->data = *data;
+        write_buffer->writing = true;
+        write_buffer->penalty_count = 0;
+        return CACHE_HIT;
+    }
 }
 
+#endif
 
+/* Write buffer implementation functions */
+/* @brief Initializes a new write buffer
+*  @returns an instance of a new write buffer depending on what write policy is defined
+*/
+write_buffer_t *write_buffer_init(void){
 
-
-cache_status_t d_cache_read_w(uint32_t *address, word_t *data){
-    if(flags & MASK_DEBUG){
-        printf(ANSI_C_CYAN "D_CACHE GET WORD:\n" ANSI_C_RESET);
-    }
-    //Get data from the data cache
-#ifdef DIRECT_MAPPED
-    cache_status_t status = direct_cache_get_word(d_cache, address, data);
-#endif /* DIRECT_MAPPED */
-    return status;
+    write_buffer_t *wb = (write_buffer_t *)malloc(sizeof(write_buffer_t));
+    wb->penalty_count = 0;
+    return wb;
 }
 
-cache_status_t d_cache_read_h(uint32_t *address, word_t *data){
-    if(flags & MASK_DEBUG){
-        printf(ANSI_C_CYAN "D_CACHE GET HALFWORD:\n" ANSI_C_RESET);
-    }
-    //Get data from the data cache
-#ifdef DIRECT_MAPPED
-    cache_status_t status = direct_cache_get_word(d_cache, address, data);
-#endif /* DIRECT_MAPPED */
-
-    //Make it a halfword
-    uint32_t shift = ((2-(*address & 0x2))<<3); // shift amount based on byte position
-    *data >>= shift;
-    *data &= 0xffff;
-    return status;
+/* @brief frees the memory reserved for the write buffer
+*  @params the write buffer to be destroyed.
+*/
+void write_buffer_destroy(write_buffer_t *wb){
+    free(wb);
 }
 
-cache_status_t d_cache_read_b(uint32_t *address, word_t *data){
-    if(flags & MASK_DEBUG){
-        printf(ANSI_C_CYAN "D_CACHE GET BYTE:\n" ANSI_C_RESET);
+void write_buffer_digest(void){
+    if(get_mem_status() != MEM_WRITING){
+        //Its not my turn!!!
+        return;
     }
-    //Get data from the data cache
 
-#ifdef DIRECT_MAPPED
-    cache_status_t status = direct_cache_get_word(d_cache, address, data);
-#endif /* DIRECT_MAPPED */
-
-    uint32_t shift = ((3-(*address & 0x3))<<3); // shift amount based on byte position
-    *data >>= shift;
-    *data &= 0xff;
-    return status;
 }
-
-#ifndef UNIFIED
-cache_status_t i_cache_read_w(uint32_t *address, word_t *data){
-    if(flags & MASK_DEBUG){
-        printf(ANSI_C_CYAN "I_CACHE GET WORD:\n" ANSI_C_RESET);
-    }
-    //Get data from the data cache
-#ifdef DIRECT_MAPPED
-    cache_status_t status = direct_cache_get_word(i_cache, address, data);
-#endif /* DIRECT_MAPPED */
-    return status;
-}
-#endif /* UNIFIED */
