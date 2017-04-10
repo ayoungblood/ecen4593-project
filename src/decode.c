@@ -36,6 +36,12 @@ int decode( control_t * ifid , control_t * idex) {
                     //Make sure we don't accidentally write back, although rd = $zero
                     idex->regWrite = false;
                     break;
+                case FNC_MOVZ:
+                    idex->ALUop = OPR_MOVZ;
+                    break;
+                case FNC_MOVN:
+                    idex->ALUop = OPR_MOVN;
+                    break;
                 case FNC_NOR:
                     idex->ALUop = OPR_NOR;
                     break;
@@ -171,10 +177,12 @@ int decode( control_t * ifid , control_t * idex) {
     }
 
 
-    //Set register values for input to the ALU
+    // Set register values for input to the ALU
     reg_read((int)(idex->regRs), &(idex->regRsValue));
     reg_read((int)(idex->regRt), &(idex->regRtValue));
-
+    // Load ALUresult so that ALUresult can remain "unmodified" for MOVZ/MOVN
+    // This is needed if a MOVZ/MOVN result needs to be forwarded
+    reg_read((int)(idex->regRd), &(idex->ALUresult));
 
     //Jump address calculation
     idex->address = ( idex->address << 2 );         //Word aligned

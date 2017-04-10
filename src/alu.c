@@ -8,26 +8,30 @@ extern int flags; // from main.c
 
 // Wrapper function
 int execute(control_t *idex, control_t *exmem){
-    word_t ALUArg1;
-    word_t ALUArg2;
-    word_t ALUresult;
+    word_t ALUArg1, ALUArg2, ALUresult;
     bool zero;
 
+    // First ALU arg always comes from Rs
     ALUArg1 = idex->regRsValue;
-
-    //ALUSrc multiplexor
-    if(idex->ALUSrc){
-        //Second argument comes from immediate 16 value
-        ALUArg2 =  idex->immed;
-    }
-    else {
-        //Second argument comes from Rt
+    // Second ALU arg is multiplexed
+    if (idex->ALUSrc) {
+        // Second argument comes from 16-bit immediate value
+        ALUArg2 = idex->immed;
+    } else {
+        // Second argument comes from Rt
         ALUArg2 = idex->regRtValue;
     }
-
+    // ALU result needs to be set before the ALU call
+    // so that MOVN and MOVZ can leave it unmodified if need be
+    ALUresult = idex->ALUresult;
     alu(idex->ALUop, ALUArg1, ALUArg2, idex->shamt, &ALUresult, &zero);
+    // Additionally, clear regWrite if MOVZ or MOVN didn't move
+    if ((idex->ALUop == OPR_MOVZ && ALUArg2 != 0) ||
+        (idex->ALUop == OPR_MOVN && ALUArg2 == 0)) {
+            idex->regWrite = false;
+    }
 
-    if(flags & MASK_DEBUG){
+    if (flags & MASK_DEBUG) {
         printf(ANSI_C_CYAN "EXECUTE: \n" ANSI_C_RESET);
         printf("\tInstruction: 0x%08x\n", idex->instr);
         printf("\tALUOp:     0x%08x\n", idex->ALUop);
@@ -37,11 +41,9 @@ int execute(control_t *idex, control_t *exmem){
         printf("\tALUresult: 0x%08x\t(0d%d)\n", ALUresult, ALUresult);
     }
 
-    //Copy the results into the next pipeline register
+    // Copy the results into the next pipeline register
     copy_pipeline_register(idex, exmem);
     exmem->ALUresult = ALUresult;
-
-
     return 0;
 }
 
@@ -73,6 +75,14 @@ int alu(operation_t operation, word_t op_rs, word_t op_rt, word_t shamt, word_t 
         case OPR_AND:
             // rd <= rs AND rt
             *result = op_rs & op_rt;
+            break;
+        case OPR_MOVZ:
+            // if (rt == 0) then rd <= rs
+            if (op_rt == 0) *result = op_rs;
+            break;
+        case OPR_MOVN:
+            // if (rt != 0) then rd <= rs
+            if (op_rt != 0) *result = op_rs;
             break;
         case OPR_NOR:
             // rd <= rs NOR rt
