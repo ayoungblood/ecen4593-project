@@ -103,7 +103,9 @@ int main(int argc, char *argv[]) {
         }
     }
     printf("\nPipeline halted after %d cycles (address 0x%08x)\n",cycles,pc);
+    // Dump registers and the first couple words of memory so we can see what's going on
     reg_dump();
+    mem_dump_cute(0,16);
     // Close memory, and cleanup register files (we don't need to clean up registers)
     pipeline_destroy(&ifid, &idex, &exmem, &memwb);
     mem_close();
@@ -193,6 +195,7 @@ PROMPT: // LOL gotos
                 "\td: disable interactive mode\n" \
                 "\tl: print the original disassembly for a given memory address\n" \
                 "\tm: print a memory word for a given memory address\n" \
+                "\to: print 11 words of memory surrounding a given memory address\n" \
                 "\ts: single-step the pipeline\n" \
                 "\tr: dump registers\n" \
                 "\tx: exit simulation run\n");
@@ -217,7 +220,18 @@ PROMPT: // LOL gotos
                 goto PROMPT;
             }
             mem_read_w(i_addr, &i_data);
-            printf("mem[0x%08x]: 0x%08x\n",i_addr,i_data);
+            printf("mem[0x%08x]: 0x%08x (0d%d)\n",i_addr,i_data,i_data);
+            goto PROMPT;
+        case 'o': // view a region of memory
+            printf(ANSI_C_GREEN "memory address: " ANSI_C_RESET);
+            scanf("%x",&i_addr); getchar();
+            if (i_addr < mem_start() || i_addr > mem_end()) {
+                printf("Address out of range\n");
+                goto PROMPT;
+            }
+            if (i_addr < mem_start()+(5<<2)) i_addr = mem_start()+(5<<2);
+            if (i_addr > mem_end()-(5<<2)) i_addr = mem_end()-(5<<2);
+            mem_dump_cute(i_addr-(5<<2),11);
             goto PROMPT;
         case 's': // step
             break;

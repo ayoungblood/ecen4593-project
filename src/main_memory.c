@@ -44,6 +44,18 @@ void mem_dump(void) {
         }
     }
 }
+// Display a small section of memory starting at an address
+void mem_dump_cute(uint32_t offset, uint32_t words) {
+    printf("Printing %d words of memory starting at 0x%08x:\n",words,offset);
+    offset = offset >> 2;
+    for (uint32_t i = 0; i < words; ++i) {
+        printf("\t0x%08x: 0x%08x (0d%d)\n",
+            (offset+i)<<2,
+            mem[(offset+i)<<2],
+            mem[(offset+i)<<2]);
+    }
+}
+
 // De-allocate memory space
 void mem_close(void) {
     if (flags & MASK_VERBOSE) {

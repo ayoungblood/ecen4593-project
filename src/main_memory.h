@@ -20,6 +20,7 @@
 void mem_init(uint32_t size, uint32_t offset);
 // Display memory state (does _not_ dump the entire memory!)
 void mem_dump(void);
+void mem_dump_cute(uint32_t offset, uint32_t words); // dump a small section of memory
 // De-allocate memory
 void mem_close(void);
 // Get memory size in bytes or words
