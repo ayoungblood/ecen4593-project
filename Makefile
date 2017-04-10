@@ -9,7 +9,7 @@ CFLAGS = -Wall -Wextra -pedantic -Wshadow -m64 -std=c11 -Wpointer-arith -Wstrict
 # -std=c99: ISO/IEC 9899:2011, current C standard
 # -save-temps -fverbose-asm -masm=intel: make prettier disassembly (disabled for now)
 # -Wpointer-arith: warn on silly pointer operations
-# --Wstrict-prototypes -Wmissing-prototypes: be strict about function prototypes
+# -Wstrict-prototypes -Wmissing-prototypes: be strict about function prototypes
 LIBS =
 
 .PHONY: test clean
@@ -29,7 +29,7 @@ $(TARGET): $(OBJECTS)
 
 all: $(TARGET)
 
-test: $(OBJECTS)
+test: $(OBJECTS) all
 		$(CC) src/alu.o src/util.o -Wall $(LIBS) -o test/alu-test test/alu-test.c
 		$(CC) src/fetch.o src/util.o src/registers.o src/main_memory.o -Wall $(LIBS) -o test/fetch-test test/fetch-test.c
 		$(CC) src/registers.o -Wall $(LIBS) -o test/registers-test test/registers-test.c
@@ -45,6 +45,7 @@ test: $(OBJECTS)
 		test/memory-test
 		test/fetch-test
 		test/pipeline-test
+		./sim -s -a asm/program1file.txt
 
 test-alu: $(OBJECTS)
 		$(CC) src/alu.o src/util.o -Wall $(LIBS) -o test/alu-test test/alu-test.c
@@ -79,10 +80,7 @@ test-pipeline: $(OBJECTS)
 		test/pipeline-test
 
 test-main: all
-		#./sim asm/disjoint.s
-		#./sim -v asm/disjoint.s
-		#./sim -s -a -i -d -v asm/handcoded.txt
-		./sim -s -a -d asm/program1file.txt
+		./sim -s -a asm/program1file.txt
 
 clean:
 		-rm -f *.bc *.i *.s
