@@ -161,7 +161,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
             }
             idex->pcNext = idex->regRsValue;
         }
-        if(flags && MASK_DEBUG){
+        if(flags & MASK_DEBUG){
             if(idex->PCSrc){
                 printf("\tBranch will be taken\n");
             }

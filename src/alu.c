@@ -7,7 +7,7 @@
 extern int flags; // from main.c
 
 // Wrapper function
-int execute(control_t *idex, control_t *exmem){
+int execute(control_t *idex, control_t *exmem) {
     word_t ALUArg1, ALUArg2, ALUresult;
     bool zero;
 
@@ -60,10 +60,11 @@ int alu(operation_t operation, word_t op_rs, word_t op_rt, word_t shamt, word_t 
             // overflow, the 32-bit result is placed into GPR rd."
             temp = (int32_t)op_rs + (int32_t)op_rt;
             if (!(ADD_OVERFLOW(op_rs,op_rt,temp))) {
-                //printf("Add, no overflow. rs: %d, rt: %d, temp: %d; rs.31: %d, rt.31: %d, temp.31: %d\n",(int32_t)op_rs,(int32_t)op_rt,(int32_t)temp,BIT31(op_rs),BIT31(op_rt),BIT31(temp));
                 *result = temp;
             } else {
-                //printf("Add, OVERFLOW! rs: %d, rt: %d, temp: %d; rs.31: %d, rt.31: %d, temp.31: %d\n",(int32_t)op_rs,(int32_t)op_rt,(int32_t)temp,BIT31(op_rs),BIT31(op_rt),BIT31(temp));
+                if (flags & MASK_DEBUG) {
+                    printf("ALU::OPR_ADD: OVERFLOW! rs: %d, rt: %d, temp: %d; rs.31: %d, rt.31: %d, temp.31: %d\n",(int32_t)op_rs,(int32_t)op_rt,(int32_t)temp,BIT31(op_rs),BIT31(op_rt),BIT31(temp));
+                }
                 return ALU_INTEGER_OVERFLOW;
             }
             break;
@@ -135,9 +136,9 @@ int alu(operation_t operation, word_t op_rs, word_t op_rt, word_t shamt, word_t 
             *result = op_rs ^ op_rt;
             break;
         default: // We should not get here. Complain and crash.
-            printf(ANSI_C_RED "Illegal ALU operation %d. Halting.\n" ANSI_C_RESET, operation);
+            printf(ANSI_C_RED "Illegal ALU operation 0x%x (0d%d). Halting.\n" ANSI_C_RESET, operation, operation);
             assert(0);
-            break;
+            break; // not reached
     }
     // Set the zero flag
     *zero = (*result == 0x0)?true:false;
