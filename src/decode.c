@@ -170,6 +170,47 @@ int decode( control_t * ifid , control_t * idex) {
             idex->jump = false;
             idex->shamt = 16; // fixed shift amount
             break;
+        case OPC_SPECIAL3:
+            // R-type:   | SPECIAL  | RS | RT | RD | 0   | ADDU (funct) |
+            // Special3: | SPECIAL3 | 0  | RT | RD | SEB | BSHFL        |
+            // For SPECIAL3, the mapping is like R-type, but the names are different:
+            // OpCode is still the OpCode,
+            // Rs is zero
+            // Rt is Rt
+            // Rd is Rd
+            // shamt in R-type is the BSHFL code in Special3
+            // funct in R-type is the special3 code in Special3
+            // Despite being in a whole weird class of instructions,
+            // SEB/SEH are implemented as R-type and handled by the ALU
+            idex->regDst = true;
+            idex->ALUSrc = false;
+            idex->memToReg = false;
+            idex->regWrite = true;
+            idex->memRead = false;
+            idex->memWrite = false;
+            idex->jump = false;
+            idex->PCSrc = false;
+            switch (idex->funct) {
+                case SP3_BSHFL:
+                    switch (idex->shamt) {
+                        case BSHFL_SEB:
+                            idex->ALUop = OPR_SEB;
+                            break;
+                        case BSHFL_SEH:
+                            idex->ALUop = OPR_SEH;
+                            break;
+                        default:
+                            printf(ANSI_C_RED "Illegal SPECIAL3-type instruction, funct (special3) 0x%02x, shamt (BSHFL) 0x%02x (instruction 0x%08x). Halting.\n" ANSI_C_RESET, idex->funct, idex->shamt, idex->instr);
+                            assert(0);
+                            break; // never reached
+                    }
+                    break;
+                default:
+                    printf(ANSI_C_RED "Illegal SPECIAL3-type instruction, funct (special3) 0x%02x, shamt (BSHFL) 0x%02x (instruction 0x%08x). Halting.\n" ANSI_C_RESET, idex->funct, idex->shamt, idex->instr);
+                    assert(0);
+                    break; // never reached
+            }
+            break;
         default:
             printf(ANSI_C_RED "Illegal instruction, opcode 0x%02x (instruction 0x%08x). Halting.\n" ANSI_C_RESET, idex->opCode, idex->instr);
             assert(0);

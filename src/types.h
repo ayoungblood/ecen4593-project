@@ -43,7 +43,7 @@ typedef uint32_t word_t;
 
 // Mapping opcode values to mnemonic
 typedef enum OpCodes {
-    OPC_RTYPE   = 0x00,
+    OPC_RTYPE   = 0x00, // 0b000000, SPECIAL (R-Type)
     OPC_ADDI    = 0x08, // 0b001000, Add Immediate Word
     OPC_ADDIU   = 0x09, // 0b001001, Add Immediate Unsigned Word
     OPC_ANDI    = 0x0c, // 0b001100, And Immediate
@@ -66,7 +66,8 @@ typedef enum OpCodes {
     OPC_SLTI    = 0x0a, // 0b001010, Set on Less Than Immediate
     OPC_SLTIU   = 0x0b, // 0b001011, Set on Less Than Immediate Unsigned
     OPC_SW      = 0x2b, // 0b101011, Store Word
-    OPC_XORI    = 0x0e  // 0b001110, Exclusive OR Immediate
+    OPC_XORI    = 0x0e, // 0b001110, Exclusive OR Immediate
+    OPC_SPECIAL3    = 0x1f // 0b011111, SPECIAL 3
 } opcode_t;
 
 // Mapping funct values to mnemonic (R-type, opcode=0x0)
@@ -87,6 +88,17 @@ typedef enum FunctCodes {
     FNC_SUBU    = 0x23, // 0b100011, Subtract Unsigend Word
     FNC_XOR     = 0x26  // 0b100110, Exclusive OR
 } funct_t;
+
+// Mapping SPECIAL3 function field (SPECIAL3, opcode=0x1f)
+typedef enum Special3Codes {
+    SP3_BSHFL   = 0x20  // 0b100000, BSHFL
+} special3_t;
+
+// Mapping BSHFL sa field (SPECIAL3, opcode=0x1f, funct=0x20)
+typedef enum BSHFLCodes {
+    BSHFL_SEB   = 0x10, // 0b10000, SEB
+    BSHFL_SEH   = 0x18  // 0b11000, SEH
+} bshfl_t;
 
 // Enumerate all "operations" (R/J/I type instruction action)
 // See http://alumni.cs.ucr.edu/~vladimir/cs161/mips.html
@@ -142,7 +154,10 @@ typedef enum Operations {
     OPR_SW,     // Store Word                                       (MIPS I)
     // Data movement
     OPR_MOVN,   // Move Conditional on Not Zero                     (MIPS IV)
-    OPR_MOVZ    // Move Conditional on Zero                         (MIPS IV)
+    OPR_MOVZ,   // Move Conditional on Zero                         (MIPS IV)
+    // Sign-extension
+    OPR_SEB,    // Sign-Extend Byte                                 (MIPS R2)
+    OPR_SEH     // Sign-Extend Halfword                             (MIPS R2)
 } operation_t;
 
 typedef struct CONTROL_REGISTER {
