@@ -68,7 +68,8 @@ direct_cache_t * direct_cache_init(uint32_t num_blocks, uint32_t block_size){
 void direct_cache_digest(direct_cache_t *cache, memory_status_t proceed_condition){
     uint32_t index = 0;
     uint32_t tag = 0;
-    direct_cache_get_tag_and_index(cache, &(cache->target_address), &index, &tag);
+    uint32_t inner_index = 0;
+    direct_cache_get_tag_and_index(cache, &(cache->target_address), &index, &tag, &inner_index);
     if(get_mem_status() == proceed_condition){
         //Increment the wait count
         cache->penalty_count++;
@@ -140,7 +141,8 @@ void direct_cache_digest(direct_cache_t *cache, memory_status_t proceed_conditio
 cache_status_t direct_cache_get_word(direct_cache_t *cache, uint32_t *address, uint32_t *data){
     uint32_t index = 0;
     uint32_t tag = 0;
-    direct_cache_get_tag_and_index(cache, address, &index, &tag);
+    uint32_t inner_index = 0;
+    direct_cache_get_tag_and_index(cache, address, &index, &tag, &inner_index);
 
     //Some index checking to make sure we don't seg fault
     if(index >= cache->num_blocks){
@@ -193,7 +195,8 @@ cache_status_t direct_cache_get_word(direct_cache_t *cache, uint32_t *address, u
 }
 
 
-void direct_cache_get_tag_and_index(direct_cache_t *cache, uint32_t *address, uint32_t *index, uint32_t *tag){
-    *index = (*address & cache->index_mask) >> 2;
-    *tag = (*address & cache->tag_mask) >> (2 + cache->index_size);
+void direct_cache_get_tag_and_index(direct_cache_t *cache, uint32_t *address, uint32_t *index, uint32_t *tag, uint32_t *inner_index){
+    *index = (*address & cache->index_mask) >> (2 + cache->inner_index_size);
+    *tag = (*address & cache->tag_mask) >> (2 + cache->index_size + cache->inner_index_size);
+    *inner_index = (*address & cache->inner_index_mask) >> 2;
 }

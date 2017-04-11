@@ -101,7 +101,7 @@ void direct_cache_digest(direct_cache_t *cache, memory_status_t proceed_conditio
 cache_status_t direct_cache_get_word(direct_cache_t *cache, uint32_t *address, uint32_t *data);
 
 /* Helper functions specific to the direct mapped cache */
-void direct_cache_get_tag_and_index(direct_cache_t *cache, uint32_t *address, uint32_t *index, uint32_t *tag);
+void direct_cache_get_tag_and_index(direct_cache_t *cache, uint32_t *address, uint32_t *index, uint32_t *tag, uint32_t *inner_index);
 
 
 #endif /* _DIRECT_H */
