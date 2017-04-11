@@ -79,12 +79,10 @@ void cache_digest(void){
         printf(ANSI_C_RED "cache_digest: data cache is not initialized\n" ANSI_C_RESET);
         assert(0);
     }
-    #ifndef UNIFIED
     if(i_cache == NULL){
         printf(ANSI_C_RED "cache_digest: instruction cache is not initialized\n" ANSI_C_RESET);
         assert(0);
     }
-    #endif
     if(write_buffer == NULL){
         printf(ANSI_C_RED "cache_digest: write buffer is not initialized\n" ANSI_C_RESET);
         assert(0);

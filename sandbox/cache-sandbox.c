@@ -24,17 +24,17 @@ int main(int argc, char * argv[]){
 
     cache_status_t status;
     uint32_t data;
-    for(i = 16; i < 200; i+=4){
-        cache_digest();
-        // while(d_cache_get_word(&i, &data) != CACHE_HIT){
-        //     cache_digest();
-        //     system ("/bin/stty raw"); // set terminal to raw/unbuffered
-        //     char c = getchar();
-        //     system ("/bin/stty sane"); // set back to sane
-        //     if(c == 'x'){
-        //         return 0;
-        //     }
-        // }
+    for(i = 4; i < 200; i+=4){
+        //cache_digest();
+        while(d_cache_read_w(&i, &data) != CACHE_HIT){
+            cache_digest();
+            system ("/bin/stty raw"); // set terminal to raw/unbuffered
+            char c = getchar();
+            system ("/bin/stty sane"); // set back to sane
+            if(c == 'x'){
+                return 0;
+            }
+        }
     }
 
     cache_destroy();

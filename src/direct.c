@@ -76,14 +76,16 @@ void direct_cache_digest(direct_cache_t *cache, memory_status_t proceed_conditio
         if(flags & MASK_DEBUG){
             printf("\tPenalty counter: %d\n", cache->penalty_count);
         }
-        if((cache->penalty_count == CACHE_MISS_PENALTY) && (cache->subsequent_fetching == 0)){
+        if(cache->penalty_count == CACHE_MISS_PENALTY){
             //Finished waiting, get data and return it
             uint32_t temp = 0;
             mem_read_w(cache->target_address, &temp);
+            if(cache->block_size == 4){
+                index = index * 4 + inner_index;
+            }
             if(flags & MASK_DEBUG){
                 printf("\tFilling block index %d with data 0x%08x and tag 0x%08x\n", index, temp, tag);
             }
-            //fill block line
             cache->blocks[index].data = temp;
             cache->blocks[index].tag = tag;
             cache->blocks[index].valid = true;
@@ -94,43 +96,37 @@ void direct_cache_digest(direct_cache_t *cache, memory_status_t proceed_conditio
             }
             cache->fetching = false;
             cache->penalty_count = 0;
-            if(cache->inner_index_size != 1){
-                cache->subsequent_fetching = 1;
-                //Start retrieving data from the next address and restart the penalty counter
-                cache->target_address += 4;
+            if(cache->block_size == 4){
+                //get the second word in the block
                 cache->fetching = true;
+                cache->subsequent_fetching = 1;
+                cache->target_address |= (1 << 2);
             }
             return;
         }
-        else if((cache->penalty_count == CACHE_MISS_SUBSEQUENT_PENALTY) && (cache->subsequent_fetching != 0) && (cache->inner_index_size != 1)){
-            //We have data from a block line following a previous cache miss
+        if(cache->block_size == 4 && cache->subsequent_fetching && (cache->penalty_count == CACHE_MISS_SUBSEQUENT_PENALTY)){
+            //Have the next word for the block
             uint32_t temp = 0;
             mem_read_w(cache->target_address, &temp);
+            index = index * 4 + inner_index;
             if(flags & MASK_DEBUG){
                 printf("\tFilling block index %d with data 0x%08x and tag 0x%08x\n", index, temp, tag);
             }
             cache->blocks[index].data = temp;
             cache->blocks[index].tag = tag;
             cache->blocks[index].valid = true;
-            cache->subsequent_fetching++;
-            if(cache->subsequent_fetching == (cache->inner_index_size - 1)){
-                if(flags & MASK_DEBUG){
-                    printf("\tDone retrieving block\n");
-                }
-                //We have retrieved the whole block. Relenquish the fetching flag
-                cache->fetching = false;
-                cache->subsequent_fetching = 0;
-                cache->penalty_count = 0;
-                return;
+            if(flags & MASK_DEBUG){
+                direct_cache_block_t block = cache->blocks[index];
+                printf("\tNEW Block data!\n");
+                printf("\tVALID BIT: %d\n\tTAG: 0x%06x\n\tINDEX: %d\n\tDATA: 0x%08x\n",block.valid, block.tag, index, block.data);
             }
-            else {
-                //Start fetching the next address
-                cache->target_address+=4;
-                cache->penalty_count = 0;
-                if(flags & MASK_DEBUG){
-                    printf("\tBeggining subsequent fetch of address 0x%08x\n", cache->target_address);
-                }
-                return;
+            cache->fetching = false;
+            cache->penalty_count = 0;
+            if(cache->subsequent_fetching != 3){
+                //get the next word for the block
+                cache->fetching = true;
+                cache->subsequent_fetching++;
+                cache->target_address |= (cache->subsequent_fetching << 2);
             }
         }
     }
@@ -156,10 +152,6 @@ cache_status_t direct_cache_get_word(direct_cache_t *cache, uint32_t *address, u
     }
 
     direct_cache_block_t block = cache->blocks[index];
-    if(flags & MASK_DEBUG){
-        printf("\tCurrent data in block at requested index\n");
-        printf("\tVALID BIT: %d \n\tTAG: 0x%06x\n\tINDEX: %d\n\tDATA: 0x%08x\n",block.valid, block.tag, index, block.data);
-    }
     if(block.valid && (tag == block.tag)){
         if(flags & MASK_DEBUG){
             printf("\tCACHE HIT!\n");
@@ -168,7 +160,6 @@ cache_status_t direct_cache_get_word(direct_cache_t *cache, uint32_t *address, u
         *data = block.data;
         return CACHE_HIT;
     } else {
-        //Data is not in the cache. Either start the retrieval, wait, or fill depending on the stall count
         if(cache->fetching){
             if(flags & MASK_DEBUG){
                 printf("\tCache is busy\n");
@@ -180,17 +171,29 @@ cache_status_t direct_cache_get_word(direct_cache_t *cache, uint32_t *address, u
             if(*address != cache->target_address){
                 printf(ANSI_C_RED "d_cache_get_word: RESOURCE IN USE! Cache already retrieving memory at address 0x%08x and cannot retreive memory at address 0x%08x\n" ANSI_C_RESET, cache->target_address, *address);
             }
-        }
-        else {
-            //Start the fetch stall
-            if(flags & MASK_DEBUG){
-                printf("\tCACHE MISS! Starting main memory data retreival for address 0x%08x\n",*address);
+            return CACHE_MISS;
+        } else {
+            //Data is not in the cache. Either start the retrieval, wait, or fill depending on the stall count
+            if(cache->block_size == 1){
+                //Start the fetch stall
+                if(flags & MASK_DEBUG){
+                    printf("\tCACHE MISS! Starting main memory data retreival for address 0x%08x\n",*address);
+                }
+                cache->fetching = true;
+                cache->target_address = *address;
+                cache->penalty_count = 0;
+            } else if(cache->block_size == 4){
+                //Start request for the first word in the block
+                //Get the first word in the block means inner_index = 0
+                cache->target_address = *address & (cache->tag_mask | cache->index_mask);
+                cache->fetching = true;
+                cache->penalty_count = 0;
+            } else {
+                printf(ANSI_C_RED "direct_cache_get_word: Unsupported block size\n" ANSI_C_RESET);
+                assert(0);
             }
-            cache->fetching = true;
-            cache->target_address = *address;
-            cache->penalty_count = 0;
+            return CACHE_MISS;
         }
-        return CACHE_MISS;
     }
 }
 
