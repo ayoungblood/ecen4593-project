@@ -1,0 +1,31 @@
+0xdead44ff, // $sp = 0xdead44ff (not used)
+0xdead55ff, // $fp = 0xdead55ff (not used)
+0x00000000,
+0x00000000,
+0x00000000,
+0x0000000a, // $pc = 0x28 (multiplied by 4)
+0x00000000,
+0x00000000,
+0x00000000,
+0x00000000,
+0x24088000, // addiu t0 zero 0x8000
+0x24090022, // addiu t1 zero 0x22
+0x240A8444, // addiu t2 zero 0x8444
+0x240B0066, // addiu t3 zero 0x66
+0x240C8888, // addiu t4 zero 0x8888
+0x240D00AA, // addiu t5 zero 0xaa
+0x240E8CCC, // addiu t6 zero 0x8ccc
+0x240F00FF, // addiu t7 zero 0xff
+0x7c088420, // seb s0 t0, expect s0 = 0x0
+0x7c098c20, // seb s1 t1, expect s1 = 0x22
+0x7c0a9420, // seb s2 t2, expect s2 = 0x44
+0x7c0b9c20, // seb s3 t3, expect s3 = 0x66
+0x7c0ca420, // seb s4 t4, expect s4 = 0xffffff88
+0x7c0dac20, // seb s5 t5, expect s5 = 0xffffffaa
+0x7c0eb420, // seb s6 t6, expect s6 = 0xffffffcc
+0x7c0fbc20, // seb s7 t7, expect s7 = 0xffffffff
+0x00000000, // nop
+0x00000000, // nop
+0x00000000, // nop
+0x00000000, // nop
+0x1000FFFF, // HALT
