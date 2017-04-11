@@ -51,8 +51,8 @@ void mem_dump_cute(uint32_t offset, uint32_t words) {
     for (uint32_t i = 0; i < words; ++i) {
         printf("\t0x%08x: 0x%08x (0d%d)\n",
             (offset+i)<<2,
-            mem[(offset+i)<<2],
-            mem[(offset+i)<<2]);
+            mem[(offset+i)],
+            mem[(offset+i)]);
     }
 }
 
