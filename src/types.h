@@ -194,4 +194,17 @@ typedef struct CONTROL_REGISTER {
 
 } control_t;
 
+
+typedef enum CACHE_STATUS {
+    CACHE_MISS,         //Data isn't in cache, stall
+    CACHE_HIT           //Data returned is valid
+} cache_status_t;
+
+typedef enum MEMORY_STATUS {
+    MEM_IDLE,         //Initial state of memory
+    MEM_WRITING,      //Writing data cache to main memory
+    MEM_READING_D,    //Reading from memory into data cache
+    MEM_READING_I     //Reading from memory into instruction cache
+} memory_status_t;
+
 #endif /* _TYPES_H */
