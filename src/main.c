@@ -14,6 +14,9 @@ control_t* memwb = NULL; // MEM/WB pipeline register
 pc_t pc = 0;             // Program counter
 
 uint32_t temp = 0;
+#define BREAKPOINT_MAX 8
+uint32_t breakpoints_address[BREAKPOINT_MAX] = {0}; // the address of a breakpoint
+uint8_t breakpoints_status[BREAKPOINT_MAX] = {0}; // breakpoint status, 0: disabled, 1:enabled
 
 int main(int argc, char *argv[]) {
     int i;
@@ -98,6 +101,8 @@ int main(int argc, char *argv[]) {
         ++cycles;
         // Check for a magic halt number (beq zero zero -1 or jr zero)
         if (ifid->instr == 0x1000ffff || ifid->instr == 0x00000008 || pc == 0) break;
+        // Breakpoint and interactive stuff
+        breakpoint_check(pc);
         if (flags & MASK_INTERACTIVE) { // Run interactive step
             if (interactive(lines) !=0) return 1;
         }
@@ -174,7 +179,59 @@ int parse(FILE *fp, asm_line_t *lines) {
     printf("Successfully extracted %d lines\n",count);
     return count;
 }
-
+// Breakpoint wrappers
+int breakpoint_get_active(void) {
+    int i, sum = 0;
+    for (i = 0; i < BREAKPOINT_MAX; ++i) {
+        sum += breakpoints_status[i] & 0x1;
+    }
+    return sum;
+}
+void breakpoint_add(uint32_t address) {
+    int i = 0;
+    do {
+        if (!(breakpoints_status[i] & 0x1)) {
+            breakpoints_address[i] = address;
+            breakpoints_status[i] |= 0x1;
+            break;
+        }
+    } while (i++ < BREAKPOINT_MAX);
+    printf(ANSI_C_GREEN "Added breakpoint at 0x%08x, %d active breakpoints\n" ANSI_C_RESET,
+        address,
+        breakpoint_get_active());
+}
+void breakpoint_dump(void) {
+    int i = 0;
+    printf("\tIndex Status  Address\n");
+    for (i = 0; i < BREAKPOINT_MAX; ++i) {
+        printf("%s\t(%2d)  %s     0x%08x\n" ANSI_C_RESET,
+            (breakpoints_status[i] & 0x1)?(ANSI_C_CYAN):(ANSI_C_RESET),
+            i,
+            (breakpoints_status[i] & 0x1)?"SET":"---",
+            breakpoints_address[i]);
+    }
+}
+void breakpoint_delete(int n) {
+    if (breakpoints_status[n] & 0x1) {
+        breakpoints_status[n] &= ~(0x1);
+        printf(ANSI_C_GREEN "Cleared breakpoint at 0x%08x, %d active breakpoints\n" ANSI_C_RESET,
+            breakpoints_address[n],
+            breakpoint_get_active());
+        breakpoints_address[n] = 0x0;
+    } else {
+        printf(ANSI_C_GREEN "Breakpoint not set, so not cleared. Pay attention!\n" ANSI_C_RESET);
+    }
+}
+void breakpoint_check(pc_t current_pc) {
+    int i = 0;
+    for (i = 0; i < BREAKPOINT_MAX; ++i) {
+        if ((breakpoints_status[i] & 0x1) && (current_pc == breakpoints_address[i])) {
+            flags |= MASK_INTERACTIVE | MASK_DEBUG | MASK_VERBOSE;
+            printf(ANSI_C_GREEN "Halted at breakpoint %d (pc = 0x%08x)\n",i,current_pc);
+            break;
+        }
+    }
+}
 // Provides a crude interactive debugger for the simulator
 int interactive(asm_line_t* lines) {
     uint32_t i_addr = 0, i_data;
@@ -186,20 +243,40 @@ PROMPT: // LOL gotos
     system ("/bin/stty sane"); // set back to sane
     printf("%c\n",c);
     switch(c) {
-        case 'd': // disable interactive
-            flags &= ~(MASK_INTERACTIVE);
-            printf(ANSI_C_GREEN "Interactive stepping disabled.\n" ANSI_C_RESET);
-            break;
-        case '?': // help
-            printf("Available interactive commands: \n" \
-                "\td: disable interactive mode\n" \
-                "\tl: print the original disassembly for a given memory address\n" \
-                "\tm: print a memory word for a given memory address\n" \
-                "\to: print 11 words of memory surrounding a given memory address\n" \
-                "\ts: single-step the pipeline\n" \
-                "\tr: dump registers\n" \
-                "\tx: exit simulation run\n");
+        case 'a': // add a breakpoint
+            if (breakpoint_get_active() >= BREAKPOINT_MAX) {
+                printf(ANSI_C_GREEN "Cannot add breakpoint, active breakpoint limit reached.\n" ANSI_C_RESET);
+            } else {
+                printf(ANSI_C_GREEN "breakpoint address: " ANSI_C_RESET);
+                scanf("%x",&i_addr); getchar();
+                if (i_addr < mem_start() || i_addr > mem_end()) {
+                    printf("Address out of range\n");
+                    goto PROMPT;
+                }
+                breakpoint_add(i_addr);
+
+            }
             goto PROMPT;
+        case 'b': // list breakpoints
+            if (breakpoint_get_active() == 0) {
+                printf(ANSI_C_GREEN "No breakpoints active.\n" ANSI_C_RESET);
+            } else {
+                breakpoint_dump();
+            }
+            goto PROMPT;
+        case 'c': // clear a breakpoint
+            if (breakpoint_get_active() == 0) {
+                printf(ANSI_C_GREEN "No breakpoints active.\n" ANSI_C_RESET);
+            } else {
+                printf(ANSI_C_GREEN "breakpoint number to clear: " ANSI_C_RESET);
+                scanf("%d",&i_addr); getchar();
+                if (i_addr < BREAKPOINT_MAX) breakpoint_delete(i_addr);
+            }
+            goto PROMPT;
+        case 'd': // disable interactive (disable verbose and debug as well to avoid flood)
+            flags &= ~(MASK_INTERACTIVE | MASK_VERBOSE | MASK_DEBUG);
+            printf(ANSI_C_GREEN "Interactive stepping disabled. Running until breakpoint (if set).\n" ANSI_C_RESET);
+            break;
         case 'l': // print the original disassembly for a given address
             printf(ANSI_C_GREEN "input address: " ANSI_C_RESET);
             scanf("%x",&i_addr); getchar();
@@ -241,6 +318,19 @@ PROMPT: // LOL gotos
         case 'x': // exit
             printf(ANSI_C_GREEN "Simulation halted in interactive mode.\n" ANSI_C_RESET);
             return 1;
+        case '?': // help
+            printf("Available interactive commands: \n" \
+                "\ta: add breakpoint at a memory address\n" \
+                "\tb: list breakpoints\n" \
+                "\tc: clear a breakpoint by breakpoint index\n" \
+                "\td: disable interactive mode\n" \
+                "\tl: print the original disassembly for a given memory address\n" \
+                "\tm: print a memory word for a given memory address\n" \
+                "\to: print 11 words of memory surrounding a given memory address\n" \
+                "\ts: single-step the pipeline\n" \
+                "\tr: dump registers\n" \
+                "\tx: exit simulation run\n");
+            goto PROMPT;
         default:
             printf("Unrecognized interactive command \"%c\", press \"?\" for help.\n", c);
             goto PROMPT;

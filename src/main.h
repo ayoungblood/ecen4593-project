@@ -30,3 +30,10 @@ typedef struct ASMLine {
 int parse(FILE *fp, asm_line_t *lines);
 
 int interactive(asm_line_t *lines);
+
+// Breakpoint wrappers
+int breakpoint_get_active(void);
+void breakpoint_add(uint32_t address);
+void breakpoint_dump(void);
+void breakpoint_delete(int n);
+void breakpoint_check(pc_t current_pc);
