@@ -23,8 +23,6 @@
 
 //Represents the tag field of the direct cache block
 typedef uint32_t tag_t;
-//Represents the data in a direct cache block
-typedef uint32_t data_t;
 
 
 typedef enum WRITE_POLICY{
@@ -40,7 +38,7 @@ typedef struct DIRECT_CACHE_BLOCK {
     bool valid;
     bool dirty;
     tag_t tag;
-    data_t data;
+    word_t *data;
 } direct_cache_block_t;
 
 typedef struct DIRECT_CACHE {
@@ -59,7 +57,16 @@ typedef struct DIRECT_CACHE {
     uint32_t penalty_count;
     uint32_t target_address;
     direct_cache_block_t *blocks;
+    direct_cache_block_t *words;
 } direct_cache_t;
+
+typedef struct CACHE_ACCESS_INFO {
+    uint32_t index;
+    uint32_t tag;
+    uint32_t inner_index;
+    uint32_t address;
+    uint32_t data;
+} cache_access_t;
 
 /*
 * direct_cache_t * direct_cache_init(uint32_t num_blocks)
@@ -82,6 +89,8 @@ index_mask =                1111 1111 1111 1111 1100 (index_mask & ~3)//helper f
 */
 direct_cache_t * direct_cache_init(uint32_t num_blocks, uint32_t block_size);
 
+void direct_cache_free(void);
+
 /*
 * void direct_cache_digest(direct_cache_t *cache, memory_status_t proceed_condition)
 * function to be called every cycle of the clock.
@@ -98,10 +107,27 @@ void direct_cache_digest(direct_cache_t *cache, memory_status_t proceed_conditio
 * if there is a CACHE_MISS, function will set up the direct mapped cache to
 * start fetching the data from main memory.
 */
-cache_status_t direct_cache_get_word(direct_cache_t *cache, uint32_t *address, uint32_t *data);
+cache_status_t direct_cache_read_word(direct_cache_t *cache, uint32_t *address, uint32_t *data);
+
+/*  @brief Sets up a word to be written back to main memory
+*   If writeback, the dirty bit in the cache gets set and returns. Once the
+*   block gets replaced, the data will be written back to main memory
+*   If writethrough, the data gets set in the cache as well as the write buffer
+*   If the write buffer is full, this will return CACHE_MISS to inform the processor
+*   if needs to stall
+*/
+cache_status_t direct_cache_write_w(direct_cache_t *cache, uint32_t *address, uint32_t *data);
+
+void direct_cache_fill_word(direct_cache_t *cache, cache_access_t info);
+
+cache_status_t direct_cache_access_word(direct_cache_t *cache, cache_access_t *info);
+
+void direct_cache_queue_mem_access(direct_cache_t *cache, cache_access_t info);
 
 /* Helper functions specific to the direct mapped cache */
-void direct_cache_get_tag_and_index(direct_cache_t *cache, uint32_t *address, uint32_t *index, uint32_t *tag, uint32_t *inner_index);
+void direct_cache_get_tag_and_index(cache_access_t *info, direct_cache_t *cache, uint32_t *address);
+
+
 
 
 #endif /* _DIRECT_H */

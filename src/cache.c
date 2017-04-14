@@ -182,33 +182,6 @@ cache_status_t d_cache_read_w(uint32_t *address, word_t *data){
     return status;
 }
 
-cache_status_t d_cache_read_h(uint32_t *address, word_t *data){
-    if(flags & MASK_DEBUG){
-        printf(ANSI_C_CYAN "D_CACHE GET HALFWORD:\n" ANSI_C_RESET);
-    }
-    //Get data from the data cache
-    cache_status_t status = direct_cache_get_word(d_cache, address, data);
-
-    //Make it a halfword
-    uint32_t shift = ((2-(*address & 0x2))<<3); // shift amount based on byte position
-    *data >>= shift;
-    *data &= 0xffff;
-    return status;
-}
-
-cache_status_t d_cache_read_b(uint32_t *address, word_t *data){
-    if(flags & MASK_DEBUG){
-        printf(ANSI_C_CYAN "D_CACHE GET BYTE:\n" ANSI_C_RESET);
-    }
-    //Get data from the data cache
-
-    cache_status_t status = direct_cache_get_word(d_cache, address, data);
-
-    uint32_t shift = ((3-(*address & 0x3))<<3); // shift amount based on byte position
-    *data >>= shift;
-    *data &= 0xff;
-    return status;
-}
 
 cache_status_t d_cache_write_w(uint32_t *address, word_t *data){
     if(flags & MASK_DEBUG){
