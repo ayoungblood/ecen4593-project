@@ -209,11 +209,42 @@ int arguments(int argc, char **argv, FILE* source_fp,
                 bprintf("","CPU: single-cycle execution enabled (flags = 0x%04x).\n",flags);
                 break;
             case 'h':
+                printf( "Usage: %s [OPTION]... FILE[.s|.txt]\n" \
+                        "   or: %s [--help|-h]\n" \
+                        "   or: %s [--version|-V]\n" \
+                        "  Run %s on an assembly source file, simulating a MIPS CPU execution of FILE,\n" \
+                        "  or with [--help|h], display this usage information and exit,\n"
+                        "  or with [--version|-V], display the version and exit.\n" \
+                        "  One, and only one, assembly file must be provided for simulation.\n\n"
+                        "   -a, --alternate\n" \
+                        "   \tAlterate assembly format, expects lines like\n" \
+                        "   \t\t0x24420004, // addiu v0,v0,4\n" \
+                        "   \tinstead of the the default, which expects lines like\n" \
+                        "   \t\t400048:	0x24420004    addiu v0,v0,4\n" \
+                        "   -C mode, --color mode\n" \
+                        "   --debug, -d\n" \
+                        "   --single-cycle, -g\n" \
+                        "   --help, -h\n" \
+                        "   --interactive, -i\n" \
+                        "   --sanity, -y\n" \
+                        "   --version, -V\n" \
+                        "   --verbose, -v\n" \
+                        "   --cache-block size, -b size\n" \
+                        "   --cache-config str, -c str\n" \
+                        "   --cache-dsize size, -D size\n" \
+                        "   --cache-isize size, -I size\n" \
+                        "   --cache-size size, s size\n" \
+                        "   --cache-type str, -t str\n" \
+                        "   --cache-write str, -w str\n" \
+                        "\nEmail bug reports to /dev/null\n", \
+                        TARGET_STRING,TARGET_STRING,TARGET_STRING,TARGET_STRING);
+                /*
                 printf( "usage: sim [-adghiyVv] [-C mode] [-b num] [-c str] [-s num] [-t str] [-w str]\n"
                         "\t[--alternate] [--color str] [--debug] [--single-cycle] [--help]\n" \
                         "\t[--interactive] [--sanity] [--version] [--verbose] [--cache-block num]\n" \
                         "\t[--cache-config str] [--cache-size num] [--cache-type str]\n" \
                         "\t[--cache-write str] file\n");
+                */
                 return 0;
             case 'i':
                 flags |= MASK_INTERACTIVE;
