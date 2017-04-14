@@ -37,7 +37,32 @@
 #define gprintf(COLOR__,str,...) if (flags & MASK_DEBUG) cprintf(COLOR__,str,##__VA_ARGS__)
 #define bprintf(COLOR__,str,...) if (flags & MASK_VERBOSE) cprintf(COLOR__,str,##__VA_ARGS__)
 
+typedef enum cache_config_t {
+    CACHE_SPLIT,
+    CACHE_UNIFIED
+} cache_config_t;
+typedef enum cache_type_t {
+    CACHE_DIRECT,   // Direct-mapped
+    CACHE_SA2       // Two-way set associative
+} cache_type_t;
+typedef enum cache_wpolicy_t {
+    CACHE_WRITEBACK,
+    CACHE_WRITETHROUGH
+} cache_wpolicy_t;
+
+typedef struct cache_settings_t {
+    unsigned int    block_size;
+    unsigned int    cache_size;
+    unsigned int    data_size;
+    unsigned int    inst_size;
+    cache_config_t  config;
+    cache_type_t    type;
+    cache_wpolicy_t wpolicy;
+} cache_settings_t;
+
 uint32_t flags = 0;
+
+cache_settings_t cache_settings = {4,1024,1024,1024,CACHE_SPLIT,CACHE_DIRECT,CACHE_WRITEBACK};
 
 /* Flags we need
 --alterate -a: alternate program format
@@ -50,8 +75,10 @@ uint32_t flags = 0;
 --verbose -v: enable verbose
 --version -V: print version
 --cache-block -b size: cache block size, either 1/4, defaults to 4
---cache-config -c (unified|separate): unified or separate instruction/data cache, defaults to separate
+--cache-config -c (unified|split): unified or split instruction/data cache, defaults to split
 --cache-size -s size: cache size, should be power of 2, defaults to 1024
+--cache-dsize -D size: for split config, specifies data cache size, defaults to --cache-size or 1024 if --cache-size not set
+--cache-isize -I size: for split config, specifies instruction cache size, defaults to --cache-size or 1024 if --cache-size not set
 --cache-type -t (direct|2): direct-mapped or two-way set associative, defaults to direct-mapped
 --cache-write -w (through|back): write policy, defaults to writeback
 */
@@ -61,16 +88,16 @@ int main (int argc, char **argv) {
     bool single_cycle_flag = false;
     /* Automatically configure colorized output based on CLICOLOR and TERM
        environment variables (CLICOLOR=1 or TERM=xterm-256color) */
-    char* rv;
-    if ((rv = getenv("CLICOLOR"))) { // CLICOLOR is set
-        if (!strcmp(rv,"1")) {
+    char* crv;
+    if ((crv = getenv("CLICOLOR"))) { // CLICOLOR is set
+        if (!strcmp(crv,"1")) {
             flags |= MASK_COLOR;
         } else {
             flags &= ~MASK_COLOR;
         }
     } else { // CLICOLOR not defined, check TERM
-        if ((rv = getenv("TERM"))) { // TERM is set
-            if (!strcmp(rv,"xterm-256color")) {
+        if ((crv = getenv("TERM"))) { // TERM is set
+            if (!strcmp(crv,"xterm-256color")) {
                 flags |= MASK_COLOR;
             } else {
                 flags &= ~MASK_COLOR;
@@ -82,6 +109,7 @@ int main (int argc, char **argv) {
     /* Parse command line options with getopt */
     int c;
     int option_index = 0;
+    int temp, srv;
     //opterr = 0; // disable getopt_long default errors
     while (1) {
         static struct option long_options[] = {
@@ -97,12 +125,14 @@ int main (int argc, char **argv) {
             /* Cache options */
             {"cache-block",     required_argument,  0, 'b'},
             {"cache-config",    required_argument,  0, 'c'},
+            {"cache-dsize",     required_argument,  0, 'D'},
+            {"cache-isize",     required_argument,  0, 'I'},
             {"cache-size",      required_argument,  0, 's'},
             {"cache-type",      required_argument,  0, 't'},
             {"cache-write",     required_argument,  0, 'w'},
             {0, 0, 0, 0}
         };
-        c = getopt_long (argc, argv, "aC:dghiyVvb:c:s:t:w:",long_options, &option_index);
+        c = getopt_long (argc, argv, "aC:dghiyVvb:c:D:I:s:t:w:",long_options, &option_index);
         if (c == -1) break; // Detect the end of the options.
 
         switch (c) {
@@ -146,25 +176,85 @@ int main (int argc, char **argv) {
                 flags |= MASK_VERBOSE;
                 break;
             /* Cache options */
-            case 'b':
-                printf("option -b (cache-block) with value '%s'\n", optarg);
+            case 'b': // --block-size
+                srv = sscanf(optarg,"%d",&temp);
+                if (!srv) {
+                    cprintf(ANSI_C_YELLOW,"Block size must be a number (%s)\n",optarg);
+                } else {
+                    if (temp == 1 || temp == 4) {
+                        cache_settings.block_size = temp;
+                    } else {
+                        cprintf(ANSI_C_YELLOW,"Invalid block size %d\n", temp);
+                    }
+                }
                 break;
-            case 'c':
-                printf("option -c (cache-config) with value '%s'\n", optarg);
+            case 'c': // --cache-config
+                if (!strcmp(optarg,"unified")) {
+                    cache_settings.config = CACHE_UNIFIED;
+                } else if (!strcmp(optarg,"split")) {
+                    cache_settings.config = CACHE_SPLIT;
+                } else {
+                    cprintf(ANSI_C_YELLOW,"Unrecognized cache configuration: %s\n", optarg);
+                }
                 break;
-            case 's':
-                printf("option -s (cache-size) with value '%s'\n", optarg);
+            case 'D': // --cache-dsize
+                srv = sscanf(optarg,"%d",&temp);
+                if (!srv) {
+                    cprintf(ANSI_C_YELLOW,"D-cache size must be a number (%s)\n",optarg);
+                } else {
+                    if ((temp!=0) && !(temp&(temp-1))) {
+                        cache_settings.data_size = temp;
+                    } else {
+                        cprintf(ANSI_C_YELLOW,"Invalid d-cache size %d\n", temp);
+                    }
+                }
                 break;
-            case 't':
-                printf("option -t (cache-type) with value '%s'\n", optarg);
+            case 'I': // --cache-isize
+                srv = sscanf(optarg,"%d",&temp);
+                if (!srv) {
+                    cprintf(ANSI_C_YELLOW,"I-cache size must be a number (%s)\n",optarg);
+                } else {
+                    if ((temp!=0) && !(temp&(temp-1))) {
+                        cache_settings.inst_size = temp;
+                    } else {
+                        cprintf(ANSI_C_YELLOW,"Invalid i-cache size %d\n", temp);
+                    }
+                }
                 break;
-            case 'w':
-                printf("option -w (cache-write) with value '%s'\n", optarg);
+            case 's': // --cache-size
+                srv = sscanf(optarg,"%d",&temp);
+                if (!srv) {
+                    cprintf(ANSI_C_YELLOW,"Cache size must be a number (%s)\n",optarg);
+                } else {
+                    if ((temp!=0) && !(temp&(temp-1))) {
+                        cache_settings.cache_size = temp;
+                    } else {
+                        cprintf(ANSI_C_YELLOW,"Invalid cache size %d\n", temp);
+                    }
+                }
                 break;
-            case '?':
+            case 't': // --cache-type
+                if (!strcmp(optarg,"direct")) {
+                    cache_settings.type = CACHE_DIRECT;
+                } else if (!strcmp(optarg,"sa2") || !strcmp(optarg,"2")) {
+                    cache_settings.type = CACHE_SA2;
+                } else {
+                    cprintf(ANSI_C_YELLOW,"Unrecognized cache type: %s\n", optarg);
+                }
+                break;
+            case 'w': // --cache-write
+                if (!strcmp(optarg,"writethrough") || !strcmp(optarg,"through") || !strcmp(optarg,"thru")) {
+                    cache_settings.wpolicy = CACHE_WRITETHROUGH;
+                } else if (!strcmp(optarg,"writeback") || !strcmp(optarg,"back")) {
+                    cache_settings.wpolicy = CACHE_WRITEBACK;
+                } else {
+                    cprintf(ANSI_C_YELLOW,"Unrecognized cache write policy: %s\n", optarg);
+                }
+                break;
+            case '?': // error
                 /* getopt_long already printed an error message. */
                 break;
-            default:
+            default: // bad error
                 printf("Failed to parse command line argument. Exiting.\n");
                 return 0;
         }
@@ -183,5 +273,13 @@ int main (int argc, char **argv) {
     cprintf(ANSI_C_YELLOW,"cprintf yellow\n");
     gprintf(ANSI_C_CYAN,"gprintf cyan\n");
     bprintf(ANSI_C_MAGENTA,"bprintf magenta\n");
+    bprintf("","Cache settings:\n");
+    bprintf("","\tblock size: %d\n",cache_settings.block_size);
+    bprintf("","\tcache size: %d\n",cache_settings.cache_size);
+    bprintf("","\tdata cache size: %d\n",cache_settings.data_size);
+    bprintf("","\tinstruction cache size: %d\n",cache_settings.inst_size);
+    bprintf("","\tconfiguration: %s\n",(cache_settings.config==CACHE_SPLIT?"SPLIT":"UNIFIED"));
+    bprintf("","\ttype: %s\n",(cache_settings.type==CACHE_DIRECT?"DIRECT-MAPPED":"TWO-WAY SET ASSOCIATIVE"));
+    bprintf("","\twrite policy: %s\n",(cache_settings.wpolicy==CACHE_WRITEBACK?"WRITEBACK":"WRITETHROUGH"));
     return 0;
 }
