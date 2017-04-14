@@ -37,6 +37,10 @@
 #define gprintf(COLOR__,str,...) if (flags & MASK_DEBUG) cprintf(COLOR__,str,##__VA_ARGS__)
 #define bprintf(COLOR__,str,...) if (flags & MASK_VERBOSE) cprintf(COLOR__,str,##__VA_ARGS__)
 
+typedef struct cpu_settings_t {
+    bool single_cycle;
+} cpu_settings_t;
+
 typedef enum cache_config_t {
     CACHE_SPLIT,
     CACHE_UNIFIED
@@ -62,7 +66,10 @@ typedef struct cache_settings_t {
 
 uint32_t flags = 0;
 
+cpu_settings_t cpu_settings = {false};
 cache_settings_t cache_settings = {4,1024,1024,1024,CACHE_SPLIT,CACHE_DIRECT,CACHE_WRITEBACK};
+
+int arguments(int argc, char **argv, FILE* source_fp, cpu_settings_t *cpu_settings, cache_settings_t *cache_settings);
 
 /* Flags we need
 --alterate -a: alternate program format
@@ -84,8 +91,6 @@ cache_settings_t cache_settings = {4,1024,1024,1024,CACHE_SPLIT,CACHE_DIRECT,CAC
 */
 
 int main (int argc, char **argv) {
-    /* Default to pipelined */
-    bool single_cycle_flag = false;
     /* Automatically configure colorized output based on CLICOLOR and TERM
        environment variables (CLICOLOR=1 or TERM=xterm-256color) */
     char* crv;
@@ -106,6 +111,25 @@ int main (int argc, char **argv) {
             flags &= ~MASK_COLOR;
         }
     }
+    FILE *source_fp = NULL;
+    int rv = arguments(argc,argv,source_fp,&cpu_settings,&cache_settings);
+    if (rv != 0) return rv;
+    printf("Starting simulation with flags: 0x%08x\n", flags);
+    cprintf(ANSI_C_YELLOW,"cprintf yellow\n");
+    gprintf(ANSI_C_CYAN,"gprintf cyan\n");
+    bprintf(ANSI_C_MAGENTA,"bprintf magenta\n");
+    bprintf("","Cache settings:\n");
+    bprintf("","\tblock size: %d\n",cache_settings.block_size);
+    bprintf("","\tcache size: %d\n",cache_settings.cache_size);
+    bprintf("","\tdata cache size: %d\n",cache_settings.data_size);
+    bprintf("","\tinstruction cache size: %d\n",cache_settings.inst_size);
+    bprintf("","\tconfiguration: %s\n",(cache_settings.config==CACHE_SPLIT?"SPLIT":"UNIFIED"));
+    bprintf("","\ttype: %s\n",(cache_settings.type==CACHE_DIRECT?"DIRECT-MAPPED":"TWO-WAY SET ASSOCIATIVE"));
+    bprintf("","\twrite policy: %s\n",(cache_settings.wpolicy==CACHE_WRITEBACK?"WRITEBACK":"WRITETHROUGH"));
+    return 0;
+}
+int arguments(int argc, char **argv, FILE* source_fp, cpu_settings_t *cpu_settings, cache_settings_t *cache_settings) {
+
     /* Parse command line options with getopt */
     int c;
     int option_index = 0;
@@ -147,14 +171,14 @@ int main (int argc, char **argv) {
                 } else if (!strcmp(optarg,"auto")) {
                     // do nothing, already set
                 } else {
-                    printf("Unrecognized option argument: %s\n", optarg);
+                    printf("Invalid color setting: %s\n", optarg);
                 }
                 break;
             case 'd':
                 flags |= MASK_DEBUG;
                 break;
             case 'g':
-                single_cycle_flag = true;
+                cpu_settings->single_cycle = true;
                 break;
             case 'h':
                 printf( "usage: sim [-adghiyVv] [-C mode] [-b num] [-c str] [-s num] [-t str] [-w str]\n"
@@ -179,76 +203,76 @@ int main (int argc, char **argv) {
             case 'b': // --block-size
                 srv = sscanf(optarg,"%d",&temp);
                 if (!srv) {
-                    cprintf(ANSI_C_YELLOW,"Block size must be a number (%s)\n",optarg);
+                    cprintf(ANSI_C_YELLOW,"Block size must be a number: %s\n",optarg);
                 } else {
                     if (temp == 1 || temp == 4) {
-                        cache_settings.block_size = temp;
+                        cache_settings->block_size = temp;
                     } else {
-                        cprintf(ANSI_C_YELLOW,"Invalid block size %d\n", temp);
+                        cprintf(ANSI_C_YELLOW,"Invalid block size: %d\n", temp);
                     }
                 }
                 break;
             case 'c': // --cache-config
                 if (!strcmp(optarg,"unified")) {
-                    cache_settings.config = CACHE_UNIFIED;
+                    cache_settings->config = CACHE_UNIFIED;
                 } else if (!strcmp(optarg,"split")) {
-                    cache_settings.config = CACHE_SPLIT;
+                    cache_settings->config = CACHE_SPLIT;
                 } else {
-                    cprintf(ANSI_C_YELLOW,"Unrecognized cache configuration: %s\n", optarg);
+                    cprintf(ANSI_C_YELLOW,"Invalid cache configuration: %s\n", optarg);
                 }
                 break;
             case 'D': // --cache-dsize
                 srv = sscanf(optarg,"%d",&temp);
                 if (!srv) {
-                    cprintf(ANSI_C_YELLOW,"D-cache size must be a number (%s)\n",optarg);
+                    cprintf(ANSI_C_YELLOW,"D-cache size must be a number: %s\n",optarg);
                 } else {
                     if ((temp!=0) && !(temp&(temp-1))) {
-                        cache_settings.data_size = temp;
+                        cache_settings->data_size = temp;
                     } else {
-                        cprintf(ANSI_C_YELLOW,"Invalid d-cache size %d\n", temp);
+                        cprintf(ANSI_C_YELLOW,"Invalid d-cache size: %d\n", temp);
                     }
                 }
                 break;
             case 'I': // --cache-isize
                 srv = sscanf(optarg,"%d",&temp);
                 if (!srv) {
-                    cprintf(ANSI_C_YELLOW,"I-cache size must be a number (%s)\n",optarg);
+                    cprintf(ANSI_C_YELLOW,"I-cache size must be a number: %s\n",optarg);
                 } else {
                     if ((temp!=0) && !(temp&(temp-1))) {
-                        cache_settings.inst_size = temp;
+                        cache_settings->inst_size = temp;
                     } else {
-                        cprintf(ANSI_C_YELLOW,"Invalid i-cache size %d\n", temp);
+                        cprintf(ANSI_C_YELLOW,"Invalid i-cache size: %d\n", temp);
                     }
                 }
                 break;
             case 's': // --cache-size
                 srv = sscanf(optarg,"%d",&temp);
                 if (!srv) {
-                    cprintf(ANSI_C_YELLOW,"Cache size must be a number (%s)\n",optarg);
+                    cprintf(ANSI_C_YELLOW,"Cache size must be a number: %s\n",optarg);
                 } else {
                     if ((temp!=0) && !(temp&(temp-1))) {
-                        cache_settings.cache_size = temp;
+                        cache_settings->cache_size = temp;
                     } else {
-                        cprintf(ANSI_C_YELLOW,"Invalid cache size %d\n", temp);
+                        cprintf(ANSI_C_YELLOW,"Invalid cache size: %d\n", temp);
                     }
                 }
                 break;
             case 't': // --cache-type
                 if (!strcmp(optarg,"direct")) {
-                    cache_settings.type = CACHE_DIRECT;
+                    cache_settings->type = CACHE_DIRECT;
                 } else if (!strcmp(optarg,"sa2") || !strcmp(optarg,"2")) {
-                    cache_settings.type = CACHE_SA2;
+                    cache_settings->type = CACHE_SA2;
                 } else {
-                    cprintf(ANSI_C_YELLOW,"Unrecognized cache type: %s\n", optarg);
+                    cprintf(ANSI_C_YELLOW,"Invalid cache type: %s\n", optarg);
                 }
                 break;
             case 'w': // --cache-write
                 if (!strcmp(optarg,"writethrough") || !strcmp(optarg,"through") || !strcmp(optarg,"thru")) {
-                    cache_settings.wpolicy = CACHE_WRITETHROUGH;
+                    cache_settings->wpolicy = CACHE_WRITETHROUGH;
                 } else if (!strcmp(optarg,"writeback") || !strcmp(optarg,"back")) {
-                    cache_settings.wpolicy = CACHE_WRITEBACK;
+                    cache_settings->wpolicy = CACHE_WRITEBACK;
                 } else {
-                    cprintf(ANSI_C_YELLOW,"Unrecognized cache write policy: %s\n", optarg);
+                    cprintf(ANSI_C_YELLOW,"Invalid cache write policy: %s\n", optarg);
                 }
                 break;
             case '?': // error
@@ -256,30 +280,25 @@ int main (int argc, char **argv) {
                 break;
             default: // bad error
                 printf("Failed to parse command line argument. Exiting.\n");
-                return 0;
+                return 1;
         }
     }
 
     /* Print any remaining command line arguments (not options). */
     if (optind < argc) {
-        printf("args:\n");
-        while (optind < argc)
-            printf ("\t%s\n", argv[optind++]);
+        if (argc-optind > 1) {
+            cprintf(ANSI_C_RED,"Too many files. (Cannot simulate many things!). Exiting.\n");
+            return 1;
+        } else {
+            source_fp = fopen(argv[optind], "r");
+            if (!source_fp) {
+                printf("You lied to me when you told me this was a file: %s\n",argv[optind]);
+                return 1; // exit with errors
+            }
+        }
     } else {
         cprintf(ANSI_C_RED,"Expected at least one argument. (Cannot simulate nothing!). Exiting.\n");
-        return 0;
+        return 1;
     }
-    printf("Starting simulation with flags: 0x%08x\n", flags);
-    cprintf(ANSI_C_YELLOW,"cprintf yellow\n");
-    gprintf(ANSI_C_CYAN,"gprintf cyan\n");
-    bprintf(ANSI_C_MAGENTA,"bprintf magenta\n");
-    bprintf("","Cache settings:\n");
-    bprintf("","\tblock size: %d\n",cache_settings.block_size);
-    bprintf("","\tcache size: %d\n",cache_settings.cache_size);
-    bprintf("","\tdata cache size: %d\n",cache_settings.data_size);
-    bprintf("","\tinstruction cache size: %d\n",cache_settings.inst_size);
-    bprintf("","\tconfiguration: %s\n",(cache_settings.config==CACHE_SPLIT?"SPLIT":"UNIFIED"));
-    bprintf("","\ttype: %s\n",(cache_settings.type==CACHE_DIRECT?"DIRECT-MAPPED":"TWO-WAY SET ASSOCIATIVE"));
-    bprintf("","\twrite policy: %s\n",(cache_settings.wpolicy==CACHE_WRITEBACK?"WRITEBACK":"WRITETHROUGH"));
     return 0;
 }
