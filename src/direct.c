@@ -17,7 +17,7 @@ direct_cache_t * direct_cache_init(uint32_t num_blocks, uint32_t block_size){
     direct_cache_block_t *blocks = (direct_cache_block_t *)malloc(sizeof(direct_cache_block_t) * num_blocks);
 
     //set up each block to point to its corresponding word in memory
-    int i = 0;
+    uint32_t i = 0;
     for(i = 0; i < num_blocks*block_size; i+=block_size){
         blocks[i].data = words + i * block_size;
     }
@@ -62,15 +62,14 @@ direct_cache_t * direct_cache_init(uint32_t num_blocks, uint32_t block_size){
     cache->subsequent_fetching = 0;
 
     //Invalidate all data in the cache
-    uint32_t i = 0;
     for(i = 0; i < cache->num_blocks; i++){
         cache->blocks[i].valid = false;
     }
     return cache;
 }
 
-void direct_cache_free(void){
-    int i;
+void direct_cache_free(direct_cache_t *cache){
+
     free(cache->words);
     free(cache->blocks);
     free(cache);
@@ -85,12 +84,12 @@ void direct_cache_digest(direct_cache_t *cache, memory_status_t proceed_conditio
         cache->penalty_count++;
         if(cache->penalty_count == CACHE_MISS_PENALTY){
             //Finished waiting, get data and return it
-            direct_cache_fill_word(info);
+            direct_cache_fill_word(cache, info);
             cache->fetching = false;
             cache->penalty_count = 0;
             if(cache->subsequent_fetching != (cache->block_size - 1)){
                 //get the second word in the block
-                info.address |= (1 << 2)
+                info.address |= (1 << 2);
                 cache->subsequent_fetching = 1;
                 direct_cache_queue_mem_access(cache, info);
             }
@@ -151,7 +150,7 @@ cache_status_t direct_cache_write_w(direct_cache_t *cache, uint32_t *address, ui
     cache_access_t info;
     direct_cache_get_tag_and_index(&info, cache, address);
     direct_cache_block_t block = cache->blocks[info.index];
-
+    return CACHE_MISS;
 }
 
 
@@ -180,7 +179,7 @@ cache_status_t direct_cache_access_word(direct_cache_t *cache, cache_access_t *i
     //Helper function for reading a word out of a cache block.
     //Check to make sure the data is valid
     if(cache->blocks[info->index].valid == true){
-        info->data = cache->blocks[info->index].data[inner_index];
+        info->data = cache->blocks[info->index].data[info->inner_index];
         return CACHE_HIT;
     }
     else {

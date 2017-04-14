@@ -57,7 +57,7 @@ typedef struct DIRECT_CACHE {
     uint32_t penalty_count;
     uint32_t target_address;
     direct_cache_block_t *blocks;
-    direct_cache_block_t *words;
+    word_t *words;
 } direct_cache_t;
 
 typedef struct CACHE_ACCESS_INFO {
@@ -89,7 +89,7 @@ index_mask =                1111 1111 1111 1111 1100 (index_mask & ~3)//helper f
 */
 direct_cache_t * direct_cache_init(uint32_t num_blocks, uint32_t block_size);
 
-void direct_cache_free(void);
+void direct_cache_free(direct_cache_t *cache);
 
 /*
 * void direct_cache_digest(direct_cache_t *cache, memory_status_t proceed_condition)
