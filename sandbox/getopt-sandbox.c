@@ -13,17 +13,20 @@
 #include <string.h>
 
 // ANSI colour escapes
-#define ANSI_C_BLACK   "\x1b[1;30m"
-#define ANSI_C_RED     "\x1b[1;31m"
-#define ANSI_C_YELLOW  "\x1b[1;33m"
-#define ANSI_C_GREEN   "\x1b[1;32m"
-#define ANSI_C_CYAN    "\x1b[1;36m"
-#define ANSI_C_BLUE    "\x1b[1;34m"
-#define ANSI_C_MAGENTA "\x1b[1;35m"
-#define ANSI_C_WHITE   "\x1b[1;37m"
-#define ANSI_C_RESET   "\x1b[0m"
+#define ANSI_C_BLACK        "\x1b[1;30m"
+#define ANSI_C_RED          "\x1b[1;31m"
+#define ANSI_C_YELLOW       "\x1b[1;33m"
+#define ANSI_C_GREEN        "\x1b[1;32m"
+#define ANSI_C_CYAN         "\x1b[1;36m"
+#define ANSI_C_BLUE         "\x1b[1;34m"
+#define ANSI_C_MAGENTA      "\x1b[1;35m"
+#define ANSI_C_WHITE        "\x1b[1;37m"
+#define ANSI_RESET          "\x1b[0m"
+#define ANSI_BOLD           "\x1b[1m"
+#define ANSI_UNDER          "\x1b[4m"
 
 #define VERSION_STRING      "?.?.????"
+#define TARGET_STRING       "spam"
 // Debugging and internal status flags
 #define MASK_DEBUG          (1<<0) // Show debugging messages
 #define MASK_VERBOSE        (1<<1) // Show verbose messages
@@ -35,11 +38,11 @@
 #define eprintf(...) fprintf(stderr,__VA_ARGS__)
 #define cprintf(COLOR__,str,...) \
 do {if (flags & MASK_COLOR) \
-        eprintf(COLOR__ str ANSI_C_RESET, ##__VA_ARGS__); \
+        eprintf(COLOR__ str ANSI_RESET, ##__VA_ARGS__); \
     else \
         eprintf(str, ##__VA_ARGS__); \
     } while (0)
-//#define cprintf(COLOR__,str,...) eprintf(COLOR__ str ANSI_C_RESET, ##__VA_ARGS__)
+//#define cprintf(COLOR__,str,...) eprintf(COLOR__ str ANSI_RESET, ##__VA_ARGS__)
 #define gprintf(COLOR__,str,...) if (flags & MASK_DEBUG) cprintf(COLOR__,str,##__VA_ARGS__)
 #define bprintf(COLOR__,str,...) if (flags & MASK_VERBOSE) cprintf(COLOR__,str,##__VA_ARGS__)
 
@@ -72,10 +75,22 @@ typedef struct cache_settings_t {
 
 uint32_t flags = 0;
 
-cpu_settings_t cpu_settings = {false};
-cache_settings_t cache_settings = {4,1024,1024,1024,CACHE_SPLIT,CACHE_DIRECT,CACHE_WRITEBACK};
+/* Create and initialize CPU and cache settings */
+cpu_settings_t cpu_settings = {
+    false
+};
+cache_settings_t cache_settings = {
+    4,
+    1024,
+    1024,
+    1024,
+    CACHE_SPLIT,
+    CACHE_DIRECT,
+    CACHE_WRITEBACK
+};
 
-int arguments(int argc, char **argv, FILE* source_fp, cpu_settings_t *cpu_settings, cache_settings_t *cache_settings);
+int arguments(int argc, char **argv, FILE* source_fp,
+        cpu_settings_t *cpu_settings, cache_settings_t *cache_settings);
 
 /* Flags we need
 --alterate -a: alternate program format
@@ -117,13 +132,11 @@ int main (int argc, char **argv) {
             flags &= ~MASK_COLOR;
         }
     }
+    /* Parse command line arguments and options */
     FILE *source_fp = NULL;
     int rv = arguments(argc,argv,source_fp,&cpu_settings,&cache_settings);
     if (rv != 0) return rv;
     printf("Starting simulation with flags: 0x%08x\n", flags);
-    cprintf(ANSI_C_YELLOW,"cprintf yellow\n");
-    gprintf(ANSI_C_CYAN,"gprintf cyan\n");
-    bprintf(ANSI_C_MAGENTA,"bprintf magenta\n");
     bprintf("","Cache settings:\n");
     bprintf("","\tblock size: %d\n",cache_settings.block_size);
     bprintf("","\tcache size: %d\n",cache_settings.cache_size);
@@ -134,7 +147,8 @@ int main (int argc, char **argv) {
     bprintf("","\twrite policy: %s\n",(cache_settings.wpolicy==CACHE_WRITEBACK?"WRITEBACK":"WRITETHROUGH"));
     return 0;
 }
-int arguments(int argc, char **argv, FILE* source_fp, cpu_settings_t *cpu_settings, cache_settings_t *cache_settings) {
+int arguments(int argc, char **argv, FILE* source_fp,
+        cpu_settings_t *cpu_settings, cache_settings_t *cache_settings) {
 
     /* Parse command line options with getopt */
     int c;
@@ -168,6 +182,7 @@ int arguments(int argc, char **argv, FILE* source_fp, cpu_settings_t *cpu_settin
         switch (c) {
             case 'a':
                 flags |= MASK_ALTFORMAT;
+                bprintf("","Alternate format enabled (flags = 0x%04x).\n",flags);
                 break;
             case 'C':
                 if (!strcmp(optarg,"disable")) {
@@ -179,12 +194,19 @@ int arguments(int argc, char **argv, FILE* source_fp, cpu_settings_t *cpu_settin
                 } else {
                     printf("Invalid color setting: %s\n", optarg);
                 }
+                if (flags & MASK_COLOR) {
+                    bprintf("","Colorized output enabled (flags = 0x%04x).\n",flags);
+                } else {
+                    bprintf("","Colorized output disabled (flags = 0x%04x).\n",flags);
+                }
                 break;
             case 'd':
                 flags |= MASK_DEBUG;
+                bprintf("","Debug output enabled (flags = 0x%04x).\n",flags);
                 break;
             case 'g':
                 cpu_settings->single_cycle = true;
+                bprintf("","CPU: single-cycle execution enabled (flags = 0x%04x).\n",flags);
                 break;
             case 'h':
                 printf( "usage: sim [-adghiyVv] [-C mode] [-b num] [-c str] [-s num] [-t str] [-w str]\n"
@@ -195,15 +217,18 @@ int arguments(int argc, char **argv, FILE* source_fp, cpu_settings_t *cpu_settin
                 return 0;
             case 'i':
                 flags |= MASK_INTERACTIVE;
+                bprintf("","Interactive mode enabled (flags = 0x%04x).\n",flags);
                 break;
             case 'y':
                 flags |= MASK_SANITY;
+                bprintf("","Sanity checks enabled (flags = 0x%04x).\n",flags);
                 break;
             case 'V':
-                printf("maps - MIPS simulator %s\n",VERSION_STRING);
+                printf("%s - MIPS I CPU simulator %s\n",TARGET_STRING,VERSION_STRING);
                 return 0;
             case 'v':
                 flags |= MASK_VERBOSE;
+                bprintf("","Verbose output enabled (flags = 0x%04x).\n",flags);
                 break;
             /* Cache options */
             case 'b': // --block-size
@@ -217,6 +242,7 @@ int arguments(int argc, char **argv, FILE* source_fp, cpu_settings_t *cpu_settin
                         cprintf(ANSI_C_YELLOW,"Invalid block size: %d\n", temp);
                     }
                 }
+                bprintf("","CACHE: block size set to %d.\n",cache_settings->block_size);
                 break;
             case 'c': // --cache-config
                 if (!strcmp(optarg,"unified")) {
@@ -226,6 +252,7 @@ int arguments(int argc, char **argv, FILE* source_fp, cpu_settings_t *cpu_settin
                 } else {
                     cprintf(ANSI_C_YELLOW,"Invalid cache configuration: %s\n", optarg);
                 }
+                bprintf("","CACHE: configuration set to ???.\n");
                 break;
             case 'D': // --cache-dsize
                 srv = sscanf(optarg,"%d",&temp);
@@ -238,6 +265,7 @@ int arguments(int argc, char **argv, FILE* source_fp, cpu_settings_t *cpu_settin
                         cprintf(ANSI_C_YELLOW,"Invalid d-cache size: %d\n", temp);
                     }
                 }
+                bprintf("","CACHE: data cache size set to %d.\n",cache_settings->data_size);
                 break;
             case 'I': // --cache-isize
                 srv = sscanf(optarg,"%d",&temp);
@@ -250,6 +278,7 @@ int arguments(int argc, char **argv, FILE* source_fp, cpu_settings_t *cpu_settin
                         cprintf(ANSI_C_YELLOW,"Invalid i-cache size: %d\n", temp);
                     }
                 }
+                bprintf("","CACHE: instruction cache size set to %d.\n",cache_settings->inst_size);
                 break;
             case 's': // --cache-size
                 srv = sscanf(optarg,"%d",&temp);
@@ -262,6 +291,7 @@ int arguments(int argc, char **argv, FILE* source_fp, cpu_settings_t *cpu_settin
                         cprintf(ANSI_C_YELLOW,"Invalid cache size: %d\n", temp);
                     }
                 }
+                bprintf("","CACHE: cache size set to %d.\n",cache_settings->cache_size);
                 break;
             case 't': // --cache-type
                 if (!strcmp(optarg,"direct")) {
@@ -271,6 +301,7 @@ int arguments(int argc, char **argv, FILE* source_fp, cpu_settings_t *cpu_settin
                 } else {
                     cprintf(ANSI_C_YELLOW,"Invalid cache type: %s\n", optarg);
                 }
+                bprintf("","CACHE: cache type set to ???.\n");
                 break;
             case 'w': // --cache-write
                 if (!strcmp(optarg,"writethrough") || !strcmp(optarg,"through") || !strcmp(optarg,"thru")) {
@@ -280,6 +311,7 @@ int arguments(int argc, char **argv, FILE* source_fp, cpu_settings_t *cpu_settin
                 } else {
                     cprintf(ANSI_C_YELLOW,"Invalid cache write policy: %s\n", optarg);
                 }
+                bprintf("","CACHE: cache write policy set to ???.\n");
                 break;
             case '?': // error
                 /* getopt_long already printed an error message. */
