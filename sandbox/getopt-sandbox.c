@@ -33,7 +33,13 @@
 #define MASK_COLOR          (1<<5) // Colorized text output
 // Print macros (note that dprintf conflicts with POSIX, and vprintf conflicts with ISO C)
 #define eprintf(...) fprintf(stderr,__VA_ARGS__)
-#define cprintf(COLOR__,str,...) eprintf(COLOR__ str ANSI_C_RESET, ##__VA_ARGS__)
+#define cprintf(COLOR__,str,...) \
+do {if (flags & MASK_COLOR) \
+        eprintf(COLOR__ str ANSI_C_RESET, ##__VA_ARGS__); \
+    else \
+        eprintf(str, ##__VA_ARGS__); \
+    } while (0)
+//#define cprintf(COLOR__,str,...) eprintf(COLOR__ str ANSI_C_RESET, ##__VA_ARGS__)
 #define gprintf(COLOR__,str,...) if (flags & MASK_DEBUG) cprintf(COLOR__,str,##__VA_ARGS__)
 #define bprintf(COLOR__,str,...) if (flags & MASK_VERBOSE) cprintf(COLOR__,str,##__VA_ARGS__)
 
@@ -292,7 +298,7 @@ int arguments(int argc, char **argv, FILE* source_fp, cpu_settings_t *cpu_settin
         } else {
             source_fp = fopen(argv[optind], "r");
             if (!source_fp) {
-                printf("You lied to me when you told me this was a file: %s\n",argv[optind]);
+                cprintf(ANSI_C_RED,"You lied to me when you told me this was a file: %s\n",argv[optind]);
                 return 1; // exit with errors
             }
         }
