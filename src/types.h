@@ -160,6 +160,12 @@ typedef enum Operations {
     OPR_SEH     // Sign-Extend Halfword                             (MIPS R2)
 } operation_t;
 
+typedef enum CACHE_STATUS {
+    CACHE_NO_ACCESS,
+    CACHE_MISS,         //Data isn't in cache, stall
+    CACHE_HIT           //Data returned is valid
+} cache_status_t;
+
 typedef struct CONTROL_REGISTER {
     char * regName;
 
@@ -192,13 +198,12 @@ typedef struct CONTROL_REGISTER {
     uint32_t pcNext;
     uint32_t memData;
 
+    cache_status_t status;
+
 } control_t;
 
 
-typedef enum CACHE_STATUS {
-    CACHE_MISS,         //Data isn't in cache, stall
-    CACHE_HIT           //Data returned is valid
-} cache_status_t;
+
 
 typedef enum MEMORY_STATUS {
     MEM_IDLE,         //Initial state of memory

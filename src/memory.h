@@ -8,6 +8,7 @@
 #include "types.h"
 #include "util.h"
 #include "main_memory.h"
+#include "cache.h"
 
 void memory(control_t *exmem, control_t *memwb);
 

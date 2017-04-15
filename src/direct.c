@@ -139,7 +139,8 @@ cache_status_t direct_cache_read_word(direct_cache_t *cache, uint32_t *address, 
             }
             return CACHE_MISS;
         } else {
-            //Data is not in the cache. Either start the retrieval, wait, or fill depending on the stall count
+            //Data is not in the cache. Start retrieval
+            info.request = CACHE_READ;
             direct_cache_queue_mem_access(cache, info);
             return CACHE_MISS;
         }
@@ -222,6 +223,7 @@ cache_status_t direct_cache_access_word(direct_cache_t *cache, cache_access_t *i
             cache->blocks[info->index].dirty = info->fromMem ? false : true;
             return status;
         }
+        return status;
 
     }
     else {

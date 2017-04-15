@@ -24,7 +24,7 @@ void cache_init(void){
     set_mem_status(MEM_IDLE);
     d_cache_init();
     i_cache_init();
-
+    write_buffer_init();
 
 }
 

@@ -83,6 +83,8 @@ int main(int argc, char *argv[]) {
     mem_dump();
     // Initialize the pipeline registers
     pipeline_init(&ifid, &idex, &exmem, &memwb, &pc,  (pc_t)mem_start());
+    hazard_init();
+    cache_init();
     if (flags & MASK_ALTFORMAT) {
         // set the program counter based on the fifth word of memory
         mem_read_w(5<<2, &temp);
