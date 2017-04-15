@@ -27,6 +27,8 @@
 
 #define VERSION_STRING      "?.?.????"
 #define TARGET_STRING       "spam"
+
+#define DEFAULT_MEM_SIZE    (1<<14)
 // Debugging and internal status flags
 #define MASK_DEBUG          (1<<0) // Show debugging messages
 #define MASK_VERBOSE        (1<<1) // Show verbose messages
@@ -93,7 +95,7 @@ uint32_t flags = 0;
 /* Create and initialize CPU and cache settings */
 cpu_config_t cpu_config = {
     false,
-    (2<<12)
+    (1<<14)
 };
 cache_config_t cache_config = {
     CACHE_DISABLE,
@@ -188,7 +190,7 @@ int arguments(int argc, char **argv, FILE* source_fp,
         static struct option long_options[] = {
             /* Simulator options */
             {"alternate",       no_argument,        0, 'a'},
-            {"color",           required_argument,  0, 'C'}, // (disable,auto,force)
+            {"color",           required_argument,  0, 'C'}, // (disabled,auto,force)
             {"debug",           no_argument,        0, 'd'},
             {"help",            no_argument,        0, 'h'},
             {"interactive",     no_argument,        0, 'i'},
@@ -199,14 +201,14 @@ int arguments(int argc, char **argv, FILE* source_fp,
             {"single-cycle",    no_argument,        0, 'g'},
             {"mem-size",        required_argument,  0, 'm'}, // 2^n, 0 <= n < 15
             /* Cache options */
-            {"cache-mode",      required_argument,  0, 'c'}, // (disable,split,unified)
+            {"cache-mode",      required_argument,  0, 'c'}, // (disabled,split,unified)
             /* Split cache options */
-            {"cache-data",      required_argument,  0, 'D'}, // (enable,disable)
+            {"cache-data",      required_argument,  0, 'D'}, // (enabled,disabled)
             {"cache-dsize",     required_argument,  0, 'E'}, // 2^n, 0 < n <= 15
             {"cache-dblock",    required_argument,  0, 'F'}, // 2^n, 0 < n <= 7
             {"cache-dtype",     required_argument,  0, 'G'}, // (direct,sa2)
             {"cache-dwrite",    required_argument,  0, 'H'}, // (back,thru)
-            {"cache-inst",      required_argument,  0, 'I'}, // (enable,disable)
+            {"cache-inst",      required_argument,  0, 'I'}, // (enabled,disabled)
             {"cache-isize",     required_argument,  0, 'J'}, // 2^n, 0 < n <= 15
             {"cache-iblock",    required_argument,  0, 'K'}, // 2^n, 0 < n <= 7
             {"cache-itype",     required_argument,  0, 'L'}, // (direct,sa2)
@@ -228,7 +230,7 @@ int arguments(int argc, char **argv, FILE* source_fp,
                 bprintf("","Alternate format enabled (flags = 0x%04x).\n",flags);
                 break;
             case 'C': // --color
-                if (!strcmp(optarg,"disable") || !strcmp(optarg,"d")) {
+                if (!strcmp(optarg,"disabled") || !strcmp(optarg,"d")) {
                     flags &= ~MASK_COLOR;
                 } else if (!strcmp(optarg,"force") || !strcmp(optarg,"f")) {
                     flags |= MASK_COLOR;
@@ -244,7 +246,7 @@ int arguments(int argc, char **argv, FILE* source_fp,
                 bprintf("","Debug output enabled (flags = 0x%04x).\n",flags);
                 break;
             case 'h': // --help
-                printf( "Usage: %s [OPTION]... FILE[.s|.txt]\n" \
+                printf( "Usage: %s [OPTION]... FILE[.s,.txt]\n" \
                         "   or: %s [--help|-h]\n" \
                         "   or: %s [--version|-V]\n" \
                         "  Run %s on an assembly source file, simulating a MIPS CPU execution of FILE,\n" \
@@ -263,14 +265,13 @@ int arguments(int argc, char **argv, FILE* source_fp,
                         "   \twhich attempts to automatically detect whether to colorize.\n" \
                         "   --debug, -d\n" \
                         "   \tEnables debugging output.\n" \
-                        "   \tIf not set, the default is a five-stage pipeline architecture.\n" \
                         "   --help, -h\n" \
                         "   \tPrints this usage information and exits.\n" \
                         "   --interactive, -i\n" \
                         "   \tEnables an interactive debugger for step-by-step and breakpoint-\n" \
                         "   \tbased debugging.\n" \
                         "   --sanity, -y\n" \
-                        "   \tEnables internal sanity checking, comes with a slight speed penalty.\n" \
+                        "   \tEnables internal sanity checking with a slight speed penalty.\n" \
                         "   --version, -V\n" \
                         "   \tPrints simulator version information.\n" \
                         "   --verbose, -v\n" \
@@ -278,23 +279,46 @@ int arguments(int argc, char **argv, FILE* source_fp,
                         "CPU configuration options:\n" \
                         "   --cpu-single, -g\n" \
                         "   \tModels a single-cycle CPU, where each instruction takes one cycle.\n" \
+                        "   \tIf not set, the default is a five-stage pipeline architecture.\n" \
+                        "   --mem-size size, -m size\n" \
+                        "   \tSets the size of main program memory. Defaults to %d bytes.\n" \
                         "Cache configuration options:\n" \
-                        "   --cache-block size, -b size\n" \
-                        "   \tSets the cache block size. Valid sizes are 1,4\n" \
-                        "   --cache-config str, -c str\n" \
-                        "   \tSets the cache configuration. Valid arguments are unified, split\n"
-                        "   --cache-dsize size, -D size\n" \
-                        "   \tSets the data cache size. Valid sizes are 2^n, 0 < n < 16\n"
-                        "   --cache-isize size, -I size\n" \
-                        "   \tSets the instruction cache size. Valid sizes are 2^n, 0 < n < 16\n"
-                        "   --cache-size size, s size\n" \
-                        "   \tSets the cache size (when unified). Valid sizes are 2^n, 0 < n < 16\n"
-                        "   --cache-type str, -t str\n" \
-                        "   \tSets the cache type. Valid types are direct, sa2\n"
-                        "   --cache-write str, -w str\n" \
-                        "   \tSets the cache write-policy. Valid arguments are back, thru\n"
+                        "   --cache-mode mode, -c mode\n" \
+                        "   \tSets the cache mode, where mode must be (disabled,split,unified).\n" \
+                        "   \tdisabled - turns off all caching.\n" \
+                        "   \tsplit - uses split caches; data and instruction caches are separate.\n" \
+                        "   \tunified - uses a single cache for instruction and data.\n" \
+                        "   --cache-data en, -D en\n" \
+                        "   --cache-inst en, -I en\n" \
+                        "   \tEnable or disable data or instruction cache respectively.\n" \
+                        "   \ten must be (0,1,enabled,disabled). Only applies with split cache.\n" \
+                        "   \tBoth default to enabled.\n" \
+                        "   --cache-size size, -S size\n" \
+                        "   --cache-dsize size, -E size\n" \
+                        "   --cache-isize size, -J size\n" \
+                        "   \tSets the size of the unified, data, or instruction cache,\n" \
+                        "   \trespectively. size must be 2^n, 0 < n < 15, defaults to 1024.\n" \
+                        "   --cache-block size, -B size\n" \
+                        "   --cache-dblock size, -F size\n" \
+                        "   --cache-iblock size, -K size\n" \
+                        "   \tSets the block size of the unified, data, or instruction cache,\n" \
+                        "   \trespectively. size must be 2^n, 0 < n < 7, defaults to 4.\n" \
+                        "   --cache-type type, -T type\n" \
+                        "   --cache-dtype type, -G type\n" \
+                        "   --cache-itype type, -L type\n" \
+                        "   \tSets the type of the unified, data, or instruction cache,\n" \
+                        "   \trespectively. type must be (direct,sa2).\n" \
+                        "   \tdirect - uses a direct-mapped cache.\n" \
+                        "   \tsa2 - uses a 2-way set associative cache.\n" \
+                        "   --cache-write policy, -W policy\n" \
+                        "   --cache-dwrite policy, -H policy\n" \
+                        "   --cache-iwrite policy, -M policy\n" \
+                        "   \tSets the write policy of the unified, data, or instruction cache,\n" \
+                        "   \trespectively. policy must be (back,thru).\n" \
+                        "   \tback - uses a writeback policy.\n" \
+                        "   \tthru - uses a writethrough policy.\n" \
                         "\nEmail bug reports to /dev/null\n", \
-                        TARGET_STRING,TARGET_STRING,TARGET_STRING,TARGET_STRING);
+                        TARGET_STRING,TARGET_STRING,TARGET_STRING,TARGET_STRING,DEFAULT_MEM_SIZE);
                 /*
                 printf( "usage: sim [-adghiyVv] [-C mode] [-b num] [-c str] [-s num] [-t str] [-w str]\n"
                         "\t[--alternate] [--color str] [--debug] [--single-cycle] [--help]\n" \
@@ -338,7 +362,7 @@ int arguments(int argc, char **argv, FILE* source_fp,
                 break;
             /* Cache options */
             case 'c': // --cache-mode
-                if (!strcmp(optarg,"disable") || !strcmp(optarg,"d")) {
+                if (!strcmp(optarg,"disabled") || !strcmp(optarg,"d")) {
                     cache_config->mode = CACHE_DISABLE;
                 } else if (!strcmp(optarg,"split") || !strcmp(optarg,"s")) {
                     cache_config->mode = CACHE_SPLIT;
@@ -351,9 +375,9 @@ int arguments(int argc, char **argv, FILE* source_fp,
                 break;
             /* Split cache options */
             case 'D': // --cache-data
-                if (!strcmp(optarg,"disable") || !strcmp(optarg,"d")) {
+                if (!strcmp(optarg,"disabled") || !strcmp(optarg,"d")) {
                     cache_config->data_enabled = false;
-                } else if (!strcmp(optarg,"enable") || !strcmp(optarg,"e")) {
+                } else if (!strcmp(optarg,"enabled") || !strcmp(optarg,"e")) {
                     cache_config->data_enabled = true;
                 } else {
                     cprintf(ANSI_C_YELLOW,"Invalid data cache setting: %s\n",optarg);
@@ -407,9 +431,9 @@ int arguments(int argc, char **argv, FILE* source_fp,
                 bprintf("","CACHE$ data cache write policy set to %s.\n",CACHE_WPOLICY_STRINGS[cache_config->data_wpolicy]);
                 break;
             case 'I': // --cache-inst
-                if (!strcmp(optarg,"disable") || !strcmp(optarg,"d")) {
+                if (!strcmp(optarg,"disabled") || !strcmp(optarg,"d")) {
                     cache_config->inst_enabled = false;
-                } else if (!strcmp(optarg,"enable") || !strcmp(optarg,"e")) {
+                } else if (!strcmp(optarg,"enabled") || !strcmp(optarg,"e")) {
                     cache_config->inst_enabled = true;
                 } else {
                     cprintf(ANSI_C_YELLOW,"Invalid instruction cache setting: %s\n",optarg);
