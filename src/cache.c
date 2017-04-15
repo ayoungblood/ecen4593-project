@@ -54,12 +54,10 @@ void i_cache_init(void){
 
 
 void cache_destroy(void){
-    //free the cache
-    free(d_cache->blocks);
-    free(d_cache);
 
-    free(i_cache->blocks);
-    free(i_cache);
+    direct_cache_free(d_cache);
+
+    direct_cache_free(i_cache);
     return;
 }
 
@@ -168,6 +166,7 @@ void cache_digest(void){
 
     direct_cache_digest(d_cache, MEM_READING_D);
     direct_cache_digest(i_cache, MEM_READING_I);
+    write_buffer_digest();
 }
 
 
@@ -188,7 +187,7 @@ cache_status_t d_cache_write_w(uint32_t *address, word_t *data){
         printf(ANSI_C_CYAN "D_CACHE WRITE WORD:\n" ANSI_C_RESET);
     }
 
-    cache_status_t status = write_through(address, data);
+    cache_status_t status = direct_cache_write_w(d_cache, address, data);
     return status;
 }
 
@@ -204,36 +203,6 @@ cache_status_t i_cache_read_w(uint32_t *address, word_t *data){
 }
 
 
-/* WRITETHROUGH BUFFER FUNCTIONS */
-#ifdef WRITETHROUGH
-/*
-* @brief Puts data into the write buffer and attempts to initialze a write
-* to main memory.
-* @params the address of the data and the data to be written
-* @returns CACHE_HIT if the write is successfully placed in the buffer
-*          and a CACHE_MISS if the write buffer is full
-*/
-cache_status_t write_through(uint32_t *address, word_t *data){
-    if(write_buffer == NULL){
-        printf(ANSI_C_RED "write_through: Write Buffer not initialized\n" ANSI_C_RESET);
-        assert(0);
-    }
-    if(write_buffer->writing){
-        printf("\twrite_through: Write Buffer is full\n");
-        write_buffer->overflow = true;
-        return CACHE_MISS;
-    }
-    else {
-        write_buffer->address = *address;
-        write_buffer->data = *data;
-        write_buffer->writing = true;
-        write_buffer->penalty_count = 0;
-        return CACHE_HIT;
-    }
-}
-
-#endif
-
 /* Write buffer implementation functions */
 /* @brief Initializes a new write buffer
 *  @returns an instance of a new write buffer depending on what write policy is defined
@@ -242,6 +211,7 @@ write_buffer_t *write_buffer_init(void){
 
     write_buffer_t *wb = (write_buffer_t *)malloc(sizeof(write_buffer_t));
     wb->penalty_count = 0;
+    wb->data = (word_t *)malloc(sizeof(word_t)*d_cache->block_size);
     return wb;
 }
 
@@ -249,13 +219,63 @@ write_buffer_t *write_buffer_init(void){
 *  @params the write buffer to be destroyed.
 */
 void write_buffer_destroy(write_buffer_t *wb){
+    free(wb->data);
     free(wb);
 }
 
 void write_buffer_digest(void){
-    if(get_mem_status() != MEM_WRITING){
-        //Its not my turn!!!
-        return;
+    if(write_buffer->writing){
+        if(get_mem_status() != MEM_WRITING){
+            //Its not my turn!!!
+            return;
+        }
+        else {
+            write_buffer->penalty_count++;
+            if(write_buffer->penalty_count == CACHE_WRITE_PENALTY){
+                mem_write_w(write_buffer->address, &write_buffer->data[write_buffer->subsequent_writing]);
+                write_buffer->writing = false;
+                write_buffer->penalty_count = 0;
+                if(write_buffer->subsequent_writing != (d_cache->block_size - 1)){
+                    //enqueue the next data address
+                    write_buffer->address+=4;
+                    write_buffer->writing = true;
+                    write_buffer->penalty_count = 0;
+                    write_buffer->subsequent_writing = 1;
+                }
+            }
+            else if(write_buffer->subsequent_writing && write_buffer->penalty_count == CACHE_WRITE_SUBSEQUENT_PENALTY){
+                mem_write_w(write_buffer->address, &write_buffer->data[write_buffer->subsequent_writing]);
+                write_buffer->writing = false;
+                write_buffer->penalty_count = 0;
+                if(write_buffer->subsequent_writing != (d_cache->block_size - 1)){
+                    write_buffer->address += 4;
+                    write_buffer->writing = true;
+                    write_buffer->subsequent_writing++;
+                    write_buffer->penalty_count = 0;
+                }
+            }
+        }
     }
+}
 
+cache_status_t write_buffer_enqueue(cache_access_t info){
+    if(write_buffer == NULL){
+        printf(ANSI_C_RED "write_buffer_enqueue: buffer is not initialized\n" ANSI_C_RESET);
+        assert(0);
+    }
+    if(write_buffer->writing){
+        //buffer is full!!
+        return CACHE_MISS;
+    }
+    else {
+        write_buffer->address = info.tag | info.index;
+        uint8_t i = 0;
+        for(i = 0; i < d_cache->block_size; i++){
+            write_buffer->data[i] = d_cache->blocks[info.index].data[i];
+        }
+        write_buffer->writing = true;
+        write_buffer->penalty_count = 0;
+        write_buffer->subsequent_writing = 0;
+        return CACHE_HIT;
+    }
 }

@@ -26,7 +26,7 @@ typedef uint32_t tag_t;
 
 
 typedef enum WRITE_POLICY{
-    WRTIEBACK,
+    WRITEBACK,
     WRITETHROUGH
 } write_policy_t;
 
@@ -60,13 +60,8 @@ typedef struct DIRECT_CACHE {
     word_t *words;
 } direct_cache_t;
 
-typedef struct CACHE_ACCESS_INFO {
-    uint32_t index;
-    uint32_t tag;
-    uint32_t inner_index;
-    uint32_t address;
-    uint32_t data;
-} cache_access_t;
+
+
 
 /*
 * direct_cache_t * direct_cache_init(uint32_t num_blocks)

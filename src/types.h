@@ -207,4 +207,20 @@ typedef enum MEMORY_STATUS {
     MEM_READING_I     //Reading from memory into instruction cache
 } memory_status_t;
 
+typedef enum ACCESS_REQUEST{
+    CACHE_READ,
+    CACHE_WRITE
+} cache_access_request_t;
+
+typedef struct CACHE_ACCESS_INFO {
+    cache_access_request_t request;
+    uint32_t index;
+    uint32_t tag;
+    uint32_t inner_index;
+    bool dirty;
+    bool fromMem;
+    uint32_t address;
+    uint32_t data;
+} cache_access_t;
+
 #endif /* _TYPES_H */

@@ -149,8 +149,11 @@ cache_status_t direct_cache_read_word(direct_cache_t *cache, uint32_t *address, 
 cache_status_t direct_cache_write_w(direct_cache_t *cache, uint32_t *address, uint32_t *data){
     cache_access_t info;
     direct_cache_get_tag_and_index(&info, cache, address);
-    direct_cache_block_t block = cache->blocks[info.index];
-    return CACHE_MISS;
+    info.request = CACHE_WRITE;
+    info.fromMem = false;
+    info.data = *data;
+    cache_status_t status = direct_cache_access_word(cache, &info);
+    return status;
 }
 
 
@@ -159,7 +162,7 @@ void direct_cache_fill_word(direct_cache_t *cache, cache_access_t info){
     if(info.inner_index != 0){
         //make sure the current tag matches the tag thats already in the block
         if(info.tag != cache->blocks[info.index].tag){
-            printf(ANSI_C_RED "direct_cache_fill_word: Inconsistent Tag Data. Aborting\n"ANSI_C_RESET);
+            printf(ANSI_C_RED "direct_cache_fill_word: Inconsistent Tag Data. Aborting\n" ANSI_C_RESET);
             assert(0);
         }
         //make sure the first word in the block is valid
@@ -168,24 +171,66 @@ void direct_cache_fill_word(direct_cache_t *cache, cache_access_t info){
             assert(0);
         }
     }
-    uint32_t temp = 0;
-    mem_read_w(info.address, &temp);
-    cache->blocks[info.index].data[info.inner_index] = temp;
-    cache->blocks[info.index].tag = info.tag;
-    cache->blocks[info.index].valid = true;
+    mem_read_w(info.address, &(info.data));
+    info.request = CACHE_WRITE;
+    info.fromMem = true;
+    direct_cache_access_word(cache, &info);
+
 }
 
 cache_status_t direct_cache_access_word(direct_cache_t *cache, cache_access_t *info){
-    //Helper function for reading a word out of a cache block.
-    //Check to make sure the data is valid
-    if(cache->blocks[info->index].valid == true){
-        info->data = cache->blocks[info->index].data[info->inner_index];
-        return CACHE_HIT;
+    //Helper function for getting data in and out of a cache block
+    if(info->request == CACHE_READ){
+        //Check to make sure the data is valid
+        if(cache->blocks[info->index].valid == true && cache->blocks[info->index].tag == info->tag){
+            info->data = cache->blocks[info->index].data[info->inner_index];
+            info->dirty = cache->blocks[info->index].dirty;
+            return CACHE_HIT;
+        }
+        else {
+            return CACHE_MISS;
+        }
+    } else if(info->request == CACHE_WRITE){
+        //read the data currently in that block
+        cache_access_t *read_info = info;
+        read_info->request = CACHE_READ;
+        cache_status_t status = direct_cache_access_word(cache, read_info);
+        if(status == CACHE_MISS && info->fromMem == false){
+            //The processor is writing to a place in memory that isnt in the cache
+            //The transaction becomes a READ MODIFY WRITE
+            if(flags & MASK_DEBUG){
+                printf("\tno valid data in the cache for the specified address.\n");
+            }
+            return CACHE_MISS;
+        }
+        else if(status == CACHE_HIT){
+            if(read_info->dirty && write_policy == WRITEBACK){
+                //There is valid dirty data in the cache, and we must put it in the write buffer
+                status = write_buffer_enqueue(*info);
+                if(status == CACHE_MISS){
+                    if(flags & MASK_DEBUG){
+                        printf("\tWrite buffer is full. Cannot fill cache without losing data.\n");
+                    }
+                    //The write buffer is full! Don't fill the block
+                    return CACHE_MISS;
+                }
+            }
+            //update the data
+            cache->blocks[info->index].data[info->inner_index] = info->data;
+            cache->blocks[info->index].tag = info->tag;
+            cache->blocks[info->index].valid = true;
+            cache->blocks[info->index].dirty = info->fromMem ? false : true;
+            return status;
+        }
+
     }
     else {
+        printf(ANSI_C_RED "direct_cache_access_word: unimplemented cache access request\n"ANSI_C_RESET);
         return CACHE_MISS;
     }
 }
+
+
 
 void direct_cache_queue_mem_access(direct_cache_t *cache, cache_access_t info){
     cache->fetching = true;

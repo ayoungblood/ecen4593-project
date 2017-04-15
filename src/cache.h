@@ -26,8 +26,6 @@
 //If multiple lines are written back, penalty for each subsequent write
 #define CACHE_WRITE_SUBSEQUENT_PENALTY 1
 //Write policy for the cache (EXACTLY ONE MUST BE DEFINED)
-//#define WRITEBACK
-#define WRITETHROUGH
 
 
 
@@ -39,12 +37,7 @@ void cache_destroy(void);
 void cache_digest(void);
 
 cache_status_t d_cache_read_w(uint32_t *address, word_t *data);
-cache_status_t d_cache_read_h(uint32_t *address, word_t *data);
-cache_status_t d_cache_read_b(uint32_t *address, word_t *data);
-
 cache_status_t d_cache_write_w(uint32_t *address, word_t *data);
-cache_status_t d_cache_write_h(uint32_t *address, word_t *data);
-cache_status_t d_cache_write_b(uint32_t *address, word_t *data);
 
 
 void d_cache_init(void);
@@ -54,21 +47,19 @@ cache_status_t i_cache_write_w(uint32_t *address, word_t *data);
 
 
 
-#ifdef WRITETHROUGH
-typedef struct WRITETHROUGH_BUFFER {
-    uint32_t data;
+typedef struct WRITE_BUFFER {
     uint32_t address;
-    uint32_t penalty_count;
     bool writing;
-    bool overflow;
+    uint32_t penalty_count;
+    uint32_t subsequent_writing;
+    word_t *data;
 } write_buffer_t;
-cache_status_t write_through(uint32_t *address, word_t *data);
-#endif
 
 
 write_buffer_t *write_buffer_init(void);
 void write_buffer_destroy(write_buffer_t *wb);
 void write_buffer_digest(void);
+cache_status_t write_buffer_enqueue(cache_access_t info);
 
 
 
