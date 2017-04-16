@@ -24,6 +24,8 @@
 #define ANSI_RESET          "\x1b[0m"
 #define ANSI_BOLD           "\x1b[1m"
 #define ANSI_UNDER          "\x1b[4m"
+#define ANSI_RBOLD           "\x1b[0m\x1b[1m"
+#define ANSI_RUNDER          "\x1b[0m\x1b[4m"
 
 #define VERSION_STRING      "?.?.????"
 #define TARGET_STRING       "spam"
@@ -166,7 +168,8 @@ int main (int argc, char **argv) {
     /* Parse command line arguments and options */
     FILE *source_fp = NULL;
     int rv = arguments(argc,argv,source_fp,&cpu_config,&cache_config);
-    if (rv != 0) return rv;
+    if (rv !=  0) return rv;
+    if (rv == -1) return 0;
     printf("Starting simulation with flags: 0x%08x\n", flags);
     bprintf("","Cache settings:\n");
     bprintf("","\tblock size: %d\n",cache_config.block);
@@ -178,6 +181,7 @@ int main (int argc, char **argv) {
     //bprintf("","\twrite policy: %s\n",(cache_config.wpolicy==CACHE_WRITEBACK?"WRITEBACK":"WRITETHROUGH"));
     return 0;
 }
+// Returns > 1 on error, or -1 if no error occurred but the caller should still exit
 int arguments(int argc, char **argv, FILE* source_fp,
         cpu_config_t *cpu_config, cache_config_t *cache_config) {
 
@@ -254,79 +258,72 @@ int arguments(int argc, char **argv, FILE* source_fp,
                         "  or with [--version|-V], display the version and exit.\n" \
                         "  One, and only one, assembly file must be provided for simulation.\n\n" \
                         "General simulator options:\n" \
-                        "   -a, --alternate\n" \
+                        "   "ANSI_BOLD"-a, --alternate"ANSI_RESET"\n" \
                         "   \tAlterate assembly format, expects lines like\n" \
                         "   \t\t0x24420004, // addiu v0,v0,4\n" \
                         "   \tinstead of the the default, which expects lines like\n" \
                         "   \t\t400048:	0x24420004    addiu v0,v0,4\n" \
-                        "   -C mode, --color mode\n" \
-                        "   \tColorized output behaviour. mode may be disable, which disables\n" \
-                        "   \tcolorized output; force, which colorizes the output; or auto,\n" \
+                        "   "ANSI_BOLD"-C "ANSI_RUNDER"mode"ANSI_RBOLD", --color "ANSI_RUNDER"mode"ANSI_RESET"\n" \
+                        "   \tColorized output behaviour. "ANSI_UNDER"mode"ANSI_RESET" may be "ANSI_BOLD"disable"ANSI_RESET", which disables\n" \
+                        "   \tcolorized output; "ANSI_BOLD"force"ANSI_RESET", which colorizes the output; or "ANSI_BOLD"auto"ANSI_RESET",\n" \
                         "   \twhich attempts to automatically detect whether to colorize.\n" \
-                        "   --debug, -d\n" \
+                        "   "ANSI_BOLD"--debug, -d"ANSI_RESET"\n" \
                         "   \tEnables debugging output.\n" \
-                        "   --help, -h\n" \
+                        "   "ANSI_BOLD"--help, -h"ANSI_RESET"\n" \
                         "   \tPrints this usage information and exits.\n" \
-                        "   --interactive, -i\n" \
+                        "   "ANSI_BOLD"--interactive, -i"ANSI_RESET"\n" \
                         "   \tEnables an interactive debugger for step-by-step and breakpoint-\n" \
                         "   \tbased debugging.\n" \
-                        "   --sanity, -y\n" \
+                        "   "ANSI_BOLD"--sanity, -y"ANSI_RESET"\n" \
                         "   \tEnables internal sanity checking with a slight speed penalty.\n" \
-                        "   --version, -V\n" \
+                        "   "ANSI_BOLD"--version, -V"ANSI_RESET"\n" \
                         "   \tPrints simulator version information.\n" \
-                        "   --verbose, -v\n" \
+                        "   "ANSI_BOLD"--verbose, -v"ANSI_RESET"\n" \
                         "   \tEnable verbose output.\n" \
                         "CPU configuration options:\n" \
-                        "   --cpu-single, -g\n" \
+                        "   "ANSI_BOLD"--cpu-single, -g"ANSI_RESET"\n" \
                         "   \tModels a single-cycle CPU, where each instruction takes one cycle.\n" \
                         "   \tIf not set, the default is a five-stage pipeline architecture.\n" \
-                        "   --mem-size size, -m size\n" \
+                        "   "ANSI_BOLD"--mem-size "ANSI_RUNDER"size"ANSI_RBOLD", -m "ANSI_RUNDER"size"ANSI_RESET"\n" \
                         "   \tSets the size of main program memory. Defaults to %d bytes.\n" \
                         "Cache configuration options:\n" \
-                        "   --cache-mode mode, -c mode\n" \
-                        "   \tSets the cache mode, where mode must be (disabled,split,unified).\n" \
-                        "   \tdisabled - turns off all caching.\n" \
-                        "   \tsplit - uses split caches; data and instruction caches are separate.\n" \
-                        "   \tunified - uses a single cache for instruction and data.\n" \
-                        "   --cache-data en, -D en\n" \
-                        "   --cache-inst en, -I en\n" \
+                        "   "ANSI_BOLD"--cache-mode "ANSI_RUNDER"mode"ANSI_RBOLD", -c "ANSI_RUNDER"mode"ANSI_RESET"\n" \
+                        "   \tSets the cache mode, where "ANSI_UNDER"mode"ANSI_RESET" must be ("ANSI_BOLD"disabled,split,unified"ANSI_RESET").\n" \
+                        "   \t"ANSI_BOLD"disabled"ANSI_RESET" - turns off all caching.\n" \
+                        "   \t"ANSI_BOLD"split"ANSI_RESET" - uses split caches; data and instruction caches are separate.\n" \
+                        "   \t"ANSI_BOLD"unified"ANSI_RESET" - uses a single cache for instruction and data.\n" \
+                        "   "ANSI_BOLD"--cache-data "ANSI_RUNDER"en"ANSI_RBOLD", -D "ANSI_RUNDER"en"ANSI_RESET"\n" \
+                        "   "ANSI_BOLD"--cache-inst "ANSI_RUNDER"en"ANSI_RBOLD", -I "ANSI_RUNDER"en"ANSI_RESET"\n" \
                         "   \tEnable or disable data or instruction cache respectively.\n" \
-                        "   \ten must be (0,1,enabled,disabled). Only applies with split cache.\n" \
+                        "   \t"ANSI_UNDER"en"ANSI_RESET" must be ("ANSI_BOLD"0,1,enabled,disabled"ANSI_RESET"). Only applies with split cache.\n" \
                         "   \tBoth default to enabled.\n" \
-                        "   --cache-size size, -S size\n" \
-                        "   --cache-dsize size, -E size\n" \
-                        "   --cache-isize size, -J size\n" \
+                        "   "ANSI_BOLD"--cache-size "ANSI_RUNDER"size"ANSI_RBOLD", -S "ANSI_RUNDER"size"ANSI_RESET"\n" \
+                        "   "ANSI_BOLD"--cache-dsize "ANSI_RUNDER"size"ANSI_RBOLD", -E "ANSI_RUNDER"size"ANSI_RESET"\n" \
+                        "   "ANSI_BOLD"--cache-isize "ANSI_RUNDER"size"ANSI_RBOLD", -J "ANSI_RUNDER"size"ANSI_RESET"\n" \
                         "   \tSets the size of the unified, data, or instruction cache,\n" \
-                        "   \trespectively. size must be 2^n, 0 < n < 15, defaults to 1024.\n" \
-                        "   --cache-block size, -B size\n" \
-                        "   --cache-dblock size, -F size\n" \
-                        "   --cache-iblock size, -K size\n" \
+                        "   \trespectively. "ANSI_UNDER"size"ANSI_RESET" must be 2^n, 0 < n < 15, defaults to 1024.\n" \
+                        "   "ANSI_BOLD"--cache-block "ANSI_RUNDER"size"ANSI_RBOLD", -B "ANSI_RUNDER"size"ANSI_RESET"\n" \
+                        "   "ANSI_BOLD"--cache-dblock "ANSI_RUNDER"size"ANSI_RBOLD", -F "ANSI_RUNDER"size"ANSI_RESET"\n" \
+                        "   "ANSI_BOLD"--cache-iblock "ANSI_RUNDER"size"ANSI_RBOLD", -K "ANSI_RUNDER"size"ANSI_RESET"\n" \
                         "   \tSets the block size of the unified, data, or instruction cache,\n" \
-                        "   \trespectively. size must be 2^n, 0 < n < 7, defaults to 4.\n" \
-                        "   --cache-type type, -T type\n" \
-                        "   --cache-dtype type, -G type\n" \
-                        "   --cache-itype type, -L type\n" \
+                        "   \trespectively. "ANSI_UNDER"size"ANSI_RESET" must be 2^n, 0 < n < 7, defaults to 4.\n" \
+                        "   "ANSI_BOLD"--cache-type "ANSI_RUNDER"type"ANSI_RBOLD", -T "ANSI_RUNDER"type"ANSI_RESET"\n" \
+                        "   "ANSI_BOLD"--cache-dtype "ANSI_RUNDER"type"ANSI_RBOLD", -G "ANSI_RUNDER"type"ANSI_RESET"\n" \
+                        "   "ANSI_BOLD"--cache-itype "ANSI_RUNDER"type"ANSI_RBOLD", -L "ANSI_RUNDER"type"ANSI_RESET"\n" \
                         "   \tSets the type of the unified, data, or instruction cache,\n" \
-                        "   \trespectively. type must be (direct,sa2).\n" \
-                        "   \tdirect - uses a direct-mapped cache.\n" \
-                        "   \tsa2 - uses a 2-way set associative cache.\n" \
-                        "   --cache-write policy, -W policy\n" \
-                        "   --cache-dwrite policy, -H policy\n" \
-                        "   --cache-iwrite policy, -M policy\n" \
+                        "   \trespectively. "ANSI_UNDER"type"ANSI_RESET" must be ("ANSI_BOLD"direct,sa2"ANSI_RESET").\n" \
+                        "   \t"ANSI_BOLD"direct"ANSI_RESET" - uses a direct-mapped cache.\n" \
+                        "   \t"ANSI_BOLD"sa2"ANSI_RESET" - uses a 2-way set associative cache.\n" \
+                        "   "ANSI_BOLD"--cache-write "ANSI_RUNDER"policy"ANSI_RBOLD", -W "ANSI_RUNDER"policy"ANSI_RESET"\n" \
+                        "   "ANSI_BOLD"--cache-dwrite "ANSI_RUNDER"policy"ANSI_RBOLD", -H "ANSI_RUNDER"policy"ANSI_RESET"\n" \
+                        "   "ANSI_BOLD"--cache-iwrite "ANSI_RUNDER"policy"ANSI_RBOLD", -M "ANSI_RUNDER"policy"ANSI_RESET"\n" \
                         "   \tSets the write policy of the unified, data, or instruction cache,\n" \
-                        "   \trespectively. policy must be (back,thru).\n" \
-                        "   \tback - uses a writeback policy.\n" \
-                        "   \tthru - uses a writethrough policy.\n" \
+                        "   \trespectively. "ANSI_UNDER"policy"ANSI_RESET" must be ("ANSI_BOLD"back,thru"ANSI_RESET").\n" \
+                        "   \t"ANSI_BOLD"back"ANSI_RESET" - uses a writeback policy.\n" \
+                        "   \t"ANSI_BOLD"thru"ANSI_RESET" - uses a writethrough policy.\n" \
                         "\nEmail bug reports to /dev/null\n", \
                         TARGET_STRING,TARGET_STRING,TARGET_STRING,TARGET_STRING,DEFAULT_MEM_SIZE);
-                /*
-                printf( "usage: sim [-adghiyVv] [-C mode] [-b num] [-c str] [-s num] [-t str] [-w str]\n"
-                        "\t[--alternate] [--color str] [--debug] [--single-cycle] [--help]\n" \
-                        "\t[--interactive] [--sanity] [--version] [--verbose] [--cache-block num]\n" \
-                        "\t[--cache-config str] [--cache-size num] [--cache-type str]\n" \
-                        "\t[--cache-write str] file\n");
-                */
-                return 0;
+                return -1; // caller should exit
             case 'i': // --interactive
                 flags |= MASK_INTERACTIVE;
                 bprintf("","Interactive mode enabled (flags = 0x%04x).\n",flags);
@@ -337,7 +334,7 @@ int arguments(int argc, char **argv, FILE* source_fp,
                 break;
             case 'V': // --version
                 printf("%s - MIPS I CPU simulator %s\n",TARGET_STRING,VERSION_STRING);
-                return 0;
+                return -1; // caller should exit
             case 'v': // --verbose
                 flags |= MASK_VERBOSE;
                 bprintf("","Verbose output enabled (flags = 0x%04x).\n",flags);
