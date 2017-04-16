@@ -100,6 +100,7 @@ int main(int argc, char *argv[]) {
         decode(ifid, idex);
         fetch(ifid, &pc);
         hazard(ifid, idex, exmem, memwb, &pc);
+        cache_digest();
         ++cycles;
         // Check for a magic halt number (beq zero zero -1 or jr zero)
         if (ifid->instr == 0x1000ffff || ifid->instr == 0x00000008 || pc == 0) break;

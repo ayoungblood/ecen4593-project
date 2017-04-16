@@ -20,13 +20,6 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
         printf(ANSI_C_CYAN "HAZARD:\n" ANSI_C_RESET);
     }
 
-    if(memwb->status == CACHE_MISS){
-        if(flags & MASK_DEBUG){
-            printf("\tcache miss! Restoring the pipeline\n");
-        }
-        restore(ifid, idex, exmem, memwb, pc);
-    }
-
     //Reset stall
     bool stall = false;
 
@@ -219,6 +212,14 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
     else{
         //Normal operation update the program counter by 4
         *pc = *pc + 4;
+    }
+
+    
+    if(memwb->status == CACHE_MISS){
+        if(flags & MASK_DEBUG){
+            printf("\tcache miss! Restoring the pipeline\n");
+        }
+        restore(ifid, idex, exmem, memwb, pc);
     }
 
     backup(ifid, idex, exmem, memwb, pc);

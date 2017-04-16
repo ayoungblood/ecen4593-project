@@ -24,7 +24,7 @@ void cache_init(void){
     set_mem_status(MEM_IDLE);
     d_cache_init();
     i_cache_init();
-    write_buffer_init();
+    write_buffer = write_buffer_init();
 
 }
 
@@ -163,6 +163,26 @@ void cache_digest(void){
             assert(0);
             break;
     }
+    if(flags & MASK_DEBUG){
+        printf("\tcache_digest: Memory state is ");
+        switch(get_mem_status()){
+            case MEM_IDLE:
+                printf("MEM_IDLE\n");
+                break;
+            case MEM_WRITING:
+                printf("MEM_WRITING\n");
+                break;
+            case MEM_READING_D:
+                printf("MEM_READING_D\n");
+                break;
+            case MEM_READING_I:
+                printf("MEM_READING_I\n");
+                break;
+            default:
+                printf("UNDEFINED\n");
+                break;
+        }
+    }
 
     direct_cache_digest(d_cache, MEM_READING_D);
     direct_cache_digest(i_cache, MEM_READING_I);
@@ -265,9 +285,15 @@ cache_status_t write_buffer_enqueue(cache_access_t info){
     }
     if(write_buffer->writing){
         //buffer is full!!
+        if(flags & MASK_DEBUG){
+            printf("\twrite_buffer_enqueue: Write buffer is full!\n");
+        }
         return CACHE_MISS;
     }
     else {
+        if(flags & MASK_DEBUG){
+            printf("\twrite_buffer_enqueue: filling write buffer with block index %d and tag 0x%08x\n", info.index, info.tag);
+        }
         write_buffer->address = info.tag | info.index;
         uint8_t i = 0;
         for(i = 0; i < d_cache->block_size; i++){
