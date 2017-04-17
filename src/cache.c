@@ -38,7 +38,7 @@ void d_cache_init(void){
 
     //Each block contains a word of data
     uint32_t num_blocks = D_CACHE_SIZE >> 2;
-    d_cache = direct_cache_init(num_blocks, 4);
+    d_cache = direct_cache_init(num_blocks, 1);
 }
 
 void i_cache_init(void){
@@ -197,7 +197,7 @@ cache_status_t d_cache_read_w(uint32_t *address, word_t *data){
         printf(ANSI_C_CYAN "D_CACHE GET WORD:\n" ANSI_C_RESET);
     }
     //Get data from the data cache
-    cache_status_t status = direct_cache_read_word(d_cache, address, data);
+    cache_status_t status = direct_cache_read_w(d_cache, address, data);
     return status;
 }
 
@@ -217,7 +217,7 @@ cache_status_t i_cache_read_w(uint32_t *address, word_t *data){
     }
     //Get data from the data cache
 
-    cache_status_t status = direct_cache_read_word(i_cache, address, data);
+    cache_status_t status = direct_cache_read_w(i_cache, address, data);
 
     return status;
 }

@@ -9,7 +9,8 @@ extern int flags;
 void fetch(control_t * ifid, pc_t * pc){
 
     //Read the instruction at the current program counter
-    mem_read_w(*pc, &(ifid->instr));
+    ifid->status = i_cache_read_w(pc, &(ifid->instr));
+    //mem_read_w(*pc, &(ifid->instr));
     if(flags & MASK_DEBUG){
         printf(ANSI_C_CYAN "FETCH:\n" ANSI_C_RESET);
         printf("\tretrieved instruction 0x%08x at 0x%08x\n", ifid->instr, *pc);

@@ -35,7 +35,7 @@ write_policy_t write_policy;    //write back or write through
 
 //Struct for a single block of a direct mapped cache
 typedef struct DIRECT_CACHE_BLOCK {
-    bool valid;
+    bool *valid;
     bool dirty;
     tag_t tag;
     word_t *data;
@@ -102,7 +102,7 @@ void direct_cache_digest(direct_cache_t *cache, memory_status_t proceed_conditio
 * if there is a CACHE_MISS, function will set up the direct mapped cache to
 * start fetching the data from main memory.
 */
-cache_status_t direct_cache_read_word(direct_cache_t *cache, uint32_t *address, uint32_t *data);
+cache_status_t direct_cache_read_w(direct_cache_t *cache, uint32_t *address, uint32_t *data);
 
 /*  @brief Sets up a word to be written back to main memory
 *   If writeback, the dirty bit in the cache gets set and returns. Once the

@@ -19,30 +19,31 @@ void memory(control_t * exmem, control_t * memwb) {
             case OPC_LBU:
             case OPC_LB:
                 mem_read_b(exmem->ALUresult,&temp);
+                /*
                 if (exmem->opCode == OPC_LB) temp = SIGN_EXTEND_B(temp);
                 printf("\tMemory data: 0x%08x\n", temp);
                 status = d_cache_read_w(&exmem->ALUresult, &temp);
                 temp = temp >> ((3-(exmem->ALUresult & 0x3))<<3);
                 temp &= 0xff;
                 if (exmem->opCode == OPC_LB) temp = SIGN_EXTEND_B(temp);
-                printf("\tCache data: 0x%08x\n", temp);
+                printf("\tCache data: 0x%08x\n", temp);*/
                 break;
             case OPC_LHU:
             case OPC_LH:
-                mem_read_h(exmem->ALUresult,&temp);
+                mem_read_h(exmem->ALUresult,&temp);/*
                 if (exmem->opCode == OPC_LH) temp = SIGN_EXTEND_H(temp);
                 printf("\tMemory data: 0x%08x\n", temp);
                 status = d_cache_read_w(&exmem->ALUresult, &temp);
                 temp = temp >> ((2-(exmem->ALUresult & 0x2))<<3);
                 temp &= 0xffff;
                 if (exmem->opCode == OPC_LH) temp = SIGN_EXTEND_H(temp);
-                printf("\tCache data: 0x%08x\n", temp);
+                printf("\tCache data: 0x%08x\n", temp);*/
                 break;
             case OPC_LW:
-                mem_read_w(exmem->ALUresult, &temp);
+                mem_read_w(exmem->ALUresult, &temp);/*
                 printf("\tMemory data: 0x%08x\n", temp);
                 status = d_cache_read_w(&exmem->ALUresult, &temp);
-                printf("\tCache data: 0x%08x\n", temp);
+                printf("\tCache data: 0x%08x\n", temp);*/
                 break;
             default: // We should not get here. Complain and crash.
                 printf(ANSI_C_RED "Illegal memory operation, opcode 0x%02x, (memRead asserted). Halting.\n" ANSI_C_RESET, exmem->opCode);
@@ -59,6 +60,8 @@ void memory(control_t * exmem, control_t * memwb) {
         switch (exmem->opCode) {
             case OPC_SB:
                 temp = exmem->regRtValue;
+                mem_write_b(exmem->ALUresult, &temp);
+                /*
                 status = d_cache_read_w(&exmem->ALUresult, &data_in_cache);
                 if(status == CACHE_HIT){
                     uint32_t shift = ((3-(exmem->ALUresult & 0x3))<<3);
@@ -67,9 +70,12 @@ void memory(control_t * exmem, control_t * memwb) {
                     temp = temp & data_in_cache;
                     status = d_cache_write_w(&exmem->ALUresult, &temp);
                 }
+                */
                 break;
             case OPC_SH:
                 temp = exmem->regRtValue;
+                mem_write_h(exmem->ALUresult, &temp);
+                /*
                 status = d_cache_read_w(&exmem->ALUresult, &data_in_cache);
                 if(status == CACHE_HIT){
                     uint32_t shift = ((2-(exmem->ALUresult & 0x2))<<3);
@@ -77,14 +83,16 @@ void memory(control_t * exmem, control_t * memwb) {
                     data_in_cache &= ~(0xffff << shift);
                     temp = temp & data_in_cache;
                     status = d_cache_write_w(&exmem->ALUresult, &temp);
-                }
+                }*/
                 break;
             case OPC_SW:
                 temp = exmem->regRtValue;
+                mem_write_w(exmem->ALUresult, &temp);
+                /*
                 status = d_cache_read_w(&exmem->ALUresult, &temp);
                 if(status == CACHE_HIT){
                     status = d_cache_write_w(&exmem->ALUresult, &temp);
-                }
+                }*/
                 break;
             default: // We should not get here. Complain and crash.
                 printf(ANSI_C_RED "Illegal memory operation, opcode 0x%02x, (memWrite asserted). Halting.\n" ANSI_C_RESET, exmem->opCode);

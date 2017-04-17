@@ -19,6 +19,6 @@ void hazard_init(void);
 
 void restore(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb, pc_t *pc);
 
-void backup(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb, pc_t *pc);
+void backup(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb);
 
 #endif

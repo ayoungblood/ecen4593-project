@@ -11,6 +11,7 @@
 #include "types.h"
 #include "util.h"
 #include "main_memory.h"
+#include "cache.h"
 
 void fetch(control_t *, pc_t * pc);
 

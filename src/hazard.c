@@ -15,6 +15,7 @@ pc_t pc_backup;
 int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb, pc_t *pc){
 
     bool forward = false;
+    pc_backup = *pc;
 
     if(flags & MASK_DEBUG){
         printf(ANSI_C_CYAN "HAZARD:\n" ANSI_C_RESET);
@@ -214,15 +215,15 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
         *pc = *pc + 4;
     }
 
-    
-    if(memwb->status == CACHE_MISS){
+
+    if(memwb->status == CACHE_MISS || ifid->status == CACHE_MISS){
         if(flags & MASK_DEBUG){
             printf("\tcache miss! Restoring the pipeline\n");
         }
         restore(ifid, idex, exmem, memwb, pc);
     }
 
-    backup(ifid, idex, exmem, memwb, pc);
+    backup(ifid, idex, exmem, memwb);
 
     return 0;
 }
@@ -232,12 +233,11 @@ void hazard_init(void){
     pipeline_init(&ifid_backup, &idex_backup, &exmem_backup, &memwb_backup, &pc_backup, 0);
 }
 
-void backup(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb, pc_t *pc){
+void backup(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb){
     copy_pipeline_register(ifid, ifid_backup);
     copy_pipeline_register(idex, idex_backup);
     copy_pipeline_register(exmem, exmem_backup);
     copy_pipeline_register(memwb, memwb_backup);
-    pc_backup = *pc;
 }
 
 void restore(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb, pc_t *pc){
@@ -245,5 +245,5 @@ void restore(control_t *ifid, control_t *idex, control_t *exmem, control_t *memw
     copy_pipeline_register(idex_backup, idex);
     copy_pipeline_register(exmem_backup, exmem);
     copy_pipeline_register(memwb_backup, memwb);
-    *pc = pc_backup;
+    *pc = pc_backup - 4;
 }
