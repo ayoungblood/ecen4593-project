@@ -11,10 +11,7 @@ void fetch(control_t * ifid, pc_t * pc){
     //Read the instruction at the current program counter
     ifid->status = i_cache_read_w(pc, &(ifid->instr));
     //mem_read_w(*pc, &(ifid->instr));
-    if(flags & MASK_DEBUG){
-        printf(ANSI_C_CYAN "FETCH:\n" ANSI_C_RESET);
-        printf("\tretrieved instruction 0x%08x at 0x%08x\n", ifid->instr, *pc);
-    }
+
 
     //Break the instruction into the specific fields
     ifid->opCode = ( ifid->instr & OP_MASK ) >> OP_SHIFT;
@@ -31,5 +28,14 @@ void fetch(control_t * ifid, pc_t * pc){
 
     //Update the program counter by 4
     ifid->pcNext = *pc + 4;
+
+    if(flags & MASK_DEBUG){
+        printf(ANSI_C_CYAN "FETCH:\n" ANSI_C_RESET);
+        if(ifid->status == CACHE_HIT){
+            printf("\tretrieved instruction 0x%08x at 0x%08x\n", ifid->instr, *pc);
+        } else {
+            printf("\tCACHE MISS at 0x%08x\n", *pc);
+        }
+    }
 
 }

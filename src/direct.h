@@ -123,6 +123,11 @@ void direct_cache_queue_mem_access(direct_cache_t *cache, cache_access_t info);
 void direct_cache_get_tag_and_index(cache_access_t *info, direct_cache_t *cache, uint32_t *address);
 
 
+/* Debugging functions */
+void direct_cache_print(direct_cache_t *cache);
+void direct_cache_print_block(direct_cache_t *cache, int index);
+
+
 
 
 #endif /* _DIRECT_H */

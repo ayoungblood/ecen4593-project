@@ -39,6 +39,7 @@ direct_cache_t * direct_cache_init(uint32_t num_blocks, uint32_t block_size){
     //get the number of bits the index takes up
     uint32_t index_size = 1;
     while((num_blocks>>index_size) != 0) index_size+=1;
+    index_size--;
     cache->index_size = index_size;
     //cache size is 2^n blocks, so n bits are needed for the index
     //block size is 2^m words, m bits needed for word within block
@@ -46,8 +47,9 @@ direct_cache_t * direct_cache_init(uint32_t num_blocks, uint32_t block_size){
     //This is magic. Look in the header file for some sort of explanation
     uint32_t inner_index_size = 1;
     while((block_size>>inner_index_size) != 0) inner_index_size+=1;
+    inner_index_size--;
     cache->inner_index_size = inner_index_size;
-    cache->inner_index_mask = ((1 << (inner_index_size + 1)) - 1) & ~3;
+    cache->inner_index_mask = ((1 << (inner_index_size + 2)) - 1) & ~3;
     cache->tag_size = 32 - cache->index_size - cache->inner_index_size - 2;
     cache->index_mask = ((1 << (cache->index_size + cache->inner_index_size + 2)) - 1);
     cache->tag_mask = ~cache->index_mask;
@@ -55,9 +57,9 @@ direct_cache_t * direct_cache_init(uint32_t num_blocks, uint32_t block_size){
 
     if(flags & MASK_DEBUG){
         printf("creating cache masks...\n");
-        printf("tag_mask: 0x%08x\n", cache->tag_mask);
-        printf("index_mask: 0x%08x\n", cache->index_mask);
-        printf("inner_index_mask: 0x%08x\n", cache->inner_index_mask);
+        printf("tag_mask: 0x%08x, tag_size: %d\n", cache->tag_mask, cache->tag_size);
+        printf("index_mask: 0x%08x, index_size: %d\n", cache->index_mask, cache->index_size);
+        printf("inner_index_mask: 0x%08x, inner_index_size: %d\n", cache->inner_index_mask, cache->inner_index_size);
     }
 
     //Set up the fetch variables
@@ -90,7 +92,7 @@ void direct_cache_digest(direct_cache_t *cache, memory_status_t proceed_conditio
         //Increment the wait count
         cache->penalty_count++;
         if(flags & MASK_DEBUG){
-            printf("\tdirect_cache_digest: Value of incremented penalty_count %d\n",cache->penalty_count);
+            printf("\tdirect_cache_digest: Value of incremented penalty_count %d, pending address: 0x%08x\n",cache->penalty_count, cache->target_address);
         }
         if(cache->penalty_count == CACHE_MISS_PENALTY){
             //Finished waiting, get data and return it
@@ -101,6 +103,10 @@ void direct_cache_digest(direct_cache_t *cache, memory_status_t proceed_conditio
             cache->blocks[info.index].data[info.inner_index] = info.data;
             cache->blocks[info.index].tag = info.tag;
             cache->blocks[info.index].valid[info.inner_index] = true;
+            //Invalidate the rest of the data in the cache since the tag changed
+            for(uint8_t i = 1; i < cache->block_size; i++){
+                cache->blocks[info.index].valid[i] = false;
+            }
             cache->blocks[info.index].dirty = false;
             cache->fetching = false;
             cache->penalty_count = 0;
@@ -121,11 +127,14 @@ void direct_cache_digest(direct_cache_t *cache, memory_status_t proceed_conditio
             cache->blocks[info.index].dirty = false;
             cache->fetching = false;
             cache->penalty_count = 0;
-            if(cache->subsequent_fetching != (cache->block_size - 1)){
+            if(cache->subsequent_fetching < (cache->block_size - 1)){
                 //get the next word for the block
                 cache->subsequent_fetching++;
+                info.address &= ~(0xc);
                 info.address |= (cache->subsequent_fetching << 2);
                 direct_cache_queue_mem_access(cache, info);
+            } else if(cache->subsequent_fetching == (cache->block_size - 1)){
+                cache->subsequent_fetching = 0;
             }
             return;
         }
@@ -138,6 +147,9 @@ cache_status_t direct_cache_read_w(direct_cache_t *cache, uint32_t *address, uin
     cache_access_t info;
     direct_cache_get_tag_and_index(&info, cache, address);
     info.request = CACHE_READ;
+    if(flags & MASK_DEBUG){
+        printf("\tdirect_cache_read_w: looking for address 0x%08x\n", *address);
+    }
 
     //Some index checking to make sure we don't seg fault
     if(info.index >= cache->num_blocks){
@@ -157,7 +169,7 @@ cache_status_t direct_cache_read_w(direct_cache_t *cache, uint32_t *address, uin
         info.data = cache->blocks[info.index].data[info.inner_index];
         info.dirty = cache->blocks[info.index].dirty;
         if(flags & MASK_DEBUG){
-            printf("\tdirect_cache_read_w: CACHE_HIT Found valid data 0x%08x for address 0x%08x\n", info.data, info.address);
+            printf("\tdirect_cache_read_w: CACHE_HIT Found valid data 0x%08x for address 0x%08x in block: %d, inner_index: %d\n", info.data, info.address, info.index, info.inner_index);
             if(info.dirty){
                 printf("\tdirect_cache_read_w: Block is dirty\n");
             }
@@ -245,4 +257,25 @@ void direct_cache_get_tag_and_index(cache_access_t *info, direct_cache_t *cache,
     info->tag = (*address & cache->tag_mask) >> (2 + cache->index_size + cache->inner_index_size);
     info->inner_index = (*address & cache->inner_index_mask) >> 2;
     info->address = *address;
+}
+
+
+void direct_cache_print(direct_cache_t *cache){
+    for(uint32_t i = 0; i < cache->num_blocks; i++){
+        direct_cache_print_block(cache, i);
+    }
+}
+
+void direct_cache_print_block(direct_cache_t *cache, int index){
+    direct_cache_block_t block = cache->blocks[index];
+    printf("Data:   0x%08x", *(block.data));
+    printf("\tValid: %d", *(block.valid));
+    printf("\tBlock: %d", index);
+
+    printf("\tDirty: %d", block.dirty);
+    printf("\tTag: 0x%08x\n", block.tag);
+    for(uint8_t i = 1; i < cache->block_size; i++){
+        printf("\t0x%08x", block.data[i]);
+        printf("\t       %d\n", block.valid[i]);
+    }
 }

@@ -36,6 +36,9 @@ void d_cache_init(void){
         assert(0);
     }
 
+    if(flags & MASK_DEBUG){
+        printf("Creating Data Cache (D Cache)\n");
+    }
     //Each block contains a word of data
     uint32_t num_blocks = D_CACHE_SIZE >> 2;
     d_cache = direct_cache_init(num_blocks, 1);
@@ -47,9 +50,11 @@ void i_cache_init(void){
         printf(ANSI_C_RED "cache_init: I_CACHE_SIZE %d not a power of two\n" ANSI_C_RESET, D_CACHE_SIZE);
         assert(0);
     }
-
+    if(flags & MASK_DEBUG){
+        printf("Creating Instruction Cache (I Cache)\n");
+    }
     uint32_t num_blocks = I_CACHE_SIZE >> 2;
-    i_cache = direct_cache_init(num_blocks, 1);
+    i_cache = direct_cache_init(num_blocks, 4);
 }
 
 
@@ -187,6 +192,8 @@ void cache_digest(void){
     direct_cache_digest(d_cache, MEM_READING_D);
     direct_cache_digest(i_cache, MEM_READING_I);
     write_buffer_digest();
+
+    //print_cache(i_cache);
 }
 
 
@@ -304,4 +311,9 @@ cache_status_t write_buffer_enqueue(cache_access_t info){
         write_buffer->subsequent_writing = 0;
         return CACHE_HIT;
     }
+}
+
+
+void print_cache(void *cache){
+    direct_cache_print((direct_cache_t*) cache);
 }

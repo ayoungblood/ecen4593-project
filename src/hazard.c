@@ -245,5 +245,5 @@ void restore(control_t *ifid, control_t *idex, control_t *exmem, control_t *memw
     copy_pipeline_register(idex_backup, idex);
     copy_pipeline_register(exmem_backup, exmem);
     copy_pipeline_register(memwb_backup, memwb);
-    *pc = pc_backup - 4;
+    *pc = pc_backup;
 }

@@ -17,9 +17,9 @@
 
 /* CACHE INFO */
 //Data cache size in bytes
-#define D_CACHE_SIZE 1024
+#define D_CACHE_SIZE 64
 //Instruction cache size in bytes
-#define I_CACHE_SIZE 1024
+#define I_CACHE_SIZE 128
 
 //Write to main memory penalty for first block written
 #define CACHE_WRITE_PENALTY 4
@@ -61,8 +61,8 @@ void write_buffer_destroy(write_buffer_t *wb);
 void write_buffer_digest(void);
 cache_status_t write_buffer_enqueue(cache_access_t info);
 
-
-
+/*Debugging stuff*/
+void print_cache(void *cache);
 
 
 #endif /*_CACHE_H*/
