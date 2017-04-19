@@ -24,13 +24,13 @@
 #define ANSI_RESET          "\x1b[0m"
 #define ANSI_BOLD           "\x1b[1m"
 #define ANSI_UNDER          "\x1b[4m"
-#define ANSI_RBOLD           "\x1b[0m\x1b[1m"
-#define ANSI_RUNDER          "\x1b[0m\x1b[4m"
+#define ANSI_RBOLD          "\x1b[0m\x1b[1m"
+#define ANSI_RUNDER         "\x1b[0m\x1b[4m"
 
 #define VERSION_STRING      "?.?.????"
 #define TARGET_STRING       "spam"
 
-#define DEFAULT_MEM_SIZE    (1<<14)
+#define DEFAULT_MEM_SIZE    (1<<15)
 // Debugging and internal status flags
 #define MASK_DEBUG          (1<<0) // Show debugging messages
 #define MASK_VERBOSE        (1<<1) // Show verbose messages
@@ -46,7 +46,6 @@ do {if (flags & MASK_COLOR) \
     else \
         eprintf(str, ##__VA_ARGS__); \
     } while (0)
-//#define cprintf(COLOR__,str,...) eprintf(COLOR__ str ANSI_RESET, ##__VA_ARGS__)
 #define gprintf(COLOR__,str,...) if (flags & MASK_DEBUG) cprintf(COLOR__,str,##__VA_ARGS__)
 #define bprintf(COLOR__,str,...) if (flags & MASK_VERBOSE) cprintf(COLOR__,str,##__VA_ARGS__)
 
@@ -94,55 +93,31 @@ typedef struct cache_config_t {
 
 uint32_t flags = 0;
 
-/* Create and initialize CPU and cache settings */
+/* Create and initialize CPU and cache settings with defaults */
 cpu_config_t cpu_config = {
-    false,
-    (1<<14)
+    .single_cycle   = false,
+    .mem_size       = DEFAULT_MEM_SIZE,
 };
 cache_config_t cache_config = {
-    CACHE_DISABLE,
-    true,
-    1024,
-    4,
-    CACHE_DIRECT,
-    CACHE_WRITETHROUGH,
-    true,
-    1024,
-    4,
-    CACHE_DIRECT,
-    CACHE_WRITETHROUGH,
-    1024,
-    4,
-    CACHE_DIRECT,
-    CACHE_WRITETHROUGH
+    .mode           = CACHE_DISABLE,
+    .data_enabled   = true,
+    .data_size      = 1024,
+    .data_block     = 4,
+    .data_type      = CACHE_DIRECT,
+    .data_wpolicy   = CACHE_WRITETHROUGH,
+    .inst_enabled   = true,
+    .inst_size      = 1024,
+    .inst_block     = 4,
+    .inst_type      = CACHE_DIRECT,
+    .inst_wpolicy   = CACHE_WRITETHROUGH,
+    .size           = 1024,
+    .block          = 4,
+    .type           = CACHE_DIRECT,
+    .wpolicy        = CACHE_WRITETHROUGH,
 };
 
 int arguments(int argc, char **argv, FILE* source_fp,
         cpu_config_t *cpu_config, cache_config_t *cache_config);
-
-/* Flags we need
---alterate -a: alternate program format
---color -C (disable|auto|force): colorized output, auto uses CLICOLOR environment variable, defaults to auto
---debug -d: enable debug
---help -h -?: help
---interactive -i: interactive debugger enabled
---single-cycle -g: disable pipeline
---sanity -y: sanity checks enabled
---verbose -v: enable verbose
---version -V: print version
---cache-block -b size: cache block size, either 1/4, defaults to 4
---cache-config -c (unified|split): unified or split instruction/data cache, defaults to split
---cache-size -s size: cache size, should be power of 2, defaults to 1024
---cache-dsize -D size: for split config, specifies data cache size, defaults to --cache-size or 1024 if --cache-size not set
---cache-isize -I size: for split config, specifies instruction cache size, defaults to --cache-size or 1024 if --cache-size not set
---cache-type -t (direct|2): direct-mapped or two-way set associative, defaults to direct-mapped
---cache-write -w (through|back): write policy, defaults to writeback
-*/
-/*
-Enable flags for icache and dcache
-Separate block size of icache and dcache
-Global cache enable flag
-*/
 
 int main (int argc, char **argv) {
     /* Automatically configure colorized output based on CLICOLOR and TERM
@@ -170,15 +145,32 @@ int main (int argc, char **argv) {
     int rv = arguments(argc,argv,source_fp,&cpu_config,&cache_config);
     if (rv !=  0) return rv;
     if (rv == -1) return 0;
-    printf("Starting simulation with flags: 0x%08x\n", flags);
+    printf("Starting simulation with flags: 0x%04x\n", flags);
+    bprintf("","CPU settings:\n");
+    bprintf("","\tArchitecture: %s\n",cpu_config.single_cycle?"single-cycle":"five-stage pipeline");
+    bprintf("","\tMemory size: %lu words (%lu bytes, top = 0x%08lx)\n",cpu_config.mem_size>>2,cpu_config.mem_size,cpu_config.mem_size-1);
     bprintf("","Cache settings:\n");
-    bprintf("","\tblock size: %d\n",cache_config.block);
-    bprintf("","\tcache size: %d\n",cache_config.size);
-    bprintf("","\tdata cache size: %d\n",cache_config.data_size);
-    bprintf("","\tinstruction cache size: %d\n",cache_config.inst_size);
-    //bprintf("","\tconfiguration: %s\n",(cache_config.config==CACHE_SPLIT?"SPLIT":"UNIFIED"));
-    //bprintf("","\ttype: %s\n",(cache_config.type==CACHE_DIRECT?"DIRECT-MAPPED":"TWO-WAY SET ASSOCIATIVE"));
-    //bprintf("","\twrite policy: %s\n",(cache_config.wpolicy==CACHE_WRITEBACK?"WRITEBACK":"WRITETHROUGH"));
+    if (cache_config.mode == CACHE_SPLIT) {
+        bprintf("","\tData cache:\n");
+        bprintf("","\t    Data cache %s\n",cache_config.data_enabled?"enabled":"disabled");
+        bprintf("","\t    Data cache size: %d\n",cache_config.data_size);
+        bprintf("","\t    Data cache block size: %d\n",cache_config.data_block);
+        bprintf("","\t    Data cache type: %s\n",CACHE_TYPE_STRINGS[cache_config.data_type]);
+        bprintf("","\t    Data cache write policy: %s\n",CACHE_WPOLICY_STRINGS[cache_config.data_wpolicy]);
+        bprintf("","\tInstruction cache:\n");
+        bprintf("","\t    Instruction cache %s\n",cache_config.inst_enabled?"enabled":"disabled");
+        bprintf("","\t    Instruction cache size: %d\n",cache_config.inst_size);
+        bprintf("","\t    Instruction cache block size: %d\n",cache_config.inst_block);
+        bprintf("","\t    Instruction cache type: %s\n",CACHE_TYPE_STRINGS[cache_config.inst_type]);
+        bprintf("","\t    Instruction cache write policy: %s\n",CACHE_WPOLICY_STRINGS[cache_config.inst_wpolicy]);
+    } else if (cache_config.mode == CACHE_UNIFIED) {
+        bprintf("","\t    Unified cache size: %d\n",cache_config.size);
+        bprintf("","\t    Unified cache block size: %d\n",cache_config.block);
+        bprintf("","\t    Unified cache type: %s\n",CACHE_TYPE_STRINGS[cache_config.type]);
+        bprintf("","\t    Unified cache write policy: %s\n",CACHE_WPOLICY_STRINGS[cache_config.wpolicy]);
+    } else {
+        bprintf("","\tAll caching disabled\n");
+    }
     return 0;
 }
 // Returns > 1 on error, or -1 if no error occurred but the caller should still exit
@@ -281,7 +273,7 @@ int arguments(int argc, char **argv, FILE* source_fp,
                         "   "ANSI_BOLD"--verbose, -v"ANSI_RESET"\n" \
                         "   \tEnable verbose output.\n" \
                         "CPU configuration options:\n" \
-                        "   "ANSI_BOLD"--cpu-single, -g"ANSI_RESET"\n" \
+                        "   "ANSI_BOLD"--single-cycle, -g"ANSI_RESET"\n" \
                         "   \tModels a single-cycle CPU, where each instruction takes one cycle.\n" \
                         "   \tIf not set, the default is a five-stage pipeline architecture.\n" \
                         "   "ANSI_BOLD"--mem-size "ANSI_RUNDER"size"ANSI_RBOLD", -m "ANSI_RUNDER"size"ANSI_RESET"\n" \
