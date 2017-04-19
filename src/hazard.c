@@ -14,6 +14,9 @@ pc_t pc_backup;
 
 int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb, pc_t *pc){
 
+
+    int cache_enabled = 0;
+
     bool forward = false;
     pc_backup = *pc;
 
@@ -215,15 +218,18 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
         *pc = *pc + 4;
     }
 
-
-    if(memwb->status == CACHE_MISS || ifid->status == CACHE_MISS){
-        if(flags & MASK_DEBUG){
-            printf("\tcache miss! Restoring the pipeline\n");
+    if(cache_enabled){
+        if(memwb->status == CACHE_MISS || ifid->status == CACHE_MISS){
+            if(flags & MASK_DEBUG){
+                printf("\tcache miss! Restoring the pipeline\n");
+            }
+            restore(ifid, idex, exmem, memwb, pc);
         }
-        restore(ifid, idex, exmem, memwb, pc);
+
+        backup(ifid, idex, exmem, memwb);
     }
 
-    backup(ifid, idex, exmem, memwb);
+
 
     return 0;
 }

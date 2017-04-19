@@ -7,10 +7,14 @@
 extern int flags;
 
 void fetch(control_t * ifid, pc_t * pc){
+    int cache_enabled = 0;
 
     //Read the instruction at the current program counter
-    ifid->status = i_cache_read_w(pc, &(ifid->instr));
-    //mem_read_w(*pc, &(ifid->instr));
+    if(cache_enabled){
+        ifid->status = i_cache_read_w(pc, &(ifid->instr));
+    } else {
+        mem_read_w(*pc, &(ifid->instr));
+    }
 
 
     //Break the instruction into the specific fields
