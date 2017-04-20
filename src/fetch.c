@@ -12,6 +12,16 @@ void fetch(control_t * ifid, pc_t * pc){
     //Read the instruction at the current program counter
     if(cache_enabled){
         ifid->status = i_cache_read_w(pc, &(ifid->instr));
+        if(ifid->status == CACHE_HIT){
+            //check to make sure its the same one from memory
+            //We will want to remove this check once we are sure the cache works
+            uint32_t temp;
+            mem_read_w(*pc, &temp);
+            if(temp != ifid->instr){
+                printf(ANSI_C_RED "Inconsistent data from cache! Data 0x%08x from cache does not match data 0x%08x from memory at address 0x%08x" ANSI_C_RESET, ifid->instr, temp, *pc);
+                assert(0);
+            }
+        }
     } else {
         mem_read_w(*pc, &(ifid->instr));
     }

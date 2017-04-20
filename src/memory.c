@@ -26,7 +26,7 @@ void memory(control_t * exmem, control_t * memwb) {
                 temp = temp >> ((3-(exmem->ALUresult & 0x3))<<3);
                 temp &= 0xff;*/
                 if (exmem->opCode == OPC_LB) temp = SIGN_EXTEND_B(temp);
-                printf("\tCache data: 0x%08x\n", temp);
+                //printf("\tCache data: 0x%08x\n", temp);
                 break;
             case OPC_LHU:
             case OPC_LH:
@@ -37,7 +37,7 @@ void memory(control_t * exmem, control_t * memwb) {
                 temp = temp >> ((2-(exmem->ALUresult & 0x2))<<3);
                 temp &= 0xffff;*/
                 if (exmem->opCode == OPC_LH) temp = SIGN_EXTEND_H(temp);
-                printf("\tCache data: 0x%08x\n", temp);
+                //printf("\tCache data: 0x%08x\n", temp);
                 break;
             case OPC_LW:
                 mem_read_w(exmem->ALUresult, &temp);/*
