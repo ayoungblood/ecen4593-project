@@ -2,7 +2,7 @@
 # Loosely based on https://stackoverflow.com/questions/1484817/how-do-i-make-a-simple-makefile-for-gcc-on-linux
 TARGET = sim
 CC = gcc
-CFLAGS = -Wall -Wextra -pedantic -Wshadow -m64 -std=c11 -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes
+CFLAGS = -Wall -Wextra -pedantic -Wshadow -m64 -std=c11 -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wno-gnu-zero-variadic-macro-arguments
 # -Wall -Wextra -pedantic: stricter warnings
 # -Wshadow: warn if a local shadows something else
 # -m64: Target x86-64
@@ -10,6 +10,7 @@ CFLAGS = -Wall -Wextra -pedantic -Wshadow -m64 -std=c11 -Wpointer-arith -Wstrict
 # -save-temps -fverbose-asm -masm=intel: make prettier disassembly (disabled for now)
 # -Wpointer-arith: warn on silly pointer operations
 # -Wstrict-prototypes -Wmissing-prototypes: be strict about function prototypes
+# -Wno-gnu-zero-variadic-macro-arguments: so we can use ## in variadic macros
 LIBS =
 
 .PHONY: test clean
@@ -44,7 +45,7 @@ test: $(OBJECTS) all
 		test/memory-test
 		test/fetch-test
 		test/pipeline-test
-		./sim -s -a asm/program1file.txt
+		./sim -y -a asm/program1file.txt
 
 test-alu: $(OBJECTS)
 		$(CC) src/alu.o src/util.o -Wall $(LIBS) -o test/alu-test test/alu-test.c

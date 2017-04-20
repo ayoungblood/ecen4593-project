@@ -21,7 +21,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
     pc_backup = *pc;
 
     if(flags & MASK_DEBUG){
-        printf(ANSI_C_CYAN "HAZARD:\n" ANSI_C_RESET);
+        cprintf(ANSI_C_CYAN, "HAZARD:\n");
     }
 
     //Reset stall

@@ -24,7 +24,7 @@ void writeback(control_t *memwb){
     }
 
     if (flags & MASK_DEBUG) {
-        printf(ANSI_C_CYAN "WRITE: \n" ANSI_C_RESET);
+        cprintf(ANSI_C_CYAN, "WRITE: \n");
         printf("\tInstruction: 0x%08x\n", memwb->instr);
     }
     // Write back to the register file

@@ -8,7 +8,7 @@ extern int flags;
 
 void memory(control_t * exmem, control_t * memwb) {
     if(flags & MASK_DEBUG){
-        printf(ANSI_C_CYAN "MEMORY:\n" ANSI_C_RESET);
+        cprintf(ANSI_C_CYAN, "MEMORY:\n");
         printf("\tInstruction: 0x%08x\n", exmem->instr);
     }
     copy_pipeline_register(exmem, memwb);
@@ -46,7 +46,7 @@ void memory(control_t * exmem, control_t * memwb) {
                 printf("\tCache data: 0x%08x\n", temp);*/
                 break;
             default: // We should not get here. Complain and crash.
-                printf(ANSI_C_RED "Illegal memory operation, opcode 0x%02x, (memRead asserted). Halting.\n" ANSI_C_RESET, exmem->opCode);
+                cprintf(ANSI_C_RED, "Illegal memory operation, opcode 0x%02x, (memRead asserted). Halting.\n", exmem->opCode);
                 assert(0);
         }
         if(flags & MASK_DEBUG){
@@ -95,7 +95,7 @@ void memory(control_t * exmem, control_t * memwb) {
                 }*/
                 break;
             default: // We should not get here. Complain and crash.
-                printf(ANSI_C_RED "Illegal memory operation, opcode 0x%02x, (memWrite asserted). Halting.\n" ANSI_C_RESET, exmem->opCode);
+                cprintf(ANSI_C_RED, "Illegal memory operation, opcode 0x%02x, (memWrite asserted). Halting.\n", exmem->opCode);
                 assert(0);
         }
         memwb->status = status;

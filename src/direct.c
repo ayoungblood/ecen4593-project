@@ -30,7 +30,7 @@ direct_cache_t * direct_cache_init(uint32_t num_blocks, uint32_t block_size){
     cache->words = words;
     //crash if unable to allocate memory
     if(cache == NULL || cache->blocks == NULL){
-        printf(ANSI_C_RED "cache_init: Unable to allocate direct mapped cache\n" ANSI_C_RESET);
+        cprintf(ANSI_C_RED, "cache_init: Unable to allocate direct mapped cache\n");
         assert(0);
     }
     cache->num_blocks = num_blocks;
@@ -153,12 +153,12 @@ cache_status_t direct_cache_read_w(direct_cache_t *cache, uint32_t *address, uin
 
     //Some index checking to make sure we don't seg fault
     if(info.index >= cache->num_blocks){
-        printf(ANSI_C_RED "direct_cache_read_w: Index %d requested out of range\n" ANSI_C_RESET, info.index);
+        cprintf(ANSI_C_RED, "direct_cache_read_w: Index %d requested out of range\n", info.index);
         assert(0);
     }
     //Make sure memory is initialized
     if(cache->blocks == NULL){
-        printf(ANSI_C_RED "direct_cache_read_w: Cache not initialized\n" ANSI_C_RESET);
+        cprintf(ANSI_C_RED, "direct_cache_read_w: Cache not initialized\n");
         assert(0);
     }
     if(flags & MASK_DEBUG){

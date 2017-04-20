@@ -35,7 +35,7 @@ pc_t pc;
 int clock;
 
 void execute_pipeline(){
-    printf(ANSI_C_CYAN "\nPC:\n\t" ANSI_C_RESET "0x%08x\n", pc);
+    printf(ANSI_C_CYAN "\nPC:\n\t" ANSI_RESET "0x%08x\n", pc);
     writeback(memwb);
     memory(exmem, memwb);
     execute(idex, exmem);

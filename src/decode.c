@@ -70,7 +70,7 @@ int decode( control_t * ifid , control_t * idex) {
                     idex->ALUop = OPR_XOR;
                     break;
                 default:
-                    printf(ANSI_C_RED "Illegal R-type instruction, funct 0x%02x (instruction 0x%08x). Halting.\n" ANSI_C_RESET, idex->funct, idex->instr);
+                    cprintf(ANSI_C_RED, "Illegal R-type instruction, funct 0x%02x (instruction 0x%08x). Halting.\n", idex->funct, idex->instr);
                     assert(0);
             }
 
@@ -200,19 +200,19 @@ int decode( control_t * ifid , control_t * idex) {
                             idex->ALUop = OPR_SEH;
                             break;
                         default:
-                            printf(ANSI_C_RED "Illegal SPECIAL3-type instruction, funct (special3) 0x%02x, shamt (BSHFL) 0x%02x (instruction 0x%08x). Halting.\n" ANSI_C_RESET, idex->funct, idex->shamt, idex->instr);
+                            cprintf(ANSI_C_RED, "Illegal SPECIAL3-type instruction, funct (special3) 0x%02x, shamt (BSHFL) 0x%02x (instruction 0x%08x). Halting.\n", idex->funct, idex->shamt, idex->instr);
                             assert(0);
                             break; // never reached
                     }
                     break;
                 default:
-                    printf(ANSI_C_RED "Illegal SPECIAL3-type instruction, funct (special3) 0x%02x, shamt (BSHFL) 0x%02x (instruction 0x%08x). Halting.\n" ANSI_C_RESET, idex->funct, idex->shamt, idex->instr);
+                    cprintf(ANSI_C_RED, "Illegal SPECIAL3-type instruction, funct (special3) 0x%02x, shamt (BSHFL) 0x%02x (instruction 0x%08x). Halting.\n", idex->funct, idex->shamt, idex->instr);
                     assert(0);
                     break; // never reached
             }
             break;
         default:
-            printf(ANSI_C_RED "Illegal instruction, opcode 0x%02x (instruction 0x%08x). Halting.\n" ANSI_C_RESET, idex->opCode, idex->instr);
+            cprintf(ANSI_C_RED, "Illegal instruction, opcode 0x%02x (instruction 0x%08x). Halting.\n", idex->opCode, idex->instr);
             assert(0);
             break; // never reached
     }
@@ -284,7 +284,7 @@ int decode( control_t * ifid , control_t * idex) {
 
 
     if(flags & MASK_DEBUG){
-        printf(ANSI_C_CYAN "DECODE: \n" ANSI_C_RESET);
+        cprintf(ANSI_C_CYAN, "DECODE: \n");
         print_pipeline_register(idex);
     }
 

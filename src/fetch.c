@@ -18,7 +18,7 @@ void fetch(control_t * ifid, pc_t * pc){
             uint32_t temp;
             mem_read_w(*pc, &temp);
             if(temp != ifid->instr){
-                printf(ANSI_C_RED "Inconsistent data from cache! Data 0x%08x from cache does not match data 0x%08x from memory at address 0x%08x" ANSI_C_RESET, ifid->instr, temp, *pc);
+                cprintf(ANSI_C_RED, "Inconsistent data from cache! Data 0x%08x from cache does not match data 0x%08x from memory at address 0x%08x", ifid->instr, temp, *pc);
                 assert(0);
             }
         }
@@ -44,12 +44,17 @@ void fetch(control_t * ifid, pc_t * pc){
     ifid->pcNext = *pc + 4;
 
     if(flags & MASK_DEBUG){
-        printf(ANSI_C_CYAN "FETCH:\n" ANSI_C_RESET);
-        if(ifid->status == CACHE_HIT){
-            printf("\tretrieved instruction 0x%08x at 0x%08x\n", ifid->instr, *pc);
+        cprintf(ANSI_C_CYAN, "FETCH:\n");
+        if (cache_enabled) {
+            if(ifid->status == CACHE_HIT){
+                printf("\tretrieved instruction 0x%08x at 0x%08x\n", ifid->instr, *pc);
+            } else {
+                printf("\tCACHE MISS at 0x%08x\n", *pc);
+            }
         } else {
-            printf("\tCACHE MISS at 0x%08x\n", *pc);
+            printf("\tretrieved instruction 0x%08x at 0x%08x\n", ifid->instr, *pc);
         }
+
     }
 
 }

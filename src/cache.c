@@ -32,7 +32,7 @@ void d_cache_init(void){
 
     //Check if cache size is a power of two
     if((D_CACHE_SIZE & (D_CACHE_SIZE - 1)) != 0) {
-        printf(ANSI_C_RED "cache_init: D_CACHE_SIZE %d not a power of two\n" ANSI_C_RESET, D_CACHE_SIZE);
+        cprintf(ANSI_C_RED, "cache_init: D_CACHE_SIZE %d not a power of two\n", D_CACHE_SIZE);
         assert(0);
     }
 
@@ -47,7 +47,7 @@ void d_cache_init(void){
 void i_cache_init(void){
     //chech to make sure instruction cache size is a power of two
     if((I_CACHE_SIZE & (I_CACHE_SIZE - 1)) != 0) {
-        printf(ANSI_C_RED "cache_init: I_CACHE_SIZE %d not a power of two\n" ANSI_C_RESET, D_CACHE_SIZE);
+        cprintf(ANSI_C_RED, "cache_init: I_CACHE_SIZE %d not a power of two\n", D_CACHE_SIZE);
         assert(0);
     }
     if(flags & MASK_DEBUG){
@@ -75,19 +75,19 @@ void cache_destroy(void){
 
 void cache_digest(void){
     if(flags & MASK_DEBUG){
-        printf(ANSI_C_CYAN "CACHE DIGEST:\n" ANSI_C_RESET);
+        cprintf(ANSI_C_CYAN, "CACHE DIGEST:\n");
     }
 
     if(d_cache == NULL){
-        printf(ANSI_C_RED "cache_digest: data cache is not initialized\n" ANSI_C_RESET);
+        cprintf(ANSI_C_RED, "cache_digest: data cache is not initialized\n");
         assert(0);
     }
     if(i_cache == NULL){
-        printf(ANSI_C_RED "cache_digest: instruction cache is not initialized\n" ANSI_C_RESET);
+        cprintf(ANSI_C_RED, "cache_digest: instruction cache is not initialized\n");
         assert(0);
     }
     if(write_buffer == NULL){
-        printf(ANSI_C_RED "cache_digest: write buffer is not initialized\n" ANSI_C_RESET);
+        cprintf(ANSI_C_RED, "cache_digest: write buffer is not initialized\n");
         assert(0);
     }
 
@@ -164,7 +164,7 @@ void cache_digest(void){
             }
             break;
         default:
-            printf(ANSI_C_RED "cache_digest: Undefined Memory State %d" ANSI_C_RESET, get_mem_status());
+            cprintf(ANSI_C_RED, "cache_digest: Undefined Memory State %d\n", get_mem_status());
             assert(0);
             break;
     }
@@ -201,7 +201,7 @@ void cache_digest(void){
 
 cache_status_t d_cache_read_w(uint32_t *address, word_t *data){
     if(flags & MASK_DEBUG){
-        printf(ANSI_C_CYAN "D_CACHE GET WORD:\n" ANSI_C_RESET);
+        cprintf(ANSI_C_CYAN, "D_CACHE GET WORD:\n");
     }
     //Get data from the data cache
     cache_status_t status = direct_cache_read_w(d_cache, address, data);
@@ -211,7 +211,7 @@ cache_status_t d_cache_read_w(uint32_t *address, word_t *data){
 
 cache_status_t d_cache_write_w(uint32_t *address, word_t *data){
     if(flags & MASK_DEBUG){
-        printf(ANSI_C_CYAN "D_CACHE WRITE WORD:\n" ANSI_C_RESET);
+        cprintf(ANSI_C_CYAN, "D_CACHE WRITE WORD:\n");
     }
 
     cache_status_t status = direct_cache_write_w(d_cache, address, data);
@@ -220,7 +220,7 @@ cache_status_t d_cache_write_w(uint32_t *address, word_t *data){
 
 cache_status_t i_cache_read_w(uint32_t *address, word_t *data){
     if(flags & MASK_DEBUG){
-        printf(ANSI_C_CYAN "I_CACHE GET WORD:\n" ANSI_C_RESET);
+        cprintf(ANSI_C_CYAN, "I_CACHE GET WORD:\n");
     }
     //Get data from the data cache
 
@@ -287,7 +287,7 @@ void write_buffer_digest(void){
 
 cache_status_t write_buffer_enqueue(cache_access_t info){
     if(write_buffer == NULL){
-        printf(ANSI_C_RED "write_buffer_enqueue: buffer is not initialized\n" ANSI_C_RESET);
+        cprintf(ANSI_C_RED, "write_buffer_enqueue: buffer is not initialized\n");
         assert(0);
     }
     if(write_buffer->writing){

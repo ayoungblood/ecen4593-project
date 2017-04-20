@@ -32,7 +32,7 @@ int execute(control_t *idex, control_t *exmem) {
     }
 
     if (flags & MASK_DEBUG) {
-        printf(ANSI_C_CYAN "EXECUTE: \n" ANSI_C_RESET);
+        cprintf(ANSI_C_CYAN, "EXECUTE: \n");
         printf("\tInstruction: 0x%08x\n", idex->instr);
         printf("\tALUOp:     0x%08x\n", idex->ALUop);
         printf("\tArg1:      0x%08x\t(0d%d)\n", ALUArg1, ALUArg1);
@@ -144,7 +144,7 @@ int alu(operation_t operation, word_t op_rs, word_t op_rt, word_t shamt, word_t 
             *result = op_rs ^ op_rt;
             break;
         default: // We should not get here. Complain and crash.
-            printf(ANSI_C_RED "Illegal ALU operation 0x%x (0d%d). Halting.\n" ANSI_C_RESET, operation, operation);
+            cprintf(ANSI_C_RED, "Illegal ALU operation 0x%x (0d%d). Halting.\n", operation, operation);
             assert(0);
             break; // not reached
     }
