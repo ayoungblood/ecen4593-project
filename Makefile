@@ -46,6 +46,7 @@ test: $(OBJECTS) all
 		test/fetch-test
 		test/pipeline-test
 		./sim -y -a asm/program1file.txt
+		./sim -y -a asm/program2file.txt
 
 test-alu: $(OBJECTS)
 		$(CC) src/alu.o src/util.o -Wall $(LIBS) -o test/alu-test test/alu-test.c
@@ -64,7 +65,7 @@ test-main-memory: $(OBJECTS)
 		test/main-memory-test
 
 test-memory: $(OBJECTS)
-		$(CC) src/memory.o src/main_memory.o -Wall $(LIBS) -o test/memory-test test/memory-test.c
+		$(CC) src/memory.o src/main_memory.o src/util.o -Wall $(LIBS) -o test/memory-test test/memory-test.c
 		test/memory-test
 
 test-fetch: $(OBJECTS)
@@ -76,11 +77,11 @@ test-hazard: $(OBJECTS)
 		test/hazard-test
 
 test-pipeline: $(OBJECTS)
-		$(CC) src/alu.o src/decode.o src/main_memory.o src/memory.o src/fetch.o src/write.o src/registers.o src/util.o src/hazard.o -Wall $(LIBS) -o test/pipeline-test test/pipeline-test.c
+		$(CC) src/alu.o src/decode.o src/main_memory.o src/memory.o src/fetch.o src/write.o src/registers.o src/util.o src/hazard.o src/cache.o src/direct.o -Wall $(LIBS) -o test/pipeline-test test/pipeline-test.c
 		test/pipeline-test
 
 test-main: all
-		./sim -s -a asm/program1file.txt
+		./sim -y -a asm/program1file.txt
 
 clean:
 		-rm -f *.bc *.i *.s

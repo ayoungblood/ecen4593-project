@@ -64,7 +64,7 @@ static char * test_forwarding_exmem(){
     idex->regRs = REG_S3;
     idex->regRsValue = 0;
 
-    hazard(ifid, idex, exmem, memwb, &pc,);
+    hazard(ifid, idex, exmem, memwb, &pc);
 
     mu_assert(_FL "Incorrect exmem forwarding ALUresult (both) Rd->Rt", idex->regRtValue == 0x23);
     mu_assert(_FL "Incorrect exmem forwarding ALUresult (both) Rd->Rs", idex->regRsValue == 0x23);
@@ -119,7 +119,7 @@ static char * test_forwarding_memwb(){
     idex->regRtValue = 0;
     idex->regRs = REG_V1;
     idex->regRsValue = 0;
-    hazard(ifid, idex, exmem, memwb, &pc;
+    hazard(ifid, idex, exmem, memwb, &pc);
     mu_assert(_FL "Incorrect memwb forwarding memData (both) Rd->Rt", idex->regRtValue == 0xff);
     mu_assert(_FL "Incorrect memwb forwarding memData (both) Rd->Rs", idex->regRsValue == 0xff);
 
@@ -219,7 +219,7 @@ static char * test_forwarding_exmem_not_memwb(){
     idex->regRsValue = 0;
     idex->regRt = REG_S6;
     idex->regRtValue = 0;
-    hazard(ifid, idex, exmem, memwb, &pc;
+    hazard(ifid, idex, exmem, memwb, &pc);
     mu_assert(_FL "Incorrect exmem (not memwb) forwarding ALUresult Rd->Rs", idex->regRsValue == 0x1883);
     mu_assert(_FL "Incorrect exmem (not memwb) forwarding ALUresult Rd->Rt", idex->regRtValue == 0x1883);
 
