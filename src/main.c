@@ -299,7 +299,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
                 bprintf("","Sanity checks enabled (flags = 0x%04x).\n",flags);
                 break;
             case 'V': // --version
-                printf("%s - MIPS I CPU simulator %s\n",TARGET_STRING,VERSION_STRING);
+                printf("%s - MIPS I CPU simulator (v. %s)\n",TARGET_STRING,VERSION_STRING);
                 return -1; // caller should exit
             case 'v': // --verbose
                 flags |= MASK_VERBOSE;

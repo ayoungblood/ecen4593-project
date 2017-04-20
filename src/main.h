@@ -18,8 +18,9 @@
 #include "fetch.h"
 #include "hazard.h"
 
-#define VERSION_STRING      "?.?.????"
-#define TARGET_STRING       "spam"
+// Set at compile time from the Makefile
+//#define VERSION_STRING      "?.?.????"
+//#define TARGET_STRING       "spam"
 
 #define DEFAULT_MEM_SIZE    (1<<13)
 
