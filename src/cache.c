@@ -12,6 +12,8 @@ direct_cache_t *i_cache;
 write_buffer_t *write_buffer;
 memory_status_t memory_status = MEM_IDLE;
 
+cache_config_t *config;
+
 memory_status_t get_mem_status(void){
     return memory_status;
 }
@@ -20,16 +22,17 @@ void set_mem_status(memory_status_t status){
 }
 
 void cache_init(cache_config_t *cpu_cfg){
+    memcpy(config, cpu_cfg, sizeof(cache_config_t));
 
     set_mem_status(MEM_IDLE);
-    if(cpu_cfg->mode == CACHE_DISABLE){
+    if(config->mode == CACHE_DISABLE){
         return;
-    } else if(cpu_cfg->mode == CACHE_SPLIT){
-        d_cache_init(cpu_cfg);
-        i_cache_init(cpu_cfg);
+    } else if(config->mode == CACHE_SPLIT){
+        d_cache_init(config);
+        i_cache_init(config);
         write_buffer = write_buffer_init();
-    } else if(cpu_cfg->mode == CACHE_UNIFIED){
-        d_cache_init(cpu_cfg);
+    } else if(config->mode == CACHE_UNIFIED){
+        d_cache_init(config);
         write_buffer = write_buffer_init();
     }
 
@@ -321,6 +324,9 @@ cache_status_t write_buffer_enqueue(cache_access_t info){
 }
 
 
-void print_cache(void *cache){
-    direct_cache_print((direct_cache_t*) cache);
+void print_icache(int block){
+    direct_cache_print_block(d_cache, block);
+}
+void print_dcache(int block){
+    direct_cache_print_block(i_cache, block);
 }
