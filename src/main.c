@@ -110,7 +110,9 @@ int main(int argc, char *argv[]) {
     // Initialize the pipeline registers
     pipeline_init(&ifid, &idex, &exmem, &memwb, &pc,  (pc_t)mem_start());
     hazard_init();
-    cache_init(&cache_config);
+    if (cache_config.mode != CACHE_DISABLE) {
+        cache_init(&cache_config);
+    }
     uint32_t word = 0;
     if (flags & MASK_ALTFORMAT) {
         // set the program counter based on the fifth word of memory
@@ -128,7 +130,9 @@ int main(int argc, char *argv[]) {
         decode(ifid, idex);
         fetch(ifid, &pc, &cache_config);
         hazard(ifid, idex, exmem, memwb, &pc, &cache_config);
-        cache_digest();
+        if (cache_config.mode != CACHE_DISABLE) {
+            cache_digest();
+        }
         ++cycles;
         // Check for a magic halt number (beq zero zero -1 or jr zero)
         if (ifid->instr == 0x1000ffff || ifid->instr == 0x00000008 || pc == 0) break;
@@ -663,7 +667,6 @@ PROMPT: // LOL gotos
                     goto PROMPT;
                 }
                 breakpoint_add(i_addr);
-
             }
             goto PROMPT;
         case 'b': // list breakpoints
@@ -727,6 +730,16 @@ PROMPT: // LOL gotos
         case 'x': // exit
             cprintf(ANSI_C_GREEN, "Simulation halted in interactive mode.\n");
             return 1;
+        case 'D': // print data cache block
+            cprintf(ANSI_C_GREEN,"dcache block: ");
+            scanf("%d",&i_addr); getchar();
+            print_dcache(i_addr);
+            goto PROMPT;
+        case 'I': // print instruction cache block
+            cprintf(ANSI_C_GREEN,"icache block: ");
+            scanf("%d",&i_addr); getchar();
+            print_icache(i_addr);
+            goto PROMPT;
         case '?': // help
             printf("Available interactive commands: \n" \
                 "\ta: add breakpoint at a memory address\n" \
@@ -739,6 +752,10 @@ PROMPT: // LOL gotos
                 "\ts: single-step the pipeline\n" \
                 "\tr: dump registers\n" \
                 "\tx: exit simulation run\n");
+            if (cache_config.mode != CACHE_DISABLE) {
+                printf("\tD: print an dcache block\n"
+                    "\tI: print a icache block\n");
+            }
             goto PROMPT;
         default:
             printf("Unrecognized interactive command \"%c\", press \"?\" for help.\n", c);

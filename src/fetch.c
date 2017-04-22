@@ -9,7 +9,7 @@ extern int flags;
 void fetch(control_t * ifid, pc_t * pc, cache_config_t *cache_cfg){
 
     //Read the instruction at the current program counter
-    if(cache_cfg->inst_enabled){
+    if(cache_cfg->mode != CACHE_DISABLE && cache_cfg->inst_enabled){
         ifid->status = i_cache_read_w(pc, &(ifid->instr));
         if(ifid->status == CACHE_HIT){
             //check to make sure its the same one from memory
