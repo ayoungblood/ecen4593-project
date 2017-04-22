@@ -95,11 +95,9 @@ int alu(operation_t operation, word_t op_rs, word_t op_rt, word_t shamt, word_t 
             break;
         case OPR_SEB:
             *result = SIGN_EXTEND_B((op_rt & 0xff));
-            printf("ALU::OPR_SEB: rt = %x, result = %x\n",op_rt,*result);
             break;
         case OPR_SEH:
             *result = SIGN_EXTEND_H((op_rt & 0xffff));
-            printf("ALU::OPR_SEH: rt = %x, result = %x\n",op_rt,*result);
             break;
         case OPR_SLL:
             // rd = rt << shamt
