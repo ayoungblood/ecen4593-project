@@ -15,12 +15,6 @@
 #include "direct.h"
 
 
-/* CACHE INFO */
-//Data cache size in bytes
-#define D_CACHE_SIZE 64
-//Instruction cache size in bytes
-#define I_CACHE_SIZE 128
-
 //Write to main memory penalty for first block written
 #define CACHE_WRITE_PENALTY 4
 //If multiple lines are written back, penalty for each subsequent write
@@ -32,7 +26,7 @@
 memory_status_t get_mem_status(void);
 void set_mem_status(memory_status_t status);
 
-void cache_init(void);
+void cache_init(cache_config_t *cache_cfg);
 void cache_destroy(void);
 void cache_digest(void);
 
@@ -40,8 +34,8 @@ cache_status_t d_cache_read_w(uint32_t *address, word_t *data);
 cache_status_t d_cache_write_w(uint32_t *address, word_t *data);
 
 
-void d_cache_init(void);
-void i_cache_init(void);
+void d_cache_init(cache_config_t *cache_cfg);
+void i_cache_init(cache_config_t *cache_cfg);
 cache_status_t i_cache_read_w(uint32_t *address, word_t *data);
 cache_status_t i_cache_write_w(uint32_t *address, word_t *data);
 

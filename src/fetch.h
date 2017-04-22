@@ -13,7 +13,7 @@
 #include "main_memory.h"
 #include "cache.h"
 
-void fetch(control_t *, pc_t * pc);
+void fetch(control_t *, pc_t * pc, cache_config_t *cache_cfg);
 
 //Instruction decoding bitmasks
 #define OP_MASK 0xFC000000

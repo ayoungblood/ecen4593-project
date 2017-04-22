@@ -14,10 +14,7 @@ pc_t pc_backup;
 
 
 
-int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb, pc_t *pc){
-
-
-    int cache_enabled = 1;
+int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb, pc_t *pc, cache_config_t *cache_cfg){
 
     bool forward = false;
     pc_backup = *pc;
@@ -220,7 +217,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
         *pc = *pc + 4;
     }
 
-    if(cache_enabled){
+    if(cache_cfg->inst_enabled || cache_cfg->data_enabled){
         if(memwb->status == CACHE_MISS || ifid->status == CACHE_MISS){
             if(flags & MASK_DEBUG){
                 printf("\tcache miss! Restoring the pipeline\n");

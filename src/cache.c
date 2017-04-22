@@ -19,20 +19,27 @@ void set_mem_status(memory_status_t status){
     memory_status = status;
 }
 
-void cache_init(void){
+void cache_init(cache_config_t *cpu_cfg){
 
     set_mem_status(MEM_IDLE);
-    d_cache_init();
-    i_cache_init();
-    write_buffer = write_buffer_init();
+    if(cpu_cfg->mode == CACHE_DISABLE){
+        return;
+    } else if(cpu_cfg->mode == CACHE_SPLIT){
+        d_cache_init(cpu_cfg);
+        i_cache_init(cpu_cfg);
+        write_buffer = write_buffer_init();
+    } else if(cpu_cfg->mode == CACHE_UNIFIED){
+        d_cache_init(cpu_cfg);
+        write_buffer = write_buffer_init();
+    }
 
 }
 
-void d_cache_init(void){
+void d_cache_init(cache_config_t *cpu_cfg){
 
     //Check if cache size is a power of two
-    if((D_CACHE_SIZE & (D_CACHE_SIZE - 1)) != 0) {
-        cprintf(ANSI_C_RED, "cache_init: D_CACHE_SIZE %d not a power of two\n", D_CACHE_SIZE);
+    if((cpu_cfg->data_size & (cpu_cfg->data_size - 1)) != 0) {
+        cprintf(ANSI_C_RED, "cache_init: D_CACHE_SIZE %d not a power of two\n", cpu_cfg->data_size);
         assert(0);
     }
 
@@ -40,21 +47,21 @@ void d_cache_init(void){
         printf("Creating Data Cache (D Cache)\n");
     }
     //Each block contains a word of data
-    uint32_t num_blocks = D_CACHE_SIZE >> 2;
-    d_cache = direct_cache_init(num_blocks, 1);
+    uint32_t num_blocks = cpu_cfg->data_size >> 2;
+    d_cache = direct_cache_init(num_blocks, cpu_cfg->data_block);
 }
 
-void i_cache_init(void){
+void i_cache_init(cache_config_t *cpu_cfg){
     //chech to make sure instruction cache size is a power of two
-    if((I_CACHE_SIZE & (I_CACHE_SIZE - 1)) != 0) {
-        cprintf(ANSI_C_RED, "cache_init: I_CACHE_SIZE %d not a power of two\n", D_CACHE_SIZE);
+    if((cpu_cfg->inst_size & (cpu_cfg->inst_size - 1)) != 0) {
+        cprintf(ANSI_C_RED, "cache_init: I_CACHE_SIZE %d not a power of two\n", cpu_cfg->inst_size);
         assert(0);
     }
     if(flags & MASK_DEBUG){
         printf("Creating Instruction Cache (I Cache)\n");
     }
-    uint32_t num_blocks = I_CACHE_SIZE >> 2;
-    i_cache = direct_cache_init(num_blocks, 4);
+    uint32_t num_blocks = cpu_cfg->inst_size >> 2;
+    i_cache = direct_cache_init(num_blocks, cpu_cfg->inst_block);
 }
 
 

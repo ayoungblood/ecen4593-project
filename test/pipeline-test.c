@@ -34,14 +34,32 @@ control_t * memwb;
 pc_t pc;
 int clock;
 
+cache_config_t cache_config = {
+    .mode           = CACHE_DISABLE,
+    .data_enabled   = true,
+    .data_size      = 1024,
+    .data_block     = 4,
+    .data_type      = CACHE_DIRECT,
+    .data_wpolicy   = CACHE_WRITETHROUGH,
+    .inst_enabled   = true,
+    .inst_size      = 1024,
+    .inst_block     = 4,
+    .inst_type      = CACHE_DIRECT,
+    .inst_wpolicy   = CACHE_WRITETHROUGH,
+    .size           = 1024,
+    .block          = 4,
+    .type           = CACHE_DIRECT,
+    .wpolicy        = CACHE_WRITETHROUGH,
+};
+
 void execute_pipeline(){
     printf(ANSI_C_CYAN "\nPC:\n\t" ANSI_RESET "0x%08x\n", pc);
     writeback(memwb);
-    memory(exmem, memwb);
+    memory(exmem, memwb, &cache_config);
     execute(idex, exmem);
     decode(ifid, idex);
-    fetch(ifid, &pc);
-    hazard(ifid, idex, exmem, memwb, &pc);
+    fetch(ifid, &pc, &cache_config);
+    hazard(ifid, idex, exmem, memwb, &pc, &cache_config);
     printf("\n\n\n");
 }
 

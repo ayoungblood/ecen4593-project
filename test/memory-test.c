@@ -17,6 +17,24 @@ int flags = 0; // MASK_DEBUG | MASK_VERBOSE | MASK_SANITY;
 word_t data;
 uint64_t size, addr, offs;
 
+cache_config_t cache_config = {
+    .mode           = CACHE_DISABLE,
+    .data_enabled   = true,
+    .data_size      = 1024,
+    .data_block     = 4,
+    .data_type      = CACHE_DIRECT,
+    .data_wpolicy   = CACHE_WRITETHROUGH,
+    .inst_enabled   = true,
+    .inst_size      = 1024,
+    .inst_block     = 4,
+    .inst_type      = CACHE_DIRECT,
+    .inst_wpolicy   = CACHE_WRITETHROUGH,
+    .size           = 1024,
+    .block          = 4,
+    .type           = CACHE_DIRECT,
+    .wpolicy        = CACHE_WRITETHROUGH,
+};
+
 static char * test_mem_small_store() {
     // Tests SB, SH, SW instructions
     // Create a small memory
@@ -32,43 +50,43 @@ static char * test_mem_small_store() {
     exmem->memRead = false; // de-assert read
     exmem->ALUresult = 0x80; // the memory address
     exmem->regRtValue = 0xdeadbeef; // the value to write
-    memory(exmem, memwb);
+    memory(exmem, memwb, &cache_config);
     exmem->opCode = OPC_SW; // store word
     exmem->memWrite = true; // assert write
     exmem->memRead = false; // de-assert read
     exmem->ALUresult = 0x84; // the memory address
     exmem->regRtValue = 0xfa5f4444; // the value to write
-    memory(exmem, memwb);
+    memory(exmem, memwb, &cache_config);
     exmem->opCode = OPC_SH; // store halfword
     exmem->memWrite = true; // assert write
     exmem->memRead = false; // de-assert read
     exmem->ALUresult = 0x88; // the memory address
     exmem->regRtValue = 0xff88; // the value to write
-    memory(exmem, memwb);
+    memory(exmem, memwb, &cache_config);
     exmem->opCode = OPC_SH; // store halfword
     exmem->memWrite = true; // assert write
     exmem->memRead = false; // de-assert read
     exmem->ALUresult = 0x8a; // the memory address
     exmem->regRtValue = 0xffaa; // the value to write
-    memory(exmem, memwb);
+    memory(exmem, memwb, &cache_config);
     exmem->opCode = OPC_SB; // store byte
     exmem->memWrite = true; // assert write
     exmem->memRead = false; // de-assert read
     exmem->ALUresult = 0x8c; // the memory address
     exmem->regRtValue = 0xfc; // the value to write
-    memory(exmem, memwb);
+    memory(exmem, memwb, &cache_config);
     exmem->opCode = OPC_SB; // store byte
     exmem->memWrite = true; // assert write
     exmem->memRead = false; // de-assert read
     exmem->ALUresult = 0x8d; // the memory address
     exmem->regRtValue = 0xfd; // the value to write
-    memory(exmem, memwb);
+    memory(exmem, memwb, &cache_config);
     exmem->opCode = OPC_SH; // store halfword
     exmem->memWrite = true; // assert write
     exmem->memRead = false; // de-assert read
     exmem->ALUresult = 0x8e; // the memory address
     exmem->regRtValue = 0xfeef; // the value to write
-    memory(exmem, memwb);
+    memory(exmem, memwb, &cache_config);
 
     mem_dump();
     mem_read_w(0x80, &data);
@@ -111,43 +129,43 @@ static char * test_mem_small_load() {
     exmem->memRead = true; // assert read
     exmem->memWrite = false; // de-assert write
     exmem->ALUresult = 0x80; // the memory address
-    memory(exmem, memwb);
+    memory(exmem, memwb, &cache_config);
     mu_assert(_FL "bad assert", memwb->memData == 0xfedcba98);
     exmem->opCode = OPC_LH; // load halfword
     exmem->memRead = true; // assert read
     exmem->memWrite = false; // de-assert write
     exmem->ALUresult = 0x84; // the memory address
-    memory(exmem, memwb);
+    memory(exmem, memwb, &cache_config);
     mu_assert(_FL "bad assert", memwb->memData == 0x7444);
     exmem->opCode = OPC_LH; // load halfword
     exmem->memRead = true; // assert read
     exmem->memWrite = false; // de-assert write
     exmem->ALUresult = 0x86; // the memory address
-    memory(exmem, memwb);
+    memory(exmem, memwb, &cache_config);
     mu_assert(_FL "bad assert", memwb->memData == 0xfffff444); // sign-extended
     exmem->opCode = OPC_LHU; // load halfword unsigned
     exmem->memRead = true; // assert read
     exmem->memWrite = false; // de-assert write
     exmem->ALUresult = 0x86; // the memory address
-    memory(exmem, memwb);
+    memory(exmem, memwb, &cache_config);
     mu_assert(_FL "bad assert", memwb->memData == 0xf444); // not sign-extended
     exmem->opCode = OPC_LB; // load byte
     exmem->memRead = true; // assert read
     exmem->memWrite = false; // de-assert write
     exmem->ALUresult = 0x8b; // the memory address
-    memory(exmem, memwb);
+    memory(exmem, memwb, &cache_config);
     mu_assert(_FL "bad assert", memwb->memData == 0x78);
     exmem->opCode = OPC_LB; // load byte
     exmem->memRead = true; // assert read
     exmem->memWrite = false; // de-assert write
     exmem->ALUresult = 0x8a; // the memory address
-    memory(exmem, memwb);
+    memory(exmem, memwb, &cache_config);
     mu_assert(_FL "bad assert", memwb->memData == 0xffffff88); // sign-extended
     exmem->opCode = OPC_LBU; // load byte unsigned
     exmem->memRead = true; // assert read
     exmem->memWrite = false; // de-assert write
     exmem->ALUresult = 0x8a; // the memory address
-    memory(exmem, memwb);
+    memory(exmem, memwb, &cache_config);
     mu_assert(_FL "bad assert", memwb->memData == 0x88); // not sign-extended
 
     // De-allocate memory and clean up pipeline register

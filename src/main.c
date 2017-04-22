@@ -12,8 +12,8 @@ cpu_config_t cpu_config = {
     .mem_size       = DEFAULT_MEM_SIZE,
 };
 cache_config_t cache_config = {
-    .mode           = CACHE_DISABLE,
-    .data_enabled   = true,
+    .mode           = CACHE_SPLIT,
+    .data_enabled   = false,
     .data_size      = 1024,
     .data_block     = 4,
     .data_type      = CACHE_DIRECT,
@@ -36,8 +36,6 @@ control_t* exmem = NULL; // EX/MEM pipeline register
 control_t* memwb = NULL; // MEM/WB pipeline register
 pc_t pc = 0;             // Program counter
 
-word_t last_reg_rs_val, last_reg_rt_val;
-pc_t last_inst_decode;
 
 #define BREAKPOINT_MAX 8
 uint32_t breakpoints_address[BREAKPOINT_MAX] = {0}; // the address of a breakpoint
@@ -112,7 +110,7 @@ int main(int argc, char *argv[]) {
     // Initialize the pipeline registers
     pipeline_init(&ifid, &idex, &exmem, &memwb, &pc,  (pc_t)mem_start());
     hazard_init();
-    cache_init();
+    cache_init(&cache_config);
     uint32_t word = 0;
     if (flags & MASK_ALTFORMAT) {
         // set the program counter based on the fifth word of memory
@@ -121,33 +119,15 @@ int main(int argc, char *argv[]) {
     }
     // Run the simulation
     int cycles = 0;
-    last_inst_decode = 0;
-    last_reg_rs_val = 0;
-    last_reg_rt_val = 0;
     while (1) {
         // Run a pipeline cycle
         backup(ifid, idex, exmem, memwb, &pc);
         writeback(memwb);
-        memory(exmem, memwb);
+        memory(exmem, memwb, &cache_config);
         execute(idex, exmem);
         decode(ifid, idex);
-        if(last_inst_decode == idex->instr){
-            if(idex->regRsValue != last_reg_rs_val){
-                cprintf(ANSI_C_YELLOW, "Inconsistent register file read for RegRs for instruction 0x%08x. prior value was 0x%08x but 0x%08x was read from the register file\n", last_inst_decode, last_reg_rs_val, idex->regRsValue);
-                cprintf(ANSI_C_YELLOW, "Current Program Counter: 0x%08x @%d cycles\n", pc, cycles);
-                assert(0);
-            }
-            if(idex->regRtValue != last_reg_rt_val){
-                cprintf(ANSI_C_YELLOW, "Inconsistent register file read for RegRt for instruction 0x%08x. prior value was 0x%08x but 0x%08x was read from the register file.\n", last_inst_decode, last_reg_rt_val, idex->regRtValue);
-                cprintf(ANSI_C_YELLOW, "Current Program Counter: 0x%08x @%d cycles\n", pc, cycles);
-                assert(0);
-            }
-        }
-        last_inst_decode = idex->instr;
-        last_reg_rs_val = idex->regRsValue;
-        last_reg_rt_val = idex->regRtValue;
-        fetch(ifid, &pc);
-        hazard(ifid, idex, exmem, memwb, &pc);
+        fetch(ifid, &pc, &cache_config);
+        hazard(ifid, idex, exmem, memwb, &pc, &cache_config);
         cache_digest();
         ++cycles;
         // Check for a magic halt number (beq zero zero -1 or jr zero)

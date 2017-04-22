@@ -13,7 +13,7 @@ that will prevent a data hazard, insert nops into the pipeline if forwarding
 can't prevent the data hazard, and flush IFID if a branch is taken
 */
 //HAZARD UPDATES THE PC, SO IT MUST BE CALLED
-int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb, pc_t *pc);
+int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb, pc_t *pc, cache_config_t *cache_cfg);
 
 void hazard_init(void);
 

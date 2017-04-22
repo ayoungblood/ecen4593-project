@@ -6,11 +6,10 @@
 
 extern int flags;
 
-void fetch(control_t * ifid, pc_t * pc){
-    int cache_enabled = 1;
+void fetch(control_t * ifid, pc_t * pc, cache_config_t *cache_cfg){
 
     //Read the instruction at the current program counter
-    if(cache_enabled){
+    if(cache_cfg->inst_enabled){
         ifid->status = i_cache_read_w(pc, &(ifid->instr));
         if(ifid->status == CACHE_HIT){
             //check to make sure its the same one from memory
@@ -45,7 +44,7 @@ void fetch(control_t * ifid, pc_t * pc){
 
     if(flags & MASK_DEBUG){
         cprintf(ANSI_C_CYAN, "FETCH:\n");
-        if (cache_enabled) {
+        if (cache_cfg->inst_enabled) {
             if(ifid->status == CACHE_HIT){
                 printf("\tretrieved instruction 0x%08x at 0x%08x\n", ifid->instr, *pc);
             } else {

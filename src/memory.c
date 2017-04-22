@@ -6,7 +6,7 @@
 
 extern int flags;
 
-void memory(control_t * exmem, control_t * memwb) {
+void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
     if(flags & MASK_DEBUG){
         cprintf(ANSI_C_CYAN, "MEMORY:\n");
         printf("\tInstruction: 0x%08x\n", exmem->instr);
@@ -18,32 +18,32 @@ void memory(control_t * exmem, control_t * memwb) {
         switch (exmem->opCode) {
             case OPC_LBU:
             case OPC_LB:
-                mem_read_b(exmem->ALUresult,&temp);
-                /*
+                if(cache_cfg->data_enabled){
+                    status = d_cache_read_w(&exmem->ALUresult, &temp);
+                    temp = temp >> ((3-(exmem->ALUresult & 0x3))<<3);
+                    temp &= 0xff;
+                } else {
+                    mem_read_b(exmem->ALUresult,&temp);
+                }
                 if (exmem->opCode == OPC_LB) temp = SIGN_EXTEND_B(temp);
-                printf("\tMemory data: 0x%08x\n", temp);
-                status = d_cache_read_w(&exmem->ALUresult, &temp);
-                temp = temp >> ((3-(exmem->ALUresult & 0x3))<<3);
-                temp &= 0xff;*/
-                if (exmem->opCode == OPC_LB) temp = SIGN_EXTEND_B(temp);
-                //printf("\tCache data: 0x%08x\n", temp);
                 break;
             case OPC_LHU:
             case OPC_LH:
-                mem_read_h(exmem->ALUresult,&temp);/*
+                if(cache_cfg->data_enabled){
+                    status = d_cache_read_w(&exmem->ALUresult, &temp);
+                    temp = temp >> ((2-(exmem->ALUresult & 0x2))<<3);
+                    temp &= 0xffff;
+                } else {
+                    mem_read_h(exmem->ALUresult,&temp);
+                }
                 if (exmem->opCode == OPC_LH) temp = SIGN_EXTEND_H(temp);
-                printf("\tMemory data: 0x%08x\n", temp);
-                status = d_cache_read_w(&exmem->ALUresult, &temp);
-                temp = temp >> ((2-(exmem->ALUresult & 0x2))<<3);
-                temp &= 0xffff;*/
-                if (exmem->opCode == OPC_LH) temp = SIGN_EXTEND_H(temp);
-                //printf("\tCache data: 0x%08x\n", temp);
                 break;
             case OPC_LW:
-                mem_read_w(exmem->ALUresult, &temp);/*
-                printf("\tMemory data: 0x%08x\n", temp);
-                status = d_cache_read_w(&exmem->ALUresult, &temp);
-                printf("\tCache data: 0x%08x\n", temp);*/
+                if(cache_cfg->data_enabled){
+                    status = d_cache_read_w(&exmem->ALUresult, &temp);
+                } else {
+                    mem_read_w(exmem->ALUresult, &temp);
+                }
                 break;
             default: // We should not get here. Complain and crash.
                 cprintf(ANSI_C_RED, "Illegal memory operation, opcode 0x%02x, (memRead asserted). Halting.\n", exmem->opCode);
@@ -60,39 +60,44 @@ void memory(control_t * exmem, control_t * memwb) {
         switch (exmem->opCode) {
             case OPC_SB:
                 temp = exmem->regRtValue;
-                mem_write_b(exmem->ALUresult, &temp);
-                /*
-                status = d_cache_read_w(&exmem->ALUresult, &data_in_cache);
-                if(status == CACHE_HIT){
-                    uint32_t shift = ((3-(exmem->ALUresult & 0x3))<<3);
-                    temp = temp << shift;
-                    data_in_cache &= ~(0xff << shift);
-                    temp = temp & data_in_cache;
-                    status = d_cache_write_w(&exmem->ALUresult, &temp);
+                if(cache_cfg->data_enabled){
+                    status = d_cache_read_w(&exmem->ALUresult, &data_in_cache);
+                    if(status == CACHE_HIT){
+                        uint32_t shift = ((3-(exmem->ALUresult & 0x3))<<3);
+                        temp = temp << shift;
+                        data_in_cache &= ~(0xff << shift);
+                        temp = temp & data_in_cache;
+                        status = d_cache_write_w(&exmem->ALUresult, &temp);
+                    }
+                } else {
+                    mem_write_b(exmem->ALUresult, &temp);
                 }
-                */
                 break;
             case OPC_SH:
                 temp = exmem->regRtValue;
-                mem_write_h(exmem->ALUresult, &temp);
-                /*
-                status = d_cache_read_w(&exmem->ALUresult, &data_in_cache);
-                if(status == CACHE_HIT){
-                    uint32_t shift = ((2-(exmem->ALUresult & 0x2))<<3);
-                    temp = temp << shift; // shift amount based on byte position
-                    data_in_cache &= ~(0xffff << shift);
-                    temp = temp & data_in_cache;
-                    status = d_cache_write_w(&exmem->ALUresult, &temp);
-                }*/
+                if(cache_cfg->data_enabled){
+                    status = d_cache_read_w(&exmem->ALUresult, &data_in_cache);
+                    if(status == CACHE_HIT){
+                        uint32_t shift = ((2-(exmem->ALUresult & 0x2))<<3);
+                        temp = temp << shift; // shift amount based on byte position
+                        data_in_cache &= ~(0xffff << shift);
+                        temp = temp & data_in_cache;
+                        status = d_cache_write_w(&exmem->ALUresult, &temp);
+                    }
+                } else {
+                    mem_write_h(exmem->ALUresult, &temp);
+                }
                 break;
             case OPC_SW:
                 temp = exmem->regRtValue;
-                mem_write_w(exmem->ALUresult, &temp);
-                /*
-                status = d_cache_read_w(&exmem->ALUresult, &temp);
-                if(status == CACHE_HIT){
-                    status = d_cache_write_w(&exmem->ALUresult, &temp);
-                }*/
+                if(cache_cfg->data_enabled){
+                    status = d_cache_read_w(&exmem->ALUresult, &temp);
+                    if(status == CACHE_HIT){
+                        status = d_cache_write_w(&exmem->ALUresult, &temp);
+                    }
+                } else {
+                    mem_write_w(exmem->ALUresult, &temp);
+                }
                 break;
             default: // We should not get here. Complain and crash.
                 cprintf(ANSI_C_RED, "Illegal memory operation, opcode 0x%02x, (memWrite asserted). Halting.\n", exmem->opCode);
@@ -100,7 +105,16 @@ void memory(control_t * exmem, control_t * memwb) {
         }
         memwb->status = status;
         if(flags & MASK_DEBUG){
-            printf("\tStored 0x%08x to address 0x%08x\n", temp, exmem->ALUresult);
+            if(cache_cfg->data_enabled){
+                if(memwb->status == CACHE_HIT){
+                    printf("\tStored 0x%08x to address 0x%08x\n", temp, exmem->ALUresult);
+                }
+                else {
+                    printf("\tTried to store 0x%08x to address 0x%08x\n", temp, exmem->ALUresult);
+                }
+            } else {
+                printf("\tStored 0x%08x to address 0x%08x\n", temp, exmem->ALUresult);
+            }
         }
     }
 }
