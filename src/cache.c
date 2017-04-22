@@ -330,3 +330,16 @@ void print_icache(int block){
 void print_dcache(int block){
     direct_cache_print_block(i_cache, block);
 }
+
+void print_write_buffer(void){
+    if(write_buffer == NULL){
+        cprintf(ANSI_C_RED, "write_buffer_enqueue: buffer is not initialized\n");
+        assert(0);
+    }
+    printf("Writing: %d, Penalty Count: %d, Subsequent Writing: %d\n", write_buffer->writing, write_buffer->penalty_count, write_buffer->subsequent_writing);
+    printf("Address: 0x%08x\n", write_buffer->address);
+    printf("Data: \t0x%08x\n", write_buffer->data[0]);
+    for(uint32_t i = 1; i < d_cache->block_size; i++){
+        printf("\t0x%08x\n", write_buffer->data[i]);
+    }
+}

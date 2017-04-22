@@ -12,13 +12,13 @@ cpu_config_t cpu_config = {
     .mem_size       = DEFAULT_MEM_SIZE,
 };
 cache_config_t cache_config = {
-    .mode           = CACHE_SPLIT,
+    .mode           = CACHE_DISABLE,
     .data_enabled   = false,
     .data_size      = 1024,
     .data_block     = 4,
     .data_type      = CACHE_DIRECT,
     .data_wpolicy   = CACHE_WRITETHROUGH,
-    .inst_enabled   = true,
+    .inst_enabled   = false,
     .inst_size      = 1024,
     .inst_block     = 4,
     .inst_type      = CACHE_DIRECT,
