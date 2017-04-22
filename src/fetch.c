@@ -7,7 +7,7 @@
 extern int flags;
 
 void fetch(control_t * ifid, pc_t * pc){
-    int cache_enabled = 0;
+    int cache_enabled = 1;
 
     //Read the instruction at the current program counter
     if(cache_enabled){

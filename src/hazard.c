@@ -12,10 +12,12 @@ control_t *memwb_backup;
 pc_t pc_backup;
 
 
+
+
 int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb, pc_t *pc){
 
 
-    int cache_enabled = 0;
+    int cache_enabled = 1;
 
     bool forward = false;
     pc_backup = *pc;
@@ -225,12 +227,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
             }
             restore(ifid, idex, exmem, memwb, pc);
         }
-
-        backup(ifid, idex, exmem, memwb);
     }
-
-
-
     return 0;
 }
 
@@ -239,14 +236,17 @@ void hazard_init(void){
     pipeline_init(&ifid_backup, &idex_backup, &exmem_backup, &memwb_backup, &pc_backup, 0);
 }
 
-void backup(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb){
+void backup(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb, pc_t *pc){
     copy_pipeline_register(ifid, ifid_backup);
     copy_pipeline_register(idex, idex_backup);
     copy_pipeline_register(exmem, exmem_backup);
     copy_pipeline_register(memwb, memwb_backup);
+    pc_backup = *pc;
 }
 
 void restore(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb, pc_t *pc){
+    //Some checking to ensure the register file hasn't changed
+
     copy_pipeline_register(ifid_backup, ifid);
     copy_pipeline_register(idex_backup, idex);
     copy_pipeline_register(exmem_backup, exmem);

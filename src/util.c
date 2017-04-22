@@ -56,6 +56,7 @@ void copy_pipeline_register(control_t* orig, control_t* copy){
     copy->regRtValue    = orig->regRtValue;
     copy->ALUresult     = orig->ALUresult;
     copy->pcNext        = orig->pcNext;
+    copy->memData       = orig->memData;
 }
 
 void flush(control_t* reg){

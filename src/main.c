@@ -36,6 +36,9 @@ control_t* exmem = NULL; // EX/MEM pipeline register
 control_t* memwb = NULL; // MEM/WB pipeline register
 pc_t pc = 0;             // Program counter
 
+word_t last_reg_rs_val, last_reg_rt_val;
+pc_t last_inst_decode;
+
 #define BREAKPOINT_MAX 8
 uint32_t breakpoints_address[BREAKPOINT_MAX] = {0}; // the address of a breakpoint
 uint8_t breakpoints_status[BREAKPOINT_MAX] = {0}; // breakpoint status, 0: disabled, 1:enabled
@@ -118,12 +121,31 @@ int main(int argc, char *argv[]) {
     }
     // Run the simulation
     int cycles = 0;
+    last_inst_decode = 0;
+    last_reg_rs_val = 0;
+    last_reg_rt_val = 0;
     while (1) {
         // Run a pipeline cycle
+        backup(ifid, idex, exmem, memwb, &pc);
         writeback(memwb);
         memory(exmem, memwb);
         execute(idex, exmem);
         decode(ifid, idex);
+        if(last_inst_decode == idex->instr){
+            if(idex->regRsValue != last_reg_rs_val){
+                cprintf(ANSI_C_YELLOW, "Inconsistent register file read for RegRs for instruction 0x%08x. prior value was 0x%08x but 0x%08x was read from the register file\n", last_inst_decode, last_reg_rs_val, idex->regRsValue);
+                cprintf(ANSI_C_YELLOW, "Current Program Counter: 0x%08x @%d cycles\n", pc, cycles);
+                assert(0);
+            }
+            if(idex->regRtValue != last_reg_rt_val){
+                cprintf(ANSI_C_YELLOW, "Inconsistent register file read for RegRt for instruction 0x%08x. prior value was 0x%08x but 0x%08x was read from the register file.\n", last_inst_decode, last_reg_rt_val, idex->regRtValue);
+                cprintf(ANSI_C_YELLOW, "Current Program Counter: 0x%08x @%d cycles\n", pc, cycles);
+                assert(0);
+            }
+        }
+        last_inst_decode = idex->instr;
+        last_reg_rs_val = idex->regRsValue;
+        last_reg_rt_val = idex->regRtValue;
         fetch(ifid, &pc);
         hazard(ifid, idex, exmem, memwb, &pc);
         cache_digest();
