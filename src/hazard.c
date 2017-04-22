@@ -217,7 +217,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
         *pc = *pc + 4;
     }
 
-    if(cache_cfg->inst_enabled || cache_cfg->data_enabled){
+    if((cache_cfg->inst_enabled || cache_cfg->data_enabled) && !(cache_cfg->mode == CACHE_DISABLE)){
         if(memwb->status == CACHE_MISS || ifid->status == CACHE_MISS){
             if(flags & MASK_DEBUG){
                 printf("\tcache miss! Restoring the pipeline\n");
