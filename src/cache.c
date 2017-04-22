@@ -22,8 +22,8 @@ void set_mem_status(memory_status_t status){
 }
 
 void cache_init(cache_config_t *cpu_cfg){
+    config = (cache_config_t*)malloc(sizeof(cache_config_t));
     memcpy(config, cpu_cfg, sizeof(cache_config_t));
-
     set_mem_status(MEM_IDLE);
     if(config->mode == CACHE_DISABLE){
         return;
