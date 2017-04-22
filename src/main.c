@@ -344,9 +344,9 @@ int arguments(int argc, char **argv, FILE** source_fp,
                 break;
             /* Split cache options */
             case 'D': // --cache-data
-                if (!strcmp(optarg,"disabled") || !strcmp(optarg,"d")) {
+                if (!strcmp(optarg,"disabled") || !strcmp(optarg,"d") || !strcmp(optarg,"0")) {
                     cache_cfg->data_enabled = false;
-                } else if (!strcmp(optarg,"enabled") || !strcmp(optarg,"e")) {
+                } else if (!strcmp(optarg,"enabled") || !strcmp(optarg,"e") || !strcmp(optarg,"1")) {
                     cache_cfg->data_enabled = true;
                 } else {
                     cprintf(ANSI_C_YELLOW,"Invalid data cache setting: %s\n",optarg);
@@ -400,9 +400,9 @@ int arguments(int argc, char **argv, FILE** source_fp,
                 bprintf("","CACHE$ data cache write policy set to %s.\n",CACHE_WPOLICY_STRINGS[cache_cfg->data_wpolicy]);
                 break;
             case 'I': // --cache-inst
-                if (!strcmp(optarg,"disabled") || !strcmp(optarg,"d")) {
+                if (!strcmp(optarg,"disabled") || !strcmp(optarg,"d") || !strcmp(optarg,"0")) {
                     cache_cfg->inst_enabled = false;
-                } else if (!strcmp(optarg,"enabled") || !strcmp(optarg,"e")) {
+                } else if (!strcmp(optarg,"enabled") || !strcmp(optarg,"e") || !strcmp(optarg,"1")) {
                     cache_cfg->inst_enabled = true;
                 } else {
                     cprintf(ANSI_C_YELLOW,"Invalid instruction cache setting: %s\n",optarg);
@@ -538,6 +538,10 @@ int parse(FILE *fp, asm_line_t *lines, cpu_config_t cpu_cfg) {
     if (flags & MASK_ALTFORMAT) { // .txt "array" format
         addr = 0;
         mem_init(cpu_cfg.mem_size,0); // memory is assumed to start at 0x0
+        // Disable mem_write_w messages when parsing (@TODO make enabled by flag)
+        int saved_debug_flag = flags & MASK_DEBUG;
+        printf("DEBUG %d\n",saved_debug_flag);
+        flags &= ~(saved_debug_flag);
         // Iterate through file line-by-line
         while (fgets(buf, sizeof(buf), fp) != NULL ) {
             // Read the instruction into memory
@@ -555,6 +559,7 @@ int parse(FILE *fp, asm_line_t *lines, cpu_config_t cpu_cfg) {
                 ++count;
             }
         }
+        flags |= saved_debug_flag;
         // Set registers
         mem_read_w(0x0,&data);
         reg_write(REG_SP, &data);
@@ -740,6 +745,9 @@ PROMPT: // LOL gotos
             scanf("%d",&i_addr); getchar();
             print_icache(i_addr);
             goto PROMPT;
+        case 'W': // print write buffer
+            print_write_buffer();
+            goto PROMPT;
         case '?': // help
             printf("Available interactive commands: \n" \
                 "\ta: add breakpoint at a memory address\n" \
@@ -753,8 +761,10 @@ PROMPT: // LOL gotos
                 "\tr: dump registers\n" \
                 "\tx: exit simulation run\n");
             if (cache_config.mode != CACHE_DISABLE) {
-                printf("\tD: print an dcache block\n"
-                    "\tI: print a icache block\n");
+                printf( \
+                    "\tD: print an dcache block\n" \
+                    "\tI: print a icache block\n" \
+                    "\tW: print the cache write buffer\n");
             }
             goto PROMPT;
         default:
