@@ -240,6 +240,15 @@ cache_status_t i_cache_read_w(uint32_t *address, word_t *data){
 }
 
 
+cache_wpolicy_t get_write_policy(void){
+    if(config->mode ==CACHE_UNIFIED){
+        return config->wpolicy;
+    } else {
+        return config->data_wpolicy;
+    }
+
+}
+
 /* Write buffer implementation functions */
 /* @brief Initializes a new write buffer
 *  @returns an instance of a new write buffer depending on what write policy is defined
@@ -261,6 +270,7 @@ void write_buffer_destroy(write_buffer_t *wb){
 }
 
 void write_buffer_digest(void){
+    word_t temp;
     if(write_buffer->writing){
         if(get_mem_status() != MEM_WRITING){
             //Its not my turn!!!
@@ -308,11 +318,19 @@ cache_status_t write_buffer_enqueue(cache_access_t info){
         return CACHE_MISS;
     }
     else {
+        uint8_t i = 0;
+        for(i = 0; i < d_cache->block_size; i++){
+            if(d_cache->blocks[info.index].valid[i] == false){
+                if(flags & MASK_DEBUG){
+                    printf("\tEntire block is not valid. Waiting until block is valid before proceeding.\n");
+                    return CACHE_MISS;
+                }
+            }
+        }
         if(flags & MASK_DEBUG){
             printf("\twrite_buffer_enqueue: filling write buffer with block index %d and tag 0x%08x\n", info.index, info.tag);
         }
-        write_buffer->address = info.tag | info.index;
-        uint8_t i = 0;
+        write_buffer->address = info.address;
         for(i = 0; i < d_cache->block_size; i++){
             write_buffer->data[i] = d_cache->blocks[info.index].data[i];
         }
@@ -325,10 +343,10 @@ cache_status_t write_buffer_enqueue(cache_access_t info){
 
 
 void print_icache(int block){
-    direct_cache_print_block(d_cache, block);
+    direct_cache_print_block(i_cache, block);
 }
 void print_dcache(int block){
-    direct_cache_print_block(i_cache, block);
+    direct_cache_print_block(d_cache, block);
 }
 
 void print_write_buffer(void){

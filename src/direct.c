@@ -145,8 +145,8 @@ void direct_cache_digest(direct_cache_t *cache, memory_status_t proceed_conditio
 
 cache_status_t direct_cache_read_w(direct_cache_t *cache, uint32_t *address, uint32_t *data){
     cache_access_t info;
+    cache_status_t status;
     direct_cache_get_tag_and_index(&info, cache, address);
-    info.request = CACHE_READ;
     if(flags & MASK_DEBUG){
         printf("\tdirect_cache_read_w: looking for address 0x%08x\n", *address);
     }
@@ -183,14 +183,25 @@ cache_status_t direct_cache_read_w(direct_cache_t *cache, uint32_t *address, uin
         }
         if(cache->fetching){
             if(flags & MASK_DEBUG){
-                printf("\tdirect_cache_read_word: CACHE_MISS, cache is fetching data.\n");
+                printf("\tdirect_cache_read_w: CACHE_MISS, cache is fetching data.\n");
             }
         } else {
             //Data is not in the cache. Start retrieval
             if(flags & MASK_DEBUG){
-                printf("\tdirect_cache_read_word: CACHE_MISS, data is not in the cache. Queueing read\n");
+                printf("\tdirect_cache_read_w: CACHE_MISS, data is not in the cache. Queueing read\n");
             }
-            info.request = CACHE_READ;
+            if(info.dirty && (get_write_policy() == CACHE_WRITEBACK)){
+                if(flags & MASK_DEBUG){
+                    printf("\tdirect_cache_read_w: data in block is dirty. Queueing write.\n");
+                }
+                status = write_buffer_enqueue(info);
+                if(status == CACHE_MISS){
+                    if(flags & MASK_DEBUG){
+                        printf("\tdirect_cache_read_w: write buffer is full. \n");
+                    }
+                    return status;
+                }
+            }
             direct_cache_queue_mem_access(cache, info);
         }
         return CACHE_MISS;
@@ -205,20 +216,19 @@ cache_status_t direct_cache_write_w(direct_cache_t *cache, uint32_t *address, ui
     info.data = *data;
     if(cache->blocks[info.index].valid[info.inner_index] == true && cache->blocks[info.index].tag == info.tag){
         status = CACHE_HIT;
-        if(info.dirty && write_policy == WRITEBACK){
-            //There is valid dirty data in the cache, and we must put it in the write buffer
+        cache->blocks[info.index].data[info.inner_index] = *data;
+        cache->blocks[info.index].tag = info.tag;
+        cache->blocks[info.index].dirty = true;
+        if (get_write_policy() == CACHE_WRITETHROUGH){
             status = write_buffer_enqueue(info);
             if(status == CACHE_MISS){
                 if(flags & MASK_DEBUG){
-                    printf("\tdirect_cache_access_word: Write buffer is full. Cannot fill cache without losing data.\n");
+                    printf("\tdirect_cache_write_w: Write buffer is full. Cannot fill cache without losing data.\n");
                 }
                 //The write buffer is full! Don't fill the block
                 return CACHE_MISS;
             }
         }
-        cache->blocks[info.index].data[info.inner_index] = info.data;
-        cache->blocks[info.index].tag = info.tag;
-        cache->blocks[info.index].dirty = true;
     } else {
         //The processor is writing to a place in memory that isnt in the cache
         //The transaction becomes a READ MODIFY WRITE
