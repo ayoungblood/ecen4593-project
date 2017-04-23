@@ -12,6 +12,8 @@ direct_cache_t *i_cache;
 write_buffer_t *write_buffer;
 memory_status_t memory_status = MEM_IDLE;
 
+cache_config_t *config;
+
 memory_status_t get_mem_status(void){
     return memory_status;
 }
@@ -20,16 +22,17 @@ void set_mem_status(memory_status_t status){
 }
 
 void cache_init(cache_config_t *cpu_cfg){
-
+    config = (cache_config_t*)malloc(sizeof(cache_config_t));
+    memcpy(config, cpu_cfg, sizeof(cache_config_t));
     set_mem_status(MEM_IDLE);
-    if(cpu_cfg->mode == CACHE_DISABLE){
+    if(config->mode == CACHE_DISABLE){
         return;
-    } else if(cpu_cfg->mode == CACHE_SPLIT){
-        d_cache_init(cpu_cfg);
-        i_cache_init(cpu_cfg);
+    } else if(config->mode == CACHE_SPLIT){
+        d_cache_init(config);
+        i_cache_init(config);
         write_buffer = write_buffer_init();
-    } else if(cpu_cfg->mode == CACHE_UNIFIED){
-        d_cache_init(cpu_cfg);
+    } else if(config->mode == CACHE_UNIFIED){
+        d_cache_init(config);
         write_buffer = write_buffer_init();
     }
 
@@ -237,6 +240,15 @@ cache_status_t i_cache_read_w(uint32_t *address, word_t *data){
 }
 
 
+cache_wpolicy_t get_write_policy(void){
+    if(config->mode ==CACHE_UNIFIED){
+        return config->wpolicy;
+    } else {
+        return config->data_wpolicy;
+    }
+
+}
+
 /* Write buffer implementation functions */
 /* @brief Initializes a new write buffer
 *  @returns an instance of a new write buffer depending on what write policy is defined
@@ -258,6 +270,7 @@ void write_buffer_destroy(write_buffer_t *wb){
 }
 
 void write_buffer_digest(void){
+    word_t temp;
     if(write_buffer->writing){
         if(get_mem_status() != MEM_WRITING){
             //Its not my turn!!!
@@ -305,11 +318,19 @@ cache_status_t write_buffer_enqueue(cache_access_t info){
         return CACHE_MISS;
     }
     else {
+        uint8_t i = 0;
+        for(i = 0; i < d_cache->block_size; i++){
+            if(d_cache->blocks[info.index].valid[i] == false){
+                if(flags & MASK_DEBUG){
+                    printf("\tEntire block is not valid. Waiting until block is valid before proceeding.\n");
+                    return CACHE_MISS;
+                }
+            }
+        }
         if(flags & MASK_DEBUG){
             printf("\twrite_buffer_enqueue: filling write buffer with block index %d and tag 0x%08x\n", info.index, info.tag);
         }
-        write_buffer->address = info.tag | info.index;
-        uint8_t i = 0;
+        write_buffer->address = info.address;
         for(i = 0; i < d_cache->block_size; i++){
             write_buffer->data[i] = d_cache->blocks[info.index].data[i];
         }
@@ -321,6 +342,22 @@ cache_status_t write_buffer_enqueue(cache_access_t info){
 }
 
 
-void print_cache(void *cache){
-    direct_cache_print((direct_cache_t*) cache);
+void print_icache(int block){
+    direct_cache_print_block(i_cache, block);
+}
+void print_dcache(int block){
+    direct_cache_print_block(d_cache, block);
+}
+
+void print_write_buffer(void){
+    if(write_buffer == NULL){
+        cprintf(ANSI_C_RED, "write_buffer_enqueue: buffer is not initialized\n");
+        assert(0);
+    }
+    printf("Writing: %d, Penalty Count: %d, Subsequent Writing: %d\n", write_buffer->writing, write_buffer->penalty_count, write_buffer->subsequent_writing);
+    printf("Address: 0x%08x\n", write_buffer->address);
+    printf("Data: \t0x%08x\n", write_buffer->data[0]);
+    for(uint32_t i = 1; i < d_cache->block_size; i++){
+        printf("\t0x%08x\n", write_buffer->data[i]);
+    }
 }

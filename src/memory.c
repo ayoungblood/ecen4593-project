@@ -105,7 +105,7 @@ void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
         }
         memwb->status = status;
         if(flags & MASK_DEBUG){
-            if(cache_cfg->data_enabled && !(cache_cfg->mode == CACHE_DISABLE)){
+            if(cache_cfg->mode != CACHE_DISABLE && cache_cfg->data_enabled){
                 if(memwb->status == CACHE_HIT){
                     printf("\tStored 0x%08x to address 0x%08x\n", temp, exmem->ALUresult);
                 }

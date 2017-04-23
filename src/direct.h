@@ -25,13 +25,6 @@
 typedef uint32_t tag_t;
 
 
-typedef enum WRITE_POLICY{
-    WRITEBACK,
-    WRITETHROUGH
-} write_policy_t;
-
-
-write_policy_t write_policy;    //write back or write through
 
 //Struct for a single block of a direct mapped cache
 typedef struct DIRECT_CACHE_BLOCK {

@@ -12,13 +12,13 @@ cpu_config_t cpu_config = {
     .mem_size       = DEFAULT_MEM_SIZE,
 };
 cache_config_t cache_config = {
-    .mode           = CACHE_SPLIT,
+    .mode           = CACHE_DISABLE,
     .data_enabled   = false,
     .data_size      = 1024,
     .data_block     = 4,
     .data_type      = CACHE_DIRECT,
     .data_wpolicy   = CACHE_WRITETHROUGH,
-    .inst_enabled   = true,
+    .inst_enabled   = false,
     .inst_size      = 1024,
     .inst_block     = 4,
     .inst_type      = CACHE_DIRECT,
@@ -110,7 +110,9 @@ int main(int argc, char *argv[]) {
     // Initialize the pipeline registers
     pipeline_init(&ifid, &idex, &exmem, &memwb, &pc,  (pc_t)mem_start());
     hazard_init();
-    cache_init(&cache_config);
+    if (cache_config.mode != CACHE_DISABLE) {
+        cache_init(&cache_config);
+    }
     uint32_t word = 0;
     if (flags & MASK_ALTFORMAT) {
         // set the program counter based on the fifth word of memory
@@ -128,7 +130,9 @@ int main(int argc, char *argv[]) {
         decode(ifid, idex);
         fetch(ifid, &pc, &cache_config);
         hazard(ifid, idex, exmem, memwb, &pc, &cache_config);
-        cache_digest();
+        if (cache_config.mode != CACHE_DISABLE) {
+            cache_digest();
+        }
         ++cycles;
         // Check for a magic halt number (beq zero zero -1 or jr zero)
         if (ifid->instr == 0x1000ffff || ifid->instr == 0x00000008 || pc == 0) break;
@@ -340,9 +344,9 @@ int arguments(int argc, char **argv, FILE** source_fp,
                 break;
             /* Split cache options */
             case 'D': // --cache-data
-                if (!strcmp(optarg,"disabled") || !strcmp(optarg,"d")) {
+                if (!strcmp(optarg,"disabled") || !strcmp(optarg,"d") || !strcmp(optarg,"0")) {
                     cache_cfg->data_enabled = false;
-                } else if (!strcmp(optarg,"enabled") || !strcmp(optarg,"e")) {
+                } else if (!strcmp(optarg,"enabled") || !strcmp(optarg,"e") || !strcmp(optarg,"1")) {
                     cache_cfg->data_enabled = true;
                 } else {
                     cprintf(ANSI_C_YELLOW,"Invalid data cache setting: %s\n",optarg);
@@ -396,9 +400,9 @@ int arguments(int argc, char **argv, FILE** source_fp,
                 bprintf("","CACHE$ data cache write policy set to %s.\n",CACHE_WPOLICY_STRINGS[cache_cfg->data_wpolicy]);
                 break;
             case 'I': // --cache-inst
-                if (!strcmp(optarg,"disabled") || !strcmp(optarg,"d")) {
+                if (!strcmp(optarg,"disabled") || !strcmp(optarg,"d") || !strcmp(optarg,"0")) {
                     cache_cfg->inst_enabled = false;
-                } else if (!strcmp(optarg,"enabled") || !strcmp(optarg,"e")) {
+                } else if (!strcmp(optarg,"enabled") || !strcmp(optarg,"e") || !strcmp(optarg,"1")) {
                     cache_cfg->inst_enabled = true;
                 } else {
                     cprintf(ANSI_C_YELLOW,"Invalid instruction cache setting: %s\n",optarg);
@@ -534,6 +538,10 @@ int parse(FILE *fp, asm_line_t *lines, cpu_config_t cpu_cfg) {
     if (flags & MASK_ALTFORMAT) { // .txt "array" format
         addr = 0;
         mem_init(cpu_cfg.mem_size,0); // memory is assumed to start at 0x0
+        // Disable mem_write_w messages when parsing (@TODO make enabled by flag)
+        int saved_debug_flag = flags & MASK_DEBUG;
+        printf("DEBUG %d\n",saved_debug_flag);
+        flags &= ~(saved_debug_flag);
         // Iterate through file line-by-line
         while (fgets(buf, sizeof(buf), fp) != NULL ) {
             // Read the instruction into memory
@@ -551,6 +559,7 @@ int parse(FILE *fp, asm_line_t *lines, cpu_config_t cpu_cfg) {
                 ++count;
             }
         }
+        flags |= saved_debug_flag;
         // Set registers
         mem_read_w(0x0,&data);
         reg_write(REG_SP, &data);
@@ -663,7 +672,6 @@ PROMPT: // LOL gotos
                     goto PROMPT;
                 }
                 breakpoint_add(i_addr);
-
             }
             goto PROMPT;
         case 'b': // list breakpoints
@@ -727,6 +735,19 @@ PROMPT: // LOL gotos
         case 'x': // exit
             cprintf(ANSI_C_GREEN, "Simulation halted in interactive mode.\n");
             return 1;
+        case 'D': // print data cache block
+            cprintf(ANSI_C_GREEN,"dcache block: ");
+            scanf("%d",&i_addr); getchar();
+            print_dcache(i_addr);
+            goto PROMPT;
+        case 'I': // print instruction cache block
+            cprintf(ANSI_C_GREEN,"icache block: ");
+            scanf("%d",&i_addr); getchar();
+            print_icache(i_addr);
+            goto PROMPT;
+        case 'W': // print write buffer
+            print_write_buffer();
+            goto PROMPT;
         case '?': // help
             printf("Available interactive commands: \n" \
                 "\ta: add breakpoint at a memory address\n" \
@@ -739,6 +760,12 @@ PROMPT: // LOL gotos
                 "\ts: single-step the pipeline\n" \
                 "\tr: dump registers\n" \
                 "\tx: exit simulation run\n");
+            if (cache_config.mode != CACHE_DISABLE) {
+                printf( \
+                    "\tD: print an dcache block\n" \
+                    "\tI: print a icache block\n" \
+                    "\tW: print the cache write buffer\n");
+            }
             goto PROMPT;
         default:
             printf("Unrecognized interactive command \"%c\", press \"?\" for help.\n", c);

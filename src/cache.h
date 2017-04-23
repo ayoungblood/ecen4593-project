@@ -56,7 +56,8 @@ void write_buffer_digest(void);
 cache_status_t write_buffer_enqueue(cache_access_t info);
 
 /*Debugging stuff*/
-void print_cache(void *cache);
-
+void print_icache(int block);
+void print_dcache(int block);
+void print_write_buffer(void);
 
 #endif /*_CACHE_H*/
