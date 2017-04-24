@@ -21,4 +21,4 @@ void restore(control_t *ifid, control_t *idex, control_t *exmem, control_t *memw
 
 void backup(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb, pc_t *pc);
 
-#endif
+#endif /* _HAZARD_H */
