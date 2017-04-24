@@ -270,7 +270,7 @@ void write_buffer_destroy(write_buffer_t *wb){
 }
 
 void write_buffer_digest(void){
-    word_t temp;
+    //word_t temp;
     if(write_buffer->writing){
         if(get_mem_status() != MEM_WRITING){
             //Its not my turn!!!
@@ -330,7 +330,7 @@ cache_status_t write_buffer_enqueue(cache_access_t info){
         if(flags & MASK_DEBUG){
             printf("\twrite_buffer_enqueue: filling write buffer with block index %d and tag 0x%08x\n", info.index, info.tag);
         }
-        write_buffer->address = info.address;
+        write_buffer->address = (info.address & (d_cache->tag_mask | d_cache->index_mask));
         for(i = 0; i < d_cache->block_size; i++){
             write_buffer->data[i] = d_cache->blocks[info.index].data[i];
         }

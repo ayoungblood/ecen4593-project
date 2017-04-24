@@ -91,7 +91,7 @@ void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
             case OPC_SW:
                 temp = exmem->regRtValue;
                 if(cache_cfg->data_enabled && !(cache_cfg->mode == CACHE_DISABLE)){
-                    status = d_cache_read_w(&exmem->ALUresult, &temp);
+                    status = d_cache_read_w(&exmem->ALUresult, &data_in_cache);
                     if(status == CACHE_HIT){
                         status = d_cache_write_w(&exmem->ALUresult, &temp);
                     }

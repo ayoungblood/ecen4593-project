@@ -55,6 +55,8 @@ void write_buffer_destroy(write_buffer_t *wb);
 void write_buffer_digest(void);
 cache_status_t write_buffer_enqueue(cache_access_t info);
 
+cache_wpolicy_t get_write_policy(void);
+
 /*Debugging stuff*/
 void print_icache(int block);
 void print_dcache(int block);
