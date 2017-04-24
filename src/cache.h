@@ -60,6 +60,8 @@ cache_wpolicy_t get_write_policy(void);
 /*Debugging stuff*/
 void print_icache(int block);
 void print_dcache(int block);
+void dump_dcache(void);
 void print_write_buffer(void);
+void flush_dcache(void);
 
 #endif /*_CACHE_H*/

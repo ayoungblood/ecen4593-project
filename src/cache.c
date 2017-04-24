@@ -210,9 +210,6 @@ void cache_digest(void){
 
 
 cache_status_t d_cache_read_w(uint32_t *address, word_t *data){
-    if(flags & MASK_DEBUG){
-        cprintf(ANSI_C_CYAN, "D_CACHE GET WORD:\n");
-    }
     //Get data from the data cache
     cache_status_t status = direct_cache_read_w(d_cache, address, data);
     return status;
@@ -220,18 +217,12 @@ cache_status_t d_cache_read_w(uint32_t *address, word_t *data){
 
 
 cache_status_t d_cache_write_w(uint32_t *address, word_t *data){
-    if(flags & MASK_DEBUG){
-        cprintf(ANSI_C_CYAN, "D_CACHE WRITE WORD:\n");
-    }
 
     cache_status_t status = direct_cache_write_w(d_cache, address, data);
     return status;
 }
 
 cache_status_t i_cache_read_w(uint32_t *address, word_t *data){
-    if(flags & MASK_DEBUG){
-        cprintf(ANSI_C_CYAN, "I_CACHE GET WORD:\n");
-    }
     //Get data from the data cache
 
     cache_status_t status = direct_cache_read_w(i_cache, address, data);
@@ -341,9 +332,28 @@ cache_status_t write_buffer_enqueue(cache_access_t info){
     }
 }
 
+void flush_dcache(void){
+    printf("Flushing cache...\n");
+    uint32_t address;
+    for(uint32_t i = 0; i < d_cache->num_blocks; i++){
+        if(d_cache->blocks[i].dirty){
+            for(uint32_t j = 0; j < d_cache->block_size; j++){
+                address = (d_cache->blocks[i].tag << (2 + d_cache->index_size + d_cache->inner_index_size)) | (i << (2 + d_cache->inner_index_size)) | (j << 2);
+                printf("\tWriting 0x%08x (0d%d) to 0x%08x\n", d_cache->blocks[i].data[j], d_cache->blocks[i].data[j], address);
+                mem_write_w(address, &(d_cache->blocks[i].data[j]));
+            }
+        }
+    }
+}
+
 
 void print_icache(int block){
     direct_cache_print_block(i_cache, block);
+}
+void dump_dcache(void){
+    for(uint32_t i = 0; i < d_cache->num_blocks; i++){
+        print_dcache(i);
+    }
 }
 void print_dcache(int block){
     direct_cache_print_block(d_cache, block);

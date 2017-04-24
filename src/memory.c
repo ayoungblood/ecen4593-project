@@ -18,7 +18,7 @@ void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
         switch (exmem->opCode) {
             case OPC_LBU:
             case OPC_LB:
-                if(cache_cfg->data_enabled && !(cache_cfg->mode == CACHE_DISABLE)){
+                if(cache_cfg->data_enabled && cache_cfg->mode != CACHE_DISABLE){
                     status = d_cache_read_w(&exmem->ALUresult, &temp);
                     temp = temp >> ((3-(exmem->ALUresult & 0x3))<<3);
                     temp &= 0xff;
@@ -29,7 +29,7 @@ void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
                 break;
             case OPC_LHU:
             case OPC_LH:
-                if(cache_cfg->data_enabled && !(cache_cfg->mode == CACHE_DISABLE)){
+                if(cache_cfg->data_enabled && cache_cfg->mode != CACHE_DISABLE){
                     status = d_cache_read_w(&exmem->ALUresult, &temp);
                     temp = temp >> ((2-(exmem->ALUresult & 0x2))<<3);
                     temp &= 0xffff;
@@ -39,7 +39,7 @@ void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
                 if (exmem->opCode == OPC_LH) temp = SIGN_EXTEND_H(temp);
                 break;
             case OPC_LW:
-                if(cache_cfg->data_enabled && !(cache_cfg->mode == CACHE_DISABLE)){
+                if(cache_cfg->data_enabled && cache_cfg->mode != CACHE_DISABLE){
                     status = d_cache_read_w(&exmem->ALUresult, &temp);
                 } else {
                     mem_read_w(exmem->ALUresult, &temp);
@@ -60,7 +60,7 @@ void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
         switch (exmem->opCode) {
             case OPC_SB:
                 temp = exmem->regRtValue;
-                if(cache_cfg->data_enabled && !(cache_cfg->mode == CACHE_DISABLE)){
+                if(cache_cfg->data_enabled && cache_cfg->mode != CACHE_DISABLE){
                     status = d_cache_read_w(&exmem->ALUresult, &data_in_cache);
                     if(status == CACHE_HIT){
                         uint32_t shift = ((3-(exmem->ALUresult & 0x3))<<3);
@@ -75,7 +75,7 @@ void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
                 break;
             case OPC_SH:
                 temp = exmem->regRtValue;
-                if(cache_cfg->data_enabled && !(cache_cfg->mode == CACHE_DISABLE)){
+                if(cache_cfg->data_enabled && cache_cfg->mode != CACHE_DISABLE){
                     status = d_cache_read_w(&exmem->ALUresult, &data_in_cache);
                     if(status == CACHE_HIT){
                         uint32_t shift = ((2-(exmem->ALUresult & 0x2))<<3);
@@ -90,7 +90,7 @@ void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
                 break;
             case OPC_SW:
                 temp = exmem->regRtValue;
-                if(cache_cfg->data_enabled && !(cache_cfg->mode == CACHE_DISABLE)){
+                if(cache_cfg->data_enabled && cache_cfg->mode != CACHE_DISABLE){
                     status = d_cache_read_w(&exmem->ALUresult, &data_in_cache);
                     if(status == CACHE_HIT){
                         status = d_cache_write_w(&exmem->ALUresult, &temp);

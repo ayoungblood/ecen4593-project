@@ -144,6 +144,13 @@ int main(int argc, char *argv[]) {
     }
     printf("\nPipeline halted after %d cycles (address 0x%08x)\n",cycles,pc);
     // Dump registers and the first couple words of memory so we can see what's going on
+    if(cache_config.mode != CACHE_DISABLE && cache_config.data_enabled){
+        flush_dcache();
+        //dump_dcache();
+        for(i = 0; i * cache_config.data_block < 16; i++){
+            print_dcache(i);
+        }
+    }
     reg_dump();
     mem_dump_cute(0,16);
     // Close memory, and cleanup register files (we don't need to clean up registers)

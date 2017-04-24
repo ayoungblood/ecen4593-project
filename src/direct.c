@@ -124,7 +124,6 @@ void direct_cache_digest(direct_cache_t *cache, memory_status_t proceed_conditio
             cache->blocks[info.index].data[info.inner_index] = info.data;
             cache->blocks[info.index].tag = info.tag;
             cache->blocks[info.index].valid[info.inner_index] = true;
-            cache->blocks[info.index].dirty = false;
             cache->fetching = false;
             cache->penalty_count = 0;
             if(cache->subsequent_fetching < (cache->block_size - 1)){
@@ -166,15 +165,10 @@ cache_status_t direct_cache_read_w(direct_cache_t *cache, uint32_t *address, uin
     }
     //Check to make sure the data is valid
     if(cache->blocks[info.index].valid[info.inner_index] == true && cache->blocks[info.index].tag == info.tag){
-        info.data = cache->blocks[info.index].data[info.inner_index];
-        info.dirty = cache->blocks[info.index].dirty;
         if(flags & MASK_DEBUG){
-            printf("\tdirect_cache_read_w: CACHE_HIT Found valid data 0x%08x for address 0x%08x in block: %d, inner_index: %d\n", info.data, info.address, info.index, info.inner_index);
-            if(info.dirty){
-                printf("\tdirect_cache_read_w: Block is dirty\n");
-            }
+            printf("\tdirect_cache_read_w: CACHE_HIT Found valid data 0x%08x for address 0x%08x in block: %d, inner_index: %d\n", cache->blocks[info.index].data[info.inner_index], info.address, info.index, info.inner_index);
         }
-        *data = info.data;
+        *data = cache->blocks[info.index].data[info.inner_index];
         return CACHE_HIT;
     }
     else {
@@ -190,11 +184,15 @@ cache_status_t direct_cache_read_w(direct_cache_t *cache, uint32_t *address, uin
             if(flags & MASK_DEBUG){
                 printf("\tdirect_cache_read_w: CACHE_MISS, data is not in the cache. Queueing read\n");
             }
-            if(info.dirty && (get_write_policy() == CACHE_WRITEBACK)){
+            if(cache->blocks[info.index].dirty && (get_write_policy() == CACHE_WRITEBACK)){
                 if(flags & MASK_DEBUG){
                     printf("\tdirect_cache_read_w: data in block is dirty. Queueing write.\n");
                 }
-                status = write_buffer_enqueue(info);
+                cache_access_t write_info;
+                uint32_t write_address = (cache->blocks[info.index].tag << (2 + cache->index_size + cache->inner_index_size)) | (info.index << (2 + cache->inner_index_size)) | (info.inner_index << 2);
+                direct_cache_get_tag_and_index(&write_info, cache, &write_address);
+                status = write_buffer_enqueue(write_info);
+                //assert(0);
                 if(status == CACHE_MISS){
                     if(flags & MASK_DEBUG){
                         printf("\tdirect_cache_read_w: write buffer is full. \n");
