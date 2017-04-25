@@ -3,7 +3,7 @@
 TARGET = sim
 CC = gcc
 CFLAGS = -g -std=c99 -Wall -Wextra -pedantic -Wshadow -Wpointer-arith -Wstrict-prototypes \
--Wmissing-prototypes -Wswitch-default -Wunused-macros -Werror -Wno-error=unused -O3
+-Wmissing-prototypes -Wswitch-default -Wunused-macros -O3
 # -g: debugging symbols
 # -std=c99: even the ECES Red Hat potato compiler should support C99
 # -Wall -Wextra -pedantic: stricter warnings
@@ -16,8 +16,8 @@ CFLAGS = -g -std=c99 -Wall -Wextra -pedantic -Wshadow -Wpointer-arith -Wstrict-p
 # -Wswitch-default: warn when a switch statement does not have a default case
 # #-Walloc-zero: allocation of zero bytes is not portable (not on clang)
 # -Wunused-macros: macros not expanded are probably useless
-# -Werror: all warnings are errors
-# -Wno-error=unused: ...except for some warnings
+# #-Werror: all warnings are errors
+# #-Wno-error=unused: ...except for some warnings
 # -O3: optimize
 LIBS =
 
