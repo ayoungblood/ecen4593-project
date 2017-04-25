@@ -18,12 +18,12 @@ void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
         switch (exmem->opCode) {
             case OPC_LBU:
             case OPC_LB:
-                if(cache_cfg->data_enabled && cache_cfg->mode != CACHE_DISABLE){
+                if (cache_cfg->data_enabled && cache_cfg->mode != CACHE_DISABLE){
                     status = d_cache_read_w(&exmem->ALUresult, &temp);
                     temp = temp >> ((3-(exmem->ALUresult & 0x3))<<3);
                     temp &= 0xff;
                 } else {
-                    mem_read_b(exmem->ALUresult,&temp);
+                    mem_read_b(exmem->ALUresult, &temp);
                 }
                 if (exmem->opCode == OPC_LB) temp = SIGN_EXTEND_B(temp);
                 break;
@@ -66,7 +66,7 @@ void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
                         uint32_t shift = ((3-(exmem->ALUresult & 0x3))<<3);
                         temp = temp << shift;
                         data_in_cache &= ~(0xff << shift);
-                        temp = temp & data_in_cache;
+                        temp = temp | data_in_cache;
                         status = d_cache_write_w(&exmem->ALUresult, &temp);
                     }
                 } else {
@@ -81,7 +81,7 @@ void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
                         uint32_t shift = ((2-(exmem->ALUresult & 0x2))<<3);
                         temp = temp << shift; // shift amount based on byte position
                         data_in_cache &= ~(0xffff << shift);
-                        temp = temp & data_in_cache;
+                        temp = temp | data_in_cache;
                         status = d_cache_write_w(&exmem->ALUresult, &temp);
                     }
                 } else {
