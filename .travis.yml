@@ -1,5 +1,10 @@
 sudo: required
 dist: trusty
+language: c
+os:
+    - linux
+    - osx
+
 before_install:
 script:
 - make
