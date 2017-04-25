@@ -4,9 +4,9 @@
 
 #include "decode.h"
 
-extern int flags; // from main.c or memory-test.c
+extern int flags; // from util.c
 
-int decode( control_t * ifid , control_t * idex) {
+int decode(control_t *ifid , control_t *idex) {
 
     copy_pipeline_register(ifid, idex);
 
@@ -33,7 +33,7 @@ int decode( control_t * ifid , control_t * idex) {
                 case FNC_JR:
                     idex->ALUop = OPR_ADD;
                     idex->jump = true;
-                    //Make sure we don't accidentally write back, although rd = $zero
+                    // Make sure we don't accidentally write back, although rd = $zero
                     idex->regWrite = false;
                     break;
                 case FNC_MOVZ:
@@ -73,7 +73,6 @@ int decode( control_t * ifid , control_t * idex) {
                     cprintf(ANSI_C_RED, "Illegal R-type instruction, funct 0x%02x (instruction 0x%08x). Halting.\n", idex->funct, idex->instr);
                     assert(0);
             }
-
             break;
         case OPC_LW:
         case OPC_LH:
@@ -148,7 +147,7 @@ int decode( control_t * ifid , control_t * idex) {
             idex->ALUop = OPR_ADDU;
             idex->regRs = REG_ZERO;
             idex->regRt = REG_ZERO;
-            idex->regRd = REG_RA;    //Override so we can put pc in $ra
+            idex->regRd = REG_RA; // Override so we can put pc in $ra
             idex->regDst = true;
             idex->ALUSrc = false;
             idex->regWrite = true;
@@ -200,23 +199,25 @@ int decode( control_t * ifid , control_t * idex) {
                             idex->ALUop = OPR_SEH;
                             break;
                         default:
-                            cprintf(ANSI_C_RED, "Illegal SPECIAL3-type instruction, funct (special3) 0x%02x, shamt (BSHFL) 0x%02x (instruction 0x%08x). Halting.\n", idex->funct, idex->shamt, idex->instr);
+                            cprintf(ANSI_C_RED, "Illegal SPECIAL3-type instruction, funct (special3) 0x%02x, shamt (BSHFL) 0x%02x (instruction 0x%08x). Halting.\n",
+                                idex->funct, idex->shamt, idex->instr);
                             assert(0);
                             break; // never reached
                     }
                     break;
                 default:
-                    cprintf(ANSI_C_RED, "Illegal SPECIAL3-type instruction, funct (special3) 0x%02x, shamt (BSHFL) 0x%02x (instruction 0x%08x). Halting.\n", idex->funct, idex->shamt, idex->instr);
+                    cprintf(ANSI_C_RED, "Illegal SPECIAL3-type instruction, funct (special3) 0x%02x, shamt (BSHFL) 0x%02x (instruction 0x%08x). Halting.\n",
+                        idex->funct, idex->shamt, idex->instr);
                     assert(0);
                     break; // never reached
             }
             break;
         default:
-            cprintf(ANSI_C_RED, "Illegal instruction, opcode 0x%02x (instruction 0x%08x). Halting.\n", idex->opCode, idex->instr);
+            cprintf(ANSI_C_RED, "Illegal instruction, opcode 0x%02x (instruction 0x%08x). Halting.\n",
+                idex->opCode, idex->instr);
             assert(0);
             break; // never reached
     }
-
 
     // Set register values for input to the ALU
     reg_read((int)(idex->regRs), &(idex->regRsValue));
@@ -225,76 +226,60 @@ int decode( control_t * ifid , control_t * idex) {
     // This is needed if a MOVZ/MOVN result needs to be forwarded
     reg_read((int)(idex->regRd), &(idex->ALUresult));
 
-    //Jump address calculation
-    idex->address = ( idex->address << 2 );         //Word aligned
-    //Don't think i need to bitmask the address since in theory it shouldn't be
+    // Jump address calculation
+    idex->address = (idex->address << 2);// Word aligned
+    // Don't think i need to bitmask the address since in theory it shouldn't be
     //"signed"
-    if(idex->jump && (idex->opCode != OPC_RTYPE)){
+    if (idex->jump && (idex->opCode != OPC_RTYPE)) {
         idex->regRtValue = idex->pcNext; // RA value goes into ALU, gets added to zero to set RA
         idex->pcNext = ( idex->pcNext & 0xF0000000 ) | idex->address;
-    }
-    else if(idex->jump && (idex->opCode == OPC_RTYPE)){
-        //This is a jr instruction, pc comes from rs
+    } else if (idex->jump && (idex->opCode == OPC_RTYPE)) {
+        // This is a jr instruction, pc comes from rs
         idex->pcNext = idex->regRsValue;
+    } else {
+        // Branch determination in ID phase, dont want to overwrite jump
+        idex->pcNext = idex->pcNext + (idex->immed << 2);
     }
-    else {
-        //branch determination in ID phase, dont want to overwrite jump
-        idex->pcNext = idex->pcNext + ( idex->immed << 2 );
-    }
-    if(idex->opCode == OPC_BEQ){
-        if(idex->regRsValue == idex->regRtValue){
-            idex->PCSrc = true; //Branch is taken, use pcNext for address
+    if (idex->opCode == OPC_BEQ) {
+        if (idex->regRsValue == idex->regRtValue) {
+            idex->PCSrc = true; // Branch is taken, use pcNext for address
+        } else {
+            idex->PCSrc = false; // Branch not taken
         }
-        else{
-            idex->PCSrc = false; //Branch not taken
+    } else if (idex->opCode == OPC_BNE){
+        if (idex->regRsValue != idex->regRtValue) {
+            idex->PCSrc = true;  // Branch taken
+        } else {
+            idex->PCSrc = false; // Branch not taken
         }
-    }
-    else if (idex->opCode == OPC_BNE){
-        if(idex->regRsValue != idex->regRtValue){
-            idex->PCSrc = true;  //Branch taken
-        }
-        else{
-            idex->PCSrc = false; //Branch not taken
-        }
-    }
-    else if (idex->opCode == OPC_BLTZ){
-        if((int)idex->regRsValue < 0){
+    } else if (idex->opCode == OPC_BLTZ) {
+        if ((int)idex->regRsValue < 0) {
             idex->PCSrc = true;
+        } else {
+            idex->PCSrc = false;
         }
-        else{
+    } else if (idex->opCode == OPC_BGTZ) {
+        if ((int)idex->regRsValue > 0) {
+            idex->PCSrc = true;
+        } else {
+            idex->PCSrc = false;
+        }
+    } else if (idex->opCode == OPC_BLEZ) {
+        if ((int)idex->regRsValue <= 0) {
+            idex->PCSrc = true;
+        } else {
             idex->PCSrc = false;
         }
     }
-    else if (idex->opCode == OPC_BGTZ){
-        if((int)idex->regRsValue > 0){
-            idex->PCSrc = true;
-        }
-        else{
-            idex->PCSrc = false;
-        }
-    }
-    else if (idex->opCode == OPC_BLEZ){
-        if((int)idex->regRsValue <= 0){
-            idex->PCSrc = true;
-        }
-        else{
-            idex->PCSrc = false;
-        }
-    }
-
 
     if(flags & MASK_DEBUG){
         cprintf(ANSI_C_CYAN, "DECODE: \n");
         print_pipeline_register(idex);
     }
-
     return 0;
-
-
-
 }
 
-void setidexImmedArithmetic(control_t * idex){
+void setidexImmedArithmetic(control_t *idex){
     idex->regDst = false;
     idex->ALUSrc = true;
     idex->memToReg = false;
@@ -305,8 +290,7 @@ void setidexImmedArithmetic(control_t * idex){
     idex->PCSrc = false;
 }
 
-
-void setidexLoad(control_t * idex){
+void setidexLoad(control_t *idex){
     idex->regDst = false;
     idex->ALUSrc = true;
     idex->memToReg = true;
@@ -317,7 +301,7 @@ void setidexLoad(control_t * idex){
     idex->PCSrc = false;
 }
 
-void setidexStore(control_t * idex){
+void setidexStore(control_t *idex){
     idex->ALUSrc = true;
     idex->regWrite = false;
     idex->memRead = false;

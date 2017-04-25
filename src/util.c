@@ -169,3 +169,18 @@ char* get_register_name_string(int reg) {
     };
     return names[reg];
 }
+
+/* In C99, variadic macros with zero args in the variadic part result in a
+ * very angry compiler. Therefore, we use this function instead */
+void cprintf(const char *color, const char *format, ...) {
+    va_list args;
+    va_start(args, format);
+    if (flags & MASK_COLOR) {
+        eprintf("%s",color);
+        vfprintf(stderr,format, args);
+        eprintf(ANSI_RESET);
+    } else {
+        vprintf(format, args);
+    }
+    va_end(args);
+}

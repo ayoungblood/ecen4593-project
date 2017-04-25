@@ -16,7 +16,7 @@
 
 int tests_run = 0;
 
-int flags = MASK_DEBUG | MASK_VERBOSE | MASK_SANITY;
+extern int flags;
 
 word_t i, p;
 control_t  *ifid;
@@ -362,6 +362,7 @@ static char * all_tests() {
 }
 
 int main(int argc, char **argv) {
+    flags = MASK_DEBUG | MASK_VERBOSE | MASK_SANITY;
     char *result = all_tests();
     if (result != 0) {
         printf("%s\n", result);

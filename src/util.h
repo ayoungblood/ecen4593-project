@@ -8,6 +8,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 #include "types.h"
 
@@ -40,14 +41,12 @@
 
 // Print macros (note that dprintf conflicts with POSIX, and vprintf conflicts with ISO C)
 #define eprintf(...) fprintf(stderr,__VA_ARGS__)
-#define cprintf(COLOR__,str,...) \
-do {if (flags & MASK_COLOR) \
-        eprintf(COLOR__ str ANSI_RESET, ##__VA_ARGS__); \
-    else \
-        eprintf(str, ##__VA_ARGS__); \
-    } while (0)
-#define gprintf(COLOR__,str,...) if (flags & MASK_DEBUG) cprintf(COLOR__,str,##__VA_ARGS__)
-#define bprintf(COLOR__,str,...) if (flags & MASK_VERBOSE) cprintf(COLOR__,str,##__VA_ARGS__)
+#define gprintf(...) if (flags & MASK_DEBUG) eprintf(__VA_ARGS__)
+#define bprintf(...) if (flags & MASK_VERBOSE) eprintf(__VA_ARGS__)
+#define gcprintf(COLOR__,...) if (flags & MASK_DEBUG) cprintf(COLOR__,__VA_ARGS__)
+#define bcprintf(COLOR__,...) if (flags & MASK_VERBOSE) cprintf(COLOR__,__VA_ARGS__)
+
+int flags;
 
 typedef struct cpu_config_t {
     bool single_cycle;
@@ -67,7 +66,6 @@ typedef enum cache_wpolicy_t {
     CACHE_WRITEBACK,
     CACHE_WRITETHROUGH
 } cache_wpolicy_t;
-
 
 typedef struct cache_config_t {
     cache_mode_t    mode;
@@ -101,5 +99,8 @@ void pipeline_destroy(control_t** ifid, control_t** idex, control_t** exmem, con
 
 // Provides a reverse mapping (register number to string) for debugging
 char* get_register_name_string(int reg);
+
+// Print wrappers, because macros can't do everything
+void cprintf(const char *color, const char *format, ...);
 
 #endif /* _TYPES_H */

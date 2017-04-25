@@ -4,11 +4,11 @@
 
 #include "memory.h"
 
-extern int flags;
+extern int flags; // from util.c
 
 void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
     if(flags & MASK_DEBUG){
-        cprintf(ANSI_C_CYAN, "MEMORY:\n");
+        cprintf(ANSI_C_CYAN, "MEMORY:\n", NULL);
         printf("\tInstruction: 0x%08x\n", exmem->instr);
     }
     copy_pipeline_register(exmem, memwb);
@@ -18,7 +18,7 @@ void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
         switch (exmem->opCode) {
             case OPC_LBU:
             case OPC_LB:
-                if (cache_cfg->data_enabled && cache_cfg->mode != CACHE_DISABLE){
+                if (cache_cfg->mode != CACHE_DISABLE && cache_cfg->data_enabled) {
                     status = d_cache_read_w(&exmem->ALUresult, &temp);
                     temp = temp >> ((3-(exmem->ALUresult & 0x3))<<3);
                     temp &= 0xff;
@@ -29,7 +29,7 @@ void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
                 break;
             case OPC_LHU:
             case OPC_LH:
-                if(cache_cfg->data_enabled && cache_cfg->mode != CACHE_DISABLE){
+                if (cache_cfg->mode != CACHE_DISABLE && cache_cfg->data_enabled) {
                     status = d_cache_read_w(&exmem->ALUresult, &temp);
                     temp = temp >> ((2-(exmem->ALUresult & 0x2))<<3);
                     temp &= 0xffff;
@@ -39,7 +39,7 @@ void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
                 if (exmem->opCode == OPC_LH) temp = SIGN_EXTEND_H(temp);
                 break;
             case OPC_LW:
-                if(cache_cfg->data_enabled && cache_cfg->mode != CACHE_DISABLE){
+                if (cache_cfg->mode != CACHE_DISABLE && cache_cfg->data_enabled) {
                     status = d_cache_read_w(&exmem->ALUresult, &temp);
                 } else {
                     mem_read_w(exmem->ALUresult, &temp);
@@ -49,7 +49,7 @@ void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
                 cprintf(ANSI_C_RED, "Illegal memory operation, opcode 0x%02x, (memRead asserted). Halting.\n", exmem->opCode);
                 assert(0);
         }
-        if(flags & MASK_DEBUG){
+        if (flags & MASK_DEBUG) {
             printf("\tLoaded 0x%08x from address 0x%08x\n", temp, exmem->ALUresult);
         }
         memwb->memData = temp;
@@ -60,9 +60,9 @@ void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
         switch (exmem->opCode) {
             case OPC_SB:
                 temp = exmem->regRtValue;
-                if(cache_cfg->data_enabled && cache_cfg->mode != CACHE_DISABLE){
+                if (cache_cfg->mode != CACHE_DISABLE && cache_cfg->data_enabled) {
                     status = d_cache_read_w(&exmem->ALUresult, &data_in_cache);
-                    if(status == CACHE_HIT){
+                    if (status == CACHE_HIT) {
                         uint32_t shift = ((3-(exmem->ALUresult & 0x3))<<3);
                         temp = temp << shift;
                         data_in_cache &= ~(0xff << shift);
@@ -75,9 +75,9 @@ void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
                 break;
             case OPC_SH:
                 temp = exmem->regRtValue;
-                if(cache_cfg->data_enabled && cache_cfg->mode != CACHE_DISABLE){
+                if (cache_cfg->mode != CACHE_DISABLE && cache_cfg->data_enabled) {
                     status = d_cache_read_w(&exmem->ALUresult, &data_in_cache);
-                    if(status == CACHE_HIT){
+                    if (status == CACHE_HIT) {
                         uint32_t shift = ((2-(exmem->ALUresult & 0x2))<<3);
                         temp = temp << shift; // shift amount based on byte position
                         data_in_cache &= ~(0xffff << shift);
@@ -90,9 +90,9 @@ void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
                 break;
             case OPC_SW:
                 temp = exmem->regRtValue;
-                if(cache_cfg->data_enabled && cache_cfg->mode != CACHE_DISABLE){
+                if (cache_cfg->mode != CACHE_DISABLE && cache_cfg->data_enabled) {
                     status = d_cache_read_w(&exmem->ALUresult, &data_in_cache);
-                    if(status == CACHE_HIT){
+                    if (status == CACHE_HIT) {
                         status = d_cache_write_w(&exmem->ALUresult, &temp);
                     }
                 } else {
@@ -104,12 +104,11 @@ void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
                 assert(0);
         }
         memwb->status = status;
-        if(flags & MASK_DEBUG){
-            if(cache_cfg->mode != CACHE_DISABLE && cache_cfg->data_enabled){
-                if(memwb->status == CACHE_HIT){
+        if (flags & MASK_DEBUG) {
+            if (cache_cfg->mode != CACHE_DISABLE && cache_cfg->data_enabled) {
+                if (memwb->status == CACHE_HIT) {
                     printf("\tStored 0x%08x to address 0x%08x\n", temp, exmem->ALUresult);
-                }
-                else {
+                } else {
                     printf("\tTried to store 0x%08x to address 0x%08x\n", temp, exmem->ALUresult);
                 }
             } else {

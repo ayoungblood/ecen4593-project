@@ -4,7 +4,7 @@
 
 #include "main.h"
 
-int flags = 0; // Global flags register, shared across all files
+extern int flags; // from util.c
 
 /* Create and initialize CPU and cache settings with defaults */
 cpu_config_t cpu_config = {
@@ -36,13 +36,13 @@ control_t* exmem = NULL; // EX/MEM pipeline register
 control_t* memwb = NULL; // MEM/WB pipeline register
 pc_t pc = 0;             // Program counter
 
-
 #define BREAKPOINT_MAX 8
 uint32_t breakpoints_address[BREAKPOINT_MAX] = {0}; // the address of a breakpoint
 uint8_t breakpoints_status[BREAKPOINT_MAX] = {0}; // breakpoint status, 0: disabled, 1:enabled
 
 int main(int argc, char *argv[]) {
     int i;
+    flags = 0; // Clear flags
     /* Automatically configure colorized output based on CLICOLOR and TERM
        environment variables (CLICOLOR=1 or TERM=xterm-256color) */
     char* crv;
@@ -68,30 +68,30 @@ int main(int argc, char *argv[]) {
     int rv = arguments(argc,argv,&source_fp,&cpu_config,&cache_config);
     if (rv !=  0) return rv;
     if (rv == -1) return 0;
-    bprintf("","CPU settings:\n");
-    bprintf("","\tArchitecture: %s\n",cpu_config.single_cycle?"single-cycle":"five-stage pipeline");
-    bprintf("","\tMemory size: %lu words (%lu bytes, top = 0x%08lx)\n",cpu_config.mem_size>>2,cpu_config.mem_size,cpu_config.mem_size-1);
-    bprintf("","Cache settings:\n");
+    bprintf("CPU settings:\n");
+    bprintf("\tArchitecture: %s\n",cpu_config.single_cycle?"single-cycle":"five-stage pipeline");
+    bprintf("\tMemory size: %lu words (%lu bytes, top = 0x%08lx)\n",cpu_config.mem_size>>2,cpu_config.mem_size,cpu_config.mem_size-1);
+    bprintf("Cache settings:\n");
     if (cache_config.mode == CACHE_SPLIT) {
-        bprintf("","\tData cache:\n");
-        bprintf("","\t    Data cache %s\n",cache_config.data_enabled?"enabled":"disabled");
-        bprintf("","\t    Data cache size: %d\n",cache_config.data_size);
-        bprintf("","\t    Data cache block size: %d\n",cache_config.data_block);
-        bprintf("","\t    Data cache type: %s\n",CACHE_TYPE_STRINGS[cache_config.data_type]);
-        bprintf("","\t    Data cache write policy: %s\n",CACHE_WPOLICY_STRINGS[cache_config.data_wpolicy]);
-        bprintf("","\tInstruction cache:\n");
-        bprintf("","\t    Instruction cache %s\n",cache_config.inst_enabled?"enabled":"disabled");
-        bprintf("","\t    Instruction cache size: %d\n",cache_config.inst_size);
-        bprintf("","\t    Instruction cache block size: %d\n",cache_config.inst_block);
-        bprintf("","\t    Instruction cache type: %s\n",CACHE_TYPE_STRINGS[cache_config.inst_type]);
-        bprintf("","\t    Instruction cache write policy: %s\n",CACHE_WPOLICY_STRINGS[cache_config.inst_wpolicy]);
+        bprintf("\tData cache:\n");
+        bprintf("\t    Data cache %s\n",cache_config.data_enabled?"enabled":"disabled");
+        bprintf("\t    Data cache size: %d\n",cache_config.data_size);
+        bprintf("\t    Data cache block size: %d\n",cache_config.data_block);
+        bprintf("\t    Data cache type: %s\n",CACHE_TYPE_STRINGS[cache_config.data_type]);
+        bprintf("\t    Data cache write policy: %s\n",CACHE_WPOLICY_STRINGS[cache_config.data_wpolicy]);
+        bprintf("\tInstruction cache:\n");
+        bprintf("\t    Instruction cache %s\n",cache_config.inst_enabled?"enabled":"disabled");
+        bprintf("\t    Instruction cache size: %d\n",cache_config.inst_size);
+        bprintf("\t    Instruction cache block size: %d\n",cache_config.inst_block);
+        bprintf("\t    Instruction cache type: %s\n",CACHE_TYPE_STRINGS[cache_config.inst_type]);
+        bprintf("\t    Instruction cache write policy: %s\n",CACHE_WPOLICY_STRINGS[cache_config.inst_wpolicy]);
     } else if (cache_config.mode == CACHE_UNIFIED) {
-        bprintf("","\t    Unified cache size: %d\n",cache_config.size);
-        bprintf("","\t    Unified cache block size: %d\n",cache_config.block);
-        bprintf("","\t    Unified cache type: %s\n",CACHE_TYPE_STRINGS[cache_config.type]);
-        bprintf("","\t    Unified cache write policy: %s\n",CACHE_WPOLICY_STRINGS[cache_config.wpolicy]);
+        bprintf("\t    Unified cache size: %d\n",cache_config.size);
+        bprintf("\t    Unified cache block size: %d\n",cache_config.block);
+        bprintf("\t    Unified cache type: %s\n",CACHE_TYPE_STRINGS[cache_config.type]);
+        bprintf("\t    Unified cache write policy: %s\n",CACHE_WPOLICY_STRINGS[cache_config.wpolicy]);
     } else {
-        bprintf("","\tAll caching disabled\n");
+        bprintf("\tAll caching disabled\n");
     }
 
     /**************************************************************************
@@ -176,12 +176,12 @@ int main(int argc, char *argv[]) {
         }
     }
     printf("\nPipeline halted after %d cycles (address 0x%08x)\n",cycles,pc);
-    // Dump registers and the first couple words of memory so we can see what's going on
-    if(cache_config.mode != CACHE_DISABLE && cache_config.data_enabled){
-        if(cache_config.inst_enabled){
+    // Print cache statistics
+    if (cache_config.mode != CACHE_DISABLE) {
+        if (cache_config.inst_enabled) {
             printf("Instruction cache hit rate / access count : %d / %d\n", prof.i_cache_hit_count, prof.i_cache_access_count);
         }
-        if(cache_config.data_enabled){
+        if (cache_config.data_enabled) {
             printf("Data cache hit rate / access count : %d / %d\n", prof.d_cache_hit_count, prof.d_cache_access_count);
             flush_dcache();
             for(i = 0; i * cache_config.data_block < 16; i++){
@@ -189,6 +189,7 @@ int main(int argc, char *argv[]) {
             }
         }
     }
+    // Dump registers and the first couple words of memory so we can see what's going on
     reg_dump();
     mem_dump_cute(0,16);
     // Close memory, and cleanup register files (we don't need to clean up registers)
@@ -248,7 +249,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
             /* Simulator options */
             case 'a': // --alternate
                 flags |= MASK_ALTFORMAT;
-                bprintf("","Alternate format enabled (flags = 0x%04x).\n",flags);
+                bprintf("Alternate format enabled (flags = 0x%04x).\n",flags);
                 break;
             case 'C': // --color
                 if (!strcmp(optarg,"disabled") || !strcmp(optarg,"d")) {
@@ -260,11 +261,11 @@ int arguments(int argc, char **argv, FILE** source_fp,
                 } else {
                     printf("Invalid color setting: %s\n", optarg);
                 }
-                bprintf("","Colorized output %s (flags = 0x%04x).\n",(flags & MASK_COLOR)?"enabled":"disabled",flags);
+                bprintf("Colorized output %s (flags = 0x%04x).\n",(flags & MASK_COLOR)?"enabled":"disabled",flags);
                 break;
             case 'd': // --debug
                 flags |= MASK_DEBUG;
-                bprintf("","Debug output enabled (flags = 0x%04x).\n",flags);
+                bprintf("Debug output enabled (flags = 0x%04x).\n",flags);
                 break;
             case 'h': // --help
                 printf( "Usage: %s [OPTION]... FILE[.s,.txt]\n" \
@@ -343,23 +344,23 @@ int arguments(int argc, char **argv, FILE** source_fp,
                 return -1; // caller should exit
             case 'i': // --interactive
                 flags |= MASK_INTERACTIVE;
-                bprintf("","Interactive mode enabled (flags = 0x%04x).\n",flags);
+                bprintf("Interactive mode enabled (flags = 0x%04x).\n",flags);
                 break;
             case 'y': // --sanity
                 flags |= MASK_SANITY;
-                bprintf("","Sanity checks enabled (flags = 0x%04x).\n",flags);
+                bprintf("Sanity checks enabled (flags = 0x%04x).\n",flags);
                 break;
             case 'V': // --version
                 printf("%s - MIPS I CPU simulator (v. %s)\n",TARGET_STRING,VERSION_STRING);
                 return -1; // caller should exit
             case 'v': // --verbose
                 flags |= MASK_VERBOSE;
-                bprintf("","Verbose output enabled (flags = 0x%04x).\n",flags);
+                bprintf("Verbose output enabled (flags = 0x%04x).\n",flags);
                 break;
             /* CPU options */
             case 'g': // --single-cycle
                 cpu_cfg->single_cycle = true;
-                bprintf("","CPU$ single-cycle execution enabled.\n");
+                bprintf("CPU$ single-cycle execution enabled.\n");
                 break;
             case 'm': // --mem-size
                 srv = sscanf(optarg,"%d",&temp);
@@ -372,7 +373,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
                         cprintf(ANSI_C_YELLOW,"Invalid memory size: %d\n", temp);
                     }
                 }
-                bprintf("","CPU$ memory size set to %ld.\n",cpu_cfg->mem_size);
+                bprintf("CPU$ memory size set to %ld.\n",cpu_cfg->mem_size);
                 break;
             /* Cache options */
             case 'c': // --cache-mode
@@ -385,7 +386,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
                 } else {
                     cprintf(ANSI_C_YELLOW,"Invalid cache mode: %s\n",optarg);
                 }
-                bprintf("","CACHE$ cache mode: %s.\n",CACHE_MODE_STRINGS[cache_cfg->mode]);
+                bprintf("CACHE$ cache mode: %s.\n",CACHE_MODE_STRINGS[cache_cfg->mode]);
                 break;
             /* Split cache options */
             case 'D': // --cache-data
@@ -396,7 +397,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
                 } else {
                     cprintf(ANSI_C_YELLOW,"Invalid data cache setting: %s\n",optarg);
                 }
-                bprintf("","CACHE$ data cache setting: %s.\n",cache_cfg->data_enabled?"enabled":"disabled");
+                bprintf("CACHE$ data cache setting: %s.\n",cache_cfg->data_enabled?"enabled":"disabled");
                 break;
             case 'E': // --cache-dsize
                 srv = sscanf(optarg,"%d",&temp);
@@ -409,7 +410,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
                         cprintf(ANSI_C_YELLOW,"Invalid d-cache size: %d\n", temp);
                     }
                 }
-                bprintf("","CACHE$ data cache size set to %d.\n",cache_cfg->data_size);
+                bprintf("CACHE$ data cache size set to %d.\n",cache_cfg->data_size);
                 break;
             case 'F': // --cache-dblock
                 srv = sscanf(optarg,"%d",&temp);
@@ -422,7 +423,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
                         cprintf(ANSI_C_YELLOW,"Invalid d-block size: %d\n", temp);
                     }
                 }
-                bprintf("","CACHE$ data cache block size set to %d.\n",cache_cfg->data_block);
+                bprintf("CACHE$ data cache block size set to %d.\n",cache_cfg->data_block);
                 break;
             case 'G': // --cache-dtype
                 if (!strcmp(optarg,"direct") || !strcmp(optarg,"d")) {
@@ -432,7 +433,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
                 } else {
                     cprintf(ANSI_C_YELLOW,"Invalid d-cache type: %s\n", optarg);
                 }
-                bprintf("","CACHE$ data cache type set to %s.\n",CACHE_TYPE_STRINGS[cache_cfg->data_type]);
+                bprintf("CACHE$ data cache type set to %s.\n",CACHE_TYPE_STRINGS[cache_cfg->data_type]);
                 break;
             case 'H': // --cache-dwrite
                 if (!strcmp(optarg,"through") || !strcmp(optarg,"thru") || !strcmp(optarg,"t")) {
@@ -442,7 +443,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
                 } else {
                     cprintf(ANSI_C_YELLOW,"Invalid data cache write policy: %s\n", optarg);
                 }
-                bprintf("","CACHE$ data cache write policy set to %s.\n",CACHE_WPOLICY_STRINGS[cache_cfg->data_wpolicy]);
+                bprintf("CACHE$ data cache write policy set to %s.\n",CACHE_WPOLICY_STRINGS[cache_cfg->data_wpolicy]);
                 break;
             case 'I': // --cache-inst
                 if (!strcmp(optarg,"disabled") || !strcmp(optarg,"d") || !strcmp(optarg,"0")) {
@@ -452,7 +453,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
                 } else {
                     cprintf(ANSI_C_YELLOW,"Invalid instruction cache setting: %s\n",optarg);
                 }
-                bprintf("","CACHE$ instruction cache setting: %s.\n",cache_cfg->inst_enabled?"enabled":"disabled");
+                bprintf("CACHE$ instruction cache setting: %s.\n",cache_cfg->inst_enabled?"enabled":"disabled");
                 break;
             case 'J': // --cache-isize
                 srv = sscanf(optarg,"%d",&temp);
@@ -465,7 +466,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
                         cprintf(ANSI_C_YELLOW,"Invalid i-cache size: %d\n", temp);
                     }
                 }
-                bprintf("","CACHE$ instruction cache size set to %d.\n",cache_cfg->inst_size);
+                bprintf("CACHE$ instruction cache size set to %d.\n",cache_cfg->inst_size);
                 break;
             case 'K': // --cache-iblock
                 srv = sscanf(optarg,"%d",&temp);
@@ -478,7 +479,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
                         cprintf(ANSI_C_YELLOW,"Invalid i-block size: %d\n", temp);
                     }
                 }
-                bprintf("","CACHE$ instruction cache block size set to %d.\n",cache_cfg->inst_block);
+                bprintf("CACHE$ instruction cache block size set to %d.\n",cache_cfg->inst_block);
                 break;
             case 'L': // --cache-itype
                 if (!strcmp(optarg,"direct") || !strcmp(optarg,"d")) {
@@ -488,7 +489,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
                 } else {
                     cprintf(ANSI_C_YELLOW,"Invalid i-cache type: %s\n", optarg);
                 }
-                bprintf("","CACHE$ instruction cache type set to %s.\n",CACHE_TYPE_STRINGS[cache_cfg->inst_type]);
+                bprintf("CACHE$ instruction cache type set to %s.\n",CACHE_TYPE_STRINGS[cache_cfg->inst_type]);
                 break;
             case 'M': // --cache-iwrite
                 if (!strcmp(optarg,"through") || !strcmp(optarg,"thru") || !strcmp(optarg,"t")) {
@@ -498,7 +499,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
                 } else {
                     cprintf(ANSI_C_YELLOW,"Invalid instruction cache write policy: %s\n", optarg);
                 }
-                bprintf("","CACHE$ instruction cache write policy set to %s.\n",CACHE_WPOLICY_STRINGS[cache_cfg->inst_wpolicy]);
+                bprintf("CACHE$ instruction cache write policy set to %s.\n",CACHE_WPOLICY_STRINGS[cache_cfg->inst_wpolicy]);
                 break;
             /* Unified cache options */
             case 'B': // --cache-block
@@ -512,7 +513,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
                         cprintf(ANSI_C_YELLOW,"Invalid block size: %d\n", temp);
                     }
                 }
-                bprintf("","CACHE$ cache block size set to %d.\n",cache_cfg->block);
+                bprintf("CACHE$ cache block size set to %d.\n",cache_cfg->block);
                 break;
             case 'S': // --cache-size
                 srv = sscanf(optarg,"%d",&temp);
@@ -525,7 +526,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
                         cprintf(ANSI_C_YELLOW,"Invalid cache size: %d\n", temp);
                     }
                 }
-                bprintf("","CACHE$ cache size set to %d.\n",cache_cfg->size);
+                bprintf("CACHE$ cache size set to %d.\n",cache_cfg->size);
                 break;
             case 'T': // --cache-type
                 if (!strcmp(optarg,"direct") || !strcmp(optarg,"d")) {
@@ -535,7 +536,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
                 } else {
                     cprintf(ANSI_C_YELLOW,"Invalid cache type: %s\n", optarg);
                 }
-                bprintf("","CACHE$ cache type set to %s.\n",CACHE_TYPE_STRINGS[cache_cfg->type]);
+                bprintf("CACHE$ cache type set to %s.\n",CACHE_TYPE_STRINGS[cache_cfg->type]);
                 break;
             case 'W': // --cache-write
                 if (!strcmp(optarg,"through") || !strcmp(optarg,"thru") || !strcmp(optarg,"t")) {
@@ -545,7 +546,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
                 } else {
                     cprintf(ANSI_C_YELLOW,"Invalid cache write policy: %s\n", optarg);
                 }
-                bprintf("","CACHE$ cache write policy set to %s.\n",CACHE_WPOLICY_STRINGS[cache_cfg->wpolicy]);
+                bprintf("CACHE$ cache write policy set to %s.\n",CACHE_WPOLICY_STRINGS[cache_cfg->wpolicy]);
                 break;
             case '?': // error
                 /* getopt_long already printed an error message. */
@@ -559,7 +560,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
     /* Print any remaining command line arguments (not options). */
     if (optind < argc) {
         if (argc-optind > 1) {
-            cprintf(ANSI_C_RED,"Too many files. (Cannot simulate many things!). Exiting.\n");
+            cprintf(ANSI_C_RED,"Too many files. (Cannot simulate many things!). Exiting.\n", NULL);
             return 1;
         } else {
             *source_fp = fopen(argv[optind], "r");
@@ -569,7 +570,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
             }
         }
     } else {
-        cprintf(ANSI_C_RED,"Expected at least one argument. (Cannot simulate nothing!). Exiting.\n");
+        cprintf(ANSI_C_RED,"Expected at least one argument. (Cannot simulate nothing!). Exiting.\n", NULL);
         return 1;
     }
     return 0;
@@ -585,7 +586,6 @@ int parse(FILE *fp, asm_line_t *lines, cpu_config_t cpu_cfg) {
         mem_init(cpu_cfg.mem_size,0); // memory is assumed to start at 0x0
         // Disable mem_write_w messages when parsing (@TODO make enabled by flag)
         int saved_debug_flag = flags & MASK_DEBUG;
-        printf("DEBUG %d\n",saved_debug_flag);
         flags &= ~(saved_debug_flag);
         // Iterate through file line-by-line
         while (fgets(buf, sizeof(buf), fp) != NULL ) {
@@ -617,7 +617,7 @@ int parse(FILE *fp, asm_line_t *lines, cpu_config_t cpu_cfg) {
             // scanf magic to extract an address, colon, instruction, and the remaining line
             if (sscanf(buf,"%x: %x %[^\n]",&addr,&inst,str) == 3) {
                 if (count == 0) { // first instruction, set offset and initialize memory
-                    if (flags & MASK_VERBOSE) printf("First instruction found. %s",buf);
+                    bprintf("First instruction found. %s",buf);
                     mem_init(cpu_cfg.mem_size,addr);
                     start = addr;
                 }
@@ -700,7 +700,7 @@ int interactive(asm_line_t* lines) {
     uint32_t i_addr = 0, i_data;
     asm_line_t line;
 PROMPT: // LOL gotos
-    cprintf(ANSI_C_GREEN, "(interactive) > ");
+    cprintf(ANSI_C_GREEN, "(interactive) > ", NULL);
     system ("/bin/stty raw"); // set terminal to raw/unbuffered
     char c = getchar();
     system ("/bin/stty sane"); // set back to sane
@@ -708,9 +708,9 @@ PROMPT: // LOL gotos
     switch(c) {
         case 'a': // add a breakpoint
             if (breakpoint_get_active() >= BREAKPOINT_MAX) {
-                cprintf(ANSI_C_GREEN, "Cannot add breakpoint, active breakpoint limit reached.\n");
+                cprintf(ANSI_C_GREEN, "Cannot add breakpoint, active breakpoint limit reached.\n", NULL);
             } else {
-                cprintf(ANSI_C_GREEN, "breakpoint address: ");
+                cprintf(ANSI_C_GREEN, "breakpoint address: ", NULL);
                 scanf("%x",&i_addr); getchar();
                 if (i_addr < mem_start() || i_addr > mem_end()) {
                     printf("Address out of range\n");
@@ -721,26 +721,26 @@ PROMPT: // LOL gotos
             goto PROMPT;
         case 'b': // list breakpoints
             if (breakpoint_get_active() == 0) {
-                cprintf(ANSI_C_GREEN, "No breakpoints active.\n");
+                cprintf(ANSI_C_GREEN, "No breakpoints active.\n", NULL);
             } else {
                 breakpoint_dump();
             }
             goto PROMPT;
         case 'c': // clear a breakpoint
             if (breakpoint_get_active() == 0) {
-                cprintf(ANSI_C_GREEN, "No breakpoints active.\n");
+                cprintf(ANSI_C_GREEN, "No breakpoints active.\n", NULL);
             } else {
-                cprintf(ANSI_C_GREEN, "breakpoint number to clear: ");
+                cprintf(ANSI_C_GREEN, "breakpoint number to clear: ", NULL);
                 scanf("%d",&i_addr); getchar();
                 if (i_addr < BREAKPOINT_MAX) breakpoint_delete(i_addr);
             }
             goto PROMPT;
         case 'd': // disable interactive (disable verbose and debug as well to avoid flood)
             flags &= ~(MASK_INTERACTIVE | MASK_VERBOSE | MASK_DEBUG);
-            cprintf(ANSI_C_GREEN, "Interactive stepping disabled. Running until breakpoint (if set).\n");
+            cprintf(ANSI_C_GREEN, "Interactive stepping disabled. Running until breakpoint (if set).\n", NULL);
             break;
         case 'l': // print the original disassembly for a given address
-            cprintf(ANSI_C_GREEN, "input address: ");
+            cprintf(ANSI_C_GREEN, "input address: ", NULL);
             scanf("%x",&i_addr); getchar();
             line = lines[(i_addr>>2)-(mem_start()>>2)];
             if (line.type == 3) {
@@ -752,7 +752,7 @@ PROMPT: // LOL gotos
             }
             goto PROMPT;
         case 'm': // view a word of memory
-            cprintf(ANSI_C_GREEN, "memory address: ");
+            cprintf(ANSI_C_GREEN, "memory address: ", NULL);
             scanf("%x",&i_addr); getchar();
             if (i_addr < mem_start() || i_addr > mem_end()) {
                 printf("Address out of range\n");
@@ -762,7 +762,7 @@ PROMPT: // LOL gotos
             printf("mem[0x%08x]: 0x%08x (0d%d)\n",i_addr,i_data,i_data);
             goto PROMPT;
         case 'o': // view a region of memory
-            cprintf(ANSI_C_GREEN,"memory address: ");
+            cprintf(ANSI_C_GREEN,"memory address: ", NULL);
             scanf("%x",&i_addr); getchar();
             if (i_addr < mem_start() || i_addr > mem_end()) {
                 printf("Address out of range\n");
@@ -778,15 +778,15 @@ PROMPT: // LOL gotos
             reg_dump();
             goto PROMPT;
         case 'x': // exit
-            cprintf(ANSI_C_GREEN, "Simulation halted in interactive mode.\n");
+            cprintf(ANSI_C_GREEN, "Simulation halted in interactive mode.\n", NULL);
             return 1;
         case 'D': // print data cache block
-            cprintf(ANSI_C_GREEN,"dcache block: ");
+            cprintf(ANSI_C_GREEN,"dcache block: ", NULL);
             scanf("%d",&i_addr); getchar();
             print_dcache(i_addr);
             goto PROMPT;
         case 'I': // print instruction cache block
-            cprintf(ANSI_C_GREEN,"icache block: ");
+            cprintf(ANSI_C_GREEN,"icache block: ", NULL);
             scanf("%d",&i_addr); getchar();
             print_icache(i_addr);
             goto PROMPT;

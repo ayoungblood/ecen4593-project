@@ -15,8 +15,7 @@
 
 int tests_run = 0;
 
-int flags = MASK_DEBUG | MASK_VERBOSE | MASK_SANITY;
-
+extern int flags;
 
 static char * test_cache(){
     mem_init(2<<14, 0);
@@ -29,6 +28,7 @@ static char * all_tests() {
 }
 
 int main(int argc, char **argv) {
+    flags = MASK_DEBUG | MASK_VERBOSE | MASK_SANITY;
     char *result = all_tests();
     if (result != 0) {
         printf("%s\n", result);

@@ -23,8 +23,7 @@
 
 int tests_run = 0;
 
-int flags = MASK_DEBUG | MASK_VERBOSE | MASK_SANITY;
-//int flags = MASK_VERBOSE | MASK_SANITY;
+extern int flags;
 
 control_t * ifid;
 control_t * idex;
@@ -236,12 +235,9 @@ static char * test_load_dependency(){
     reg_read(REG_S4, &data);
     mu_assert(_FL "$S4 does not equal 21!", data == 21);
 
-
     pipeline_destroy(&ifid, &idex, &exmem, &memwb);
     return 0;
 }
-
-
 
 static char * all_tests() {
     //Pipeline initialization
@@ -258,6 +254,7 @@ static char * all_tests() {
 }
 
 int main(int argc, char **argv) {
+    flags = MASK_DEBUG | MASK_VERBOSE | MASK_SANITY;
     char *result = all_tests();
     if (result != 0) {
         printf("%s\n", result);

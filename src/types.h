@@ -168,7 +168,6 @@ typedef enum CACHE_STATUS {
 
 typedef struct CONTROL_REGISTER {
     char * regName;
-
     // These are control register definitions that come from Figure 4.16 on page 264 of the Hennessy textbook
     bool regDst;        // regDst ? destination register is Rd : destination register is Rt
     bool regWrite;      // regWrite ? Register on the write register input is written with the value of the Write data input : nothing
@@ -201,9 +200,6 @@ typedef struct CONTROL_REGISTER {
     cache_status_t status;
 
 } control_t;
-
-
-
 
 typedef enum MEMORY_STATUS {
     MEM_IDLE,         //Initial state of memory

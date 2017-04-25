@@ -13,9 +13,9 @@
 #include "main_memory.h"
 #include "cache.h"
 
-void fetch(control_t *, pc_t * pc, cache_config_t *cache_cfg);
+void fetch(control_t *ifid, pc_t *pc, cache_config_t *cache_cfg);
 
-//Instruction decoding bitmasks
+// Instruction decoding bitmasks
 #define OP_MASK 0xFC000000
 #define RS_MASK 0x03E00000
 #define RT_MASK 0x001F0000
@@ -25,16 +25,15 @@ void fetch(control_t *, pc_t * pc, cache_config_t *cache_cfg);
 #define AD_MASK 0x03FFFFFF
 #define IM_MASK 0x0000FFFF
 
-//Instruction decoding bitshifts
+// Instruction decoding bitshifts
 #define OP_SHIFT 26
 #define RS_SHIFT 21
 #define RT_SHIFT 16
 #define RD_SHIFT 11
 #define SH_SHIFT 6
 
-//Sign Extenstion
+// Sign Extenstion
 #define BIT15 0x00008000
 #define EXT_16_32 0xFFFF0000
-
 
 #endif /* _FETCH_H */

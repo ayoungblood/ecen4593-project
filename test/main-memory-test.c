@@ -8,10 +8,11 @@
 #include "minunit.h"
 #include "../src/main_memory.h"
 #include "../src/types.h"
+#include "../src/util.h"
 
 int tests_run = 0;
 
-int flags = MASK_DEBUG | MASK_VERBOSE | MASK_SANITY;
+extern int flags;
 
 word_t data;
 uint64_t size, addr, offs;
@@ -291,6 +292,7 @@ static char * all_tests() {
 }
 
 int main(int argc, char **argv) {
+    flags = MASK_DEBUG | MASK_VERBOSE | MASK_SANITY;
     char *result = all_tests();
     if (result != 0) {
         printf("%s\n", result);

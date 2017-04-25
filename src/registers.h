@@ -54,5 +54,4 @@ enum RegNames {
     REG_RA      = 31
 };
 
-
 #endif /* _REGISTERS_H */

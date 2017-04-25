@@ -5,8 +5,7 @@
 
 #include "direct.h"
 
-
-extern int flags;
+extern int flags; // from util.c
 
 direct_cache_t * direct_cache_init(uint32_t num_blocks, uint32_t block_size){
     //The linear memory that the cache blocks point to

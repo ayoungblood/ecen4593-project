@@ -12,14 +12,11 @@
 #include "util.h"
 #include "registers.h"
 
-int decode( control_t *ifid, control_t *idex );
+int decode(control_t *ifid, control_t *idex);
 
-//Helper functions
+// Helper functions
 void setidexImmedArithmetic(control_t *idex);
 void setidexLoad(control_t *idex);
 void setidexStore(control_t *idex);
-
-
-
 
 #endif /* _DECODE_H */

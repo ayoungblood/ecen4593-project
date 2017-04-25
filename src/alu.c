@@ -4,7 +4,7 @@
 
 #include "alu.h"
 
-extern int flags; // from main.c
+extern int flags; // from from util.c
 
 // Wrapper function
 int execute(control_t *idex, control_t *exmem) {
@@ -63,7 +63,8 @@ int alu(operation_t operation, word_t op_rs, word_t op_rt, word_t shamt, word_t 
                 *result = temp;
             } else {
                 if (flags & MASK_DEBUG) {
-                    printf("ALU::OPR_ADD: OVERFLOW! rs: %d, rt: %d, temp: %d; rs.31: %d, rt.31: %d, temp.31: %d\n",(int32_t)op_rs,(int32_t)op_rt,(int32_t)temp,BIT31(op_rs),BIT31(op_rt),BIT31(temp));
+                    printf("ALU::OPR_ADD: OVERFLOW! rs: %d, rt: %d, temp: %d; rs.31: %d, rt.31: %d, temp.31: %d\n",
+                        (int32_t)op_rs,(int32_t)op_rt,(int32_t)temp,BIT31(op_rs),BIT31(op_rt),BIT31(temp));
                 }
                 return ALU_INTEGER_OVERFLOW;
             }

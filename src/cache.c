@@ -2,10 +2,9 @@
 * Wrapper functions for all cache operations
 */
 
-
 #include "cache.h"
 
-extern int flags;
+extern int flags; // from util.c
 
 direct_cache_t *d_cache;
 direct_cache_t *i_cache;
@@ -84,7 +83,7 @@ void cache_destroy(void){
 */
 
 void cache_digest(void){
-    gprintf(ANSI_C_CYAN, "CACHE DIGEST:\n", NULL);
+    gcprintf(ANSI_C_CYAN, "CACHE DIGEST:\n");
     if (d_cache == NULL) {
         cprintf(ANSI_C_RED, "cache_digest: data cache is not initialized\n", NULL);
         assert(0);

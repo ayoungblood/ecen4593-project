@@ -14,14 +14,12 @@
 
 int tests_run = 0;
 
-int flags = MASK_DEBUG | MASK_VERBOSE | MASK_SANITY;
+extern int flags;
 
 pc_t pc;
 control_t *ifid, *idex, *exmem, *memwb;
 
-
 /*Test forwarding logic from exmem stage*/
-
 static char * test_forwarding_exmem(){
     ifid = (control_t *)malloc(sizeof(control_t));
     idex = (control_t *)malloc(sizeof(control_t));
@@ -313,10 +311,6 @@ static char * test_load_data_dependency(){
     return 0;
 }
 
-
-
-
-
 static char * all_tests() {
     mu_run_test(test_forwarding_exmem);
     mu_run_test(test_forwarding_memwb);
@@ -327,6 +321,7 @@ static char * all_tests() {
 }
 
 int main(int argc, char **argv) {
+    flags = MASK_DEBUG | MASK_VERBOSE | MASK_SANITY;
     char *result = all_tests();
     if (result != 0) {
         printf("%s\n", result);

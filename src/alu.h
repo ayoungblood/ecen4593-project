@@ -14,8 +14,8 @@
 #include "util.h"
 /* execute() is a wrapper function that will take the state input of the
  * pipeline register and output the result to the EX/MEM pipeline register
-  */
-int execute(control_t *, control_t *);
+ */
+int execute(control_t *idex, control_t *exmem);
 
 /* alu() performs a specified ALU operation, setting result to the output
  * and setting the zero flag if the output was zero.
