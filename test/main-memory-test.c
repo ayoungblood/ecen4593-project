@@ -208,7 +208,7 @@ static char * test_mem_word() {
     size = 0x00842000; // 8 MB memory
     offs = 0x00010000;
     // preload array
-    uint32_t test[0x00842000]; // should be same as size
+    uint32_t *test = malloc(sizeof(uint32_t)*size);
     for (i = 0; i < (size>>2); ++i) {
         test[i] = rand()<<1; // data
     }
@@ -226,6 +226,7 @@ static char * test_mem_word() {
     // restore debug flag
     flags |= MASK_DEBUG;
     mem_close();
+    free(test);
     return 0;
 }
 
@@ -234,7 +235,7 @@ static char * test_mem_halfword() {
     size = 0x00842000; // 8 MB memory
     offs = 0x00010000;
     // preload array
-    uint32_t test[0x00842000]; // should be same as size
+    uint32_t *test = malloc(sizeof(uint32_t)*size);
     for (i = 0; i < (size>>1); ++i) {
         test[i] = rand() & 0xffff; // data
     }
@@ -252,6 +253,7 @@ static char * test_mem_halfword() {
     // restore debug flag
     flags |= MASK_DEBUG;
     mem_close();
+    free(test);
     return 0;
 }
 
@@ -260,7 +262,7 @@ static char * test_mem_byte() {
     size = 0x00842000; // 8 MB memory
     offs = 0x00010000;
     // preload array
-    uint32_t test[0x00842000]; // should be same as size
+    uint32_t *test = malloc(sizeof(uint32_t)*size);
     for (i = 0; i < size; ++i) {
         test[i] = rand() & 0xff; // data
     }
@@ -278,6 +280,7 @@ static char * test_mem_byte() {
     // restore debug flag
     flags |= MASK_DEBUG;
     mem_close();
+    free(test);
     return 0;
 }
 
