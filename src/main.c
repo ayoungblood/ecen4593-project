@@ -13,12 +13,12 @@ cpu_config_t cpu_config = {
 };
 cache_config_t cache_config = {
     .mode           = CACHE_DISABLE,
-    .data_enabled   = false,
+    .data_enabled   = true,
     .data_size      = 1024,
     .data_block     = 4,
     .data_type      = CACHE_DIRECT,
     .data_wpolicy   = CACHE_WRITETHROUGH,
-    .inst_enabled   = false,
+    .inst_enabled   = true,
     .inst_size      = 1024,
     .inst_block     = 4,
     .inst_type      = CACHE_DIRECT,
@@ -119,6 +119,19 @@ int main(int argc, char *argv[]) {
         mem_read_w(5<<2, &word);
         pc = word * 4;
     }
+    //Logistic information
+    profile_t prof;
+    if(cache_config.mode != CACHE_DISABLE){
+        prof.i_cache_access_count = 0;
+        prof.i_cache_hit_count = 0;
+        prof.i_cache_status_prev = CACHE_HIT;
+        prof.i_cache_status = CACHE_NO_ACCESS;
+        prof.d_cache_status = CACHE_NO_ACCESS;
+        prof.d_cache_status_prev = CACHE_NO_ACCESS;
+        prof.d_cache_hit_count = 0;
+        prof.d_cache_access_count = 0;
+    }
+
     // Run the simulation
     int cycles = 0;
     while (1) {
@@ -131,6 +144,26 @@ int main(int argc, char *argv[]) {
         fetch(ifid, &pc, &cache_config);
         hazard(ifid, idex, exmem, memwb, &pc, &cache_config);
         if (cache_config.mode != CACHE_DISABLE) {
+            if(cache_config.inst_enabled){
+                prof.i_cache_status = ifid->status;
+                if (prof.i_cache_status_prev == CACHE_HIT) {
+                    prof.i_cache_access_count++;
+                    if (prof.i_cache_status == CACHE_HIT) {
+                        prof.i_cache_hit_count++;
+                    }
+                }
+                prof.i_cache_status_prev = prof.i_cache_status;
+            }
+            if (cache_config.data_enabled){
+                prof.d_cache_status = memwb->status;
+                if (prof.d_cache_status == CACHE_HIT && prof.d_cache_status_prev != CACHE_MISS){
+                    prof.d_cache_hit_count++;
+                    prof.d_cache_access_count++;
+                } else if (prof.d_cache_status == CACHE_MISS && prof.d_cache_status_prev != CACHE_MISS) {
+                    prof.d_cache_access_count++;
+                }
+                prof.d_cache_status_prev = prof.d_cache_status;
+            }
             cache_digest();
         }
         ++cycles;
@@ -145,10 +178,15 @@ int main(int argc, char *argv[]) {
     printf("\nPipeline halted after %d cycles (address 0x%08x)\n",cycles,pc);
     // Dump registers and the first couple words of memory so we can see what's going on
     if(cache_config.mode != CACHE_DISABLE && cache_config.data_enabled){
-        flush_dcache();
-        //dump_dcache();
-        for(i = 0; i * cache_config.data_block < 16; i++){
-            print_dcache(i);
+        if(cache_config.inst_enabled){
+            printf("Instruction cache hit rate / access count : %d / %d\n", prof.i_cache_hit_count, prof.i_cache_access_count);
+        }
+        if(cache_config.data_enabled){
+            printf("Data cache hit rate / access count : %d / %d\n", prof.d_cache_hit_count, prof.d_cache_access_count);
+            flush_dcache();
+            for(i = 0; i * cache_config.data_block < 16; i++){
+                print_dcache(i);
+            }
         }
     }
     reg_dump();

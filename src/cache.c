@@ -50,7 +50,7 @@ void d_cache_init(cache_config_t *cpu_cfg){
         printf("Creating Data Cache (D Cache)\n");
     }
     //Each block contains a word of data
-    uint32_t num_blocks = cpu_cfg->data_size >> 2;
+    uint32_t num_blocks = (cpu_cfg->data_size >> 2) / cpu_cfg->data_block;
     d_cache = direct_cache_init(num_blocks, cpu_cfg->data_block);
 }
 
@@ -63,7 +63,7 @@ void i_cache_init(cache_config_t *cpu_cfg){
     if(flags & MASK_DEBUG){
         printf("Creating Instruction Cache (I Cache)\n");
     }
-    uint32_t num_blocks = cpu_cfg->inst_size >> 2;
+    uint32_t num_blocks = (cpu_cfg->inst_size >> 2) / cpu_cfg->inst_block;
     i_cache = direct_cache_init(num_blocks, cpu_cfg->inst_block);
 }
 

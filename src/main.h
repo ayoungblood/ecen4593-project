@@ -32,6 +32,17 @@ typedef struct ASMLine {
     char     type;        // 0: invalid, 2/3: valid
 } asm_line_t;
 
+typedef struct PROFILE {
+    cache_status_t i_cache_status;
+    cache_status_t i_cache_status_prev;
+    uint32_t i_cache_hit_count;
+    uint32_t i_cache_access_count;
+    cache_status_t d_cache_status;
+    cache_status_t d_cache_status_prev;
+    uint32_t d_cache_hit_count;
+    uint32_t d_cache_access_count;
+} profile_t;
+
 const char * const CACHE_MODE_STRINGS[] = {
     [CACHE_DISABLE]         = "disabled",
     [CACHE_SPLIT]           = "split",
