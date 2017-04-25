@@ -2,15 +2,21 @@
 # Loosely based on https://stackoverflow.com/questions/1484817/how-do-i-make-a-simple-makefile-for-gcc-on-linux
 TARGET = sim
 CC = gcc
-CFLAGS = -Wall -Wextra -pedantic -Wshadow -std=c99 -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes
+CFLAGS = -g -std=c99 -Wall -Wextra -pedantic -Wshadow -Wpointer-arith -Wstrict-prototypes -Wmissing-prototypes -Wswitch-default -Wunused-macros -Werror -O3
+# -g: debugging symbols
+# -std=c99: even the ECES Red Hat potato compiler should support C99
 # -Wall -Wextra -pedantic: stricter warnings
 # -Wshadow: warn if a local shadows something else
-# #-m64: Target x86-64 (not needed)
-# -std=c99: Even the ECES Red Hat potato compiler should support C99
+# #-m64: target x86-64 explicitly (not needed)
 # #-save-temps -fverbose-asm -masm=intel: make prettier disassembly (disabled for now)
 # -Wpointer-arith: warn on silly pointer operations
 # -Wstrict-prototypes -Wmissing-prototypes: be strict about function prototypes
 # # -Wno-gnu-zero-variadic-macro-arguments: so we can use ## in variadic macros (nope)
+# -Wswitch-default: warn when a switch statement does not have a default case
+# #-Walloc-zero: allocation of zero bytes is not portable (not on clang)
+# -Werror: all warnings are errors
+# -Wunused-macros: macros not expanded are probably useless
+# -O3: optimize, and catch some errors
 LIBS =
 
 .PHONY: test clean

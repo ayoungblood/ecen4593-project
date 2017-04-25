@@ -577,7 +577,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
 }
 
 int parse(FILE *fp, asm_line_t *lines, cpu_config_t cpu_cfg) {
-    uint32_t addr, inst, data, start;
+    uint32_t addr, inst, data, start = 0;
     int count = 0;
     char buf[180]; // for storing a line from the source file
     char str[120]; // for the comment part of a line from the source file
@@ -658,7 +658,7 @@ void breakpoint_add(uint32_t address) {
             breakpoints_status[i] |= 0x1;
             break;
         }
-    } while (i++ < BREAKPOINT_MAX);
+    } while (i++ < BREAKPOINT_MAX-1);
     cprintf(ANSI_C_GREEN, "Added breakpoint at 0x%08x, %d active breakpoints\n",
         address,
         breakpoint_get_active());
@@ -667,8 +667,8 @@ void breakpoint_dump(void) {
     int i = 0;
     printf("\tIndex Status  Address\n");
     for (i = 0; i < BREAKPOINT_MAX; ++i) {
-        printf("%s\t(%2d)  %s     0x%08x\n" ANSI_RESET,
-            (breakpoints_status[i] & 0x1)?(ANSI_C_CYAN):(ANSI_RESET),
+        cprintf((breakpoints_status[i] & 0x1)?(ANSI_C_CYAN):(ANSI_RESET),
+            "\t(%2d)  %s     0x%08x\n",
             i,
             (breakpoints_status[i] & 0x1)?"SET":"---",
             breakpoints_address[i]);
@@ -698,6 +698,7 @@ void breakpoint_check(pc_t current_pc) {
 // Provides a crude interactive debugger for the simulator
 int interactive(asm_line_t* lines) {
     uint32_t i_addr = 0, i_data;
+    int temp;
     asm_line_t line;
 PROMPT: // LOL gotos
     cprintf(ANSI_C_GREEN, "(interactive) > ", NULL);
@@ -731,8 +732,8 @@ PROMPT: // LOL gotos
                 cprintf(ANSI_C_GREEN, "No breakpoints active.\n", NULL);
             } else {
                 cprintf(ANSI_C_GREEN, "breakpoint number to clear: ", NULL);
-                scanf("%d",&i_addr); getchar();
-                if (i_addr < BREAKPOINT_MAX) breakpoint_delete(i_addr);
+                scanf("%d",&temp); getchar();
+                if (temp < BREAKPOINT_MAX) breakpoint_delete(temp);
             }
             goto PROMPT;
         case 'd': // disable interactive (disable verbose and debug as well to avoid flood)
@@ -782,13 +783,13 @@ PROMPT: // LOL gotos
             return 1;
         case 'D': // print data cache block
             cprintf(ANSI_C_GREEN,"dcache block: ", NULL);
-            scanf("%d",&i_addr); getchar();
-            print_dcache(i_addr);
+            scanf("%d",&temp); getchar();
+            print_dcache(temp);
             goto PROMPT;
         case 'I': // print instruction cache block
             cprintf(ANSI_C_GREEN,"icache block: ", NULL);
-            scanf("%d",&i_addr); getchar();
-            print_icache(i_addr);
+            scanf("%d",&temp); getchar();
+            print_icache(temp);
             goto PROMPT;
         case 'W': // print write buffer
             print_write_buffer();
