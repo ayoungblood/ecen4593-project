@@ -698,7 +698,7 @@ void breakpoint_check(pc_t current_pc) {
 // Provides a crude interactive debugger for the simulator
 int interactive(asm_line_t* lines) {
     uint32_t i_addr = 0, i_data;
-    int temp;
+    int temp, rv;
     asm_line_t line;
 PROMPT: // LOL gotos
     cprintf(ANSI_C_GREEN, "(interactive) > ", NULL);
@@ -712,7 +712,8 @@ PROMPT: // LOL gotos
                 cprintf(ANSI_C_GREEN, "Cannot add breakpoint, active breakpoint limit reached.\n", NULL);
             } else {
                 cprintf(ANSI_C_GREEN, "breakpoint address: ", NULL);
-                scanf("%x",&i_addr); getchar();
+                rv = scanf("%x",&i_addr); getchar();
+                if (rv != 1) goto PROMPT;
                 if (i_addr < mem_start() || i_addr > mem_end()) {
                     printf("Address out of range\n");
                     goto PROMPT;
@@ -732,7 +733,8 @@ PROMPT: // LOL gotos
                 cprintf(ANSI_C_GREEN, "No breakpoints active.\n", NULL);
             } else {
                 cprintf(ANSI_C_GREEN, "breakpoint number to clear: ", NULL);
-                scanf("%d",&temp); getchar();
+                rv = scanf("%d",&temp); getchar();
+                if (rv != 1) goto PROMPT;
                 if (temp < BREAKPOINT_MAX) breakpoint_delete(temp);
             }
             goto PROMPT;
@@ -742,7 +744,8 @@ PROMPT: // LOL gotos
             break;
         case 'l': // print the original disassembly for a given address
             cprintf(ANSI_C_GREEN, "input address: ", NULL);
-            scanf("%x",&i_addr); getchar();
+            rv = scanf("%x",&i_addr); getchar();
+            if (rv != 1) goto PROMPT;
             line = lines[(i_addr>>2)-(mem_start()>>2)];
             if (line.type == 3) {
                 printf("\t0x%08x: 0x%08x %s\n",line.addr,line.inst,line.comment);
@@ -754,7 +757,8 @@ PROMPT: // LOL gotos
             goto PROMPT;
         case 'm': // view a word of memory
             cprintf(ANSI_C_GREEN, "memory address: ", NULL);
-            scanf("%x",&i_addr); getchar();
+            rv = scanf("%x",&i_addr); getchar();
+            if (rv != 1) goto PROMPT;
             if (i_addr < mem_start() || i_addr > mem_end()) {
                 printf("Address out of range\n");
                 goto PROMPT;
@@ -764,7 +768,8 @@ PROMPT: // LOL gotos
             goto PROMPT;
         case 'o': // view a region of memory
             cprintf(ANSI_C_GREEN,"memory address: ", NULL);
-            scanf("%x",&i_addr); getchar();
+            rv = scanf("%x",&i_addr); getchar();
+            if (rv != 1) goto PROMPT;
             if (i_addr < mem_start() || i_addr > mem_end()) {
                 printf("Address out of range\n");
                 goto PROMPT;
@@ -783,12 +788,14 @@ PROMPT: // LOL gotos
             return 1;
         case 'D': // print data cache block
             cprintf(ANSI_C_GREEN,"dcache block: ", NULL);
-            scanf("%d",&temp); getchar();
+            rv = scanf("%d",&temp); getchar();
+            if (rv != 1) goto PROMPT;
             print_dcache(temp);
             goto PROMPT;
         case 'I': // print instruction cache block
             cprintf(ANSI_C_GREEN,"icache block: ", NULL);
-            scanf("%d",&temp); getchar();
+            rv = scanf("%d",&temp); getchar();
+            if (rv != 1) goto PROMPT;
             print_icache(temp);
             goto PROMPT;
         case 'W': // print write buffer
