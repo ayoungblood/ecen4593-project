@@ -5,6 +5,7 @@
 #include "main.h"
 
 extern int flags; // from util.c
+extern profile_t *prof;  //from util.c
 
 /* Create and initialize CPU and cache settings with defaults */
 cpu_config_t cpu_config = {
@@ -35,6 +36,7 @@ control_t* idex  = NULL; // ID/EX pipeline register
 control_t* exmem = NULL; // EX/MEM pipeline register
 control_t* memwb = NULL; // MEM/WB pipeline register
 pc_t pc = 0;             // Program counter
+
 
 #define BREAKPOINT_MAX 8
 uint32_t breakpoints_address[BREAKPOINT_MAX] = {0}; // the address of a breakpoint
@@ -121,20 +123,21 @@ int main(int argc, char *argv[]) {
         pc = word * 4;
     }
     // Logistics initialization
-    profile_t prof;
+    prof = (profile_t*)malloc(sizeof(profile_t));
     if (cache_config.mode != CACHE_DISABLE) {
-        prof.i_cache_access_count = 0;
-        prof.i_cache_hit_count = 0;
-        prof.i_cache_status_prev = CACHE_HIT;
-        prof.i_cache_status = CACHE_NO_ACCESS;
-        prof.d_cache_status = CACHE_NO_ACCESS;
-        prof.d_cache_status_prev = CACHE_NO_ACCESS;
-        prof.d_cache_hit_count = 0;
-        prof.d_cache_access_count = 0;
+        prof->i_cache_access_count = 0;
+        prof->i_cache_hit_count = 0;
+        prof->i_cache_status_prev = CACHE_HIT;
+        prof->i_cache_status = CACHE_NO_ACCESS;
+        prof->d_cache_status = CACHE_NO_ACCESS;
+        prof->d_cache_status_prev = CACHE_NO_ACCESS;
+        prof->d_cache_hit_count = 0;
+        prof->d_cache_access_count = 0;
+        prof->instruction_count = 0;
+        prof->cycles = 0;
     }
 
     // Run the simulation
-    int cycles = 0;
     while (1) {
         // Run a pipeline cycle
         backup(ifid, idex, exmem, memwb, &pc);
@@ -146,28 +149,28 @@ int main(int argc, char *argv[]) {
         hazard(ifid, idex, exmem, memwb, &pc, &cache_config);
         if (cache_config.mode != CACHE_DISABLE) {
             if(cache_config.inst_enabled){
-                prof.i_cache_status = ifid->status;
-                if (prof.i_cache_status_prev == CACHE_HIT) {
-                    prof.i_cache_access_count++;
-                    if (prof.i_cache_status == CACHE_HIT) {
-                        prof.i_cache_hit_count++;
+                prof->i_cache_status = ifid->status;
+                if (prof->i_cache_status_prev == CACHE_HIT) {
+                    prof->i_cache_access_count++;
+                    if (prof->i_cache_status == CACHE_HIT) {
+                        prof->i_cache_hit_count++;
                     }
                 }
-                prof.i_cache_status_prev = prof.i_cache_status;
+                prof->i_cache_status_prev = prof->i_cache_status;
             }
             if (cache_config.data_enabled){
-                prof.d_cache_status = memwb->status;
-                if (prof.d_cache_status == CACHE_HIT && prof.d_cache_status_prev != CACHE_MISS){
-                    prof.d_cache_hit_count++;
-                    prof.d_cache_access_count++;
-                } else if (prof.d_cache_status == CACHE_MISS && prof.d_cache_status_prev != CACHE_MISS) {
-                    prof.d_cache_access_count++;
+                prof->d_cache_status = memwb->status;
+                if (prof->d_cache_status == CACHE_HIT && prof->d_cache_status_prev != CACHE_MISS){
+                    prof->d_cache_hit_count++;
+                    prof->d_cache_access_count++;
+                } else if (prof->d_cache_status == CACHE_MISS && prof->d_cache_status_prev != CACHE_MISS) {
+                    prof->d_cache_access_count++;
                 }
-                prof.d_cache_status_prev = prof.d_cache_status;
+                prof->d_cache_status_prev = prof->d_cache_status;
             }
             cache_digest();
         }
-        ++cycles;
+        prof->cycles++;
         // Check for a magic halt number (beq zero zero -1 or jr zero)
         if (ifid->instr == 0x1000ffff || ifid->instr == 0x00000008 || pc == 0) break;
         // Breakpoint and interactive stuff
@@ -176,48 +179,34 @@ int main(int argc, char *argv[]) {
             if (interactive(lines) !=0) return 1;
         }
     }
-    bprintf("\nPipeline halted after %d cycles (at address 0x%08x)\n",cycles,pc);
-    // Print cache statistics
-    if (cache_config.mode != CACHE_DISABLE) {
-        if (cache_config.inst_enabled) {
-            bprintf("Instruction cache hit rate / access count : %d / %d\n",
-                prof.i_cache_hit_count, prof.i_cache_access_count);
-        }
-        if (cache_config.data_enabled) {
-            bprintf("Data cache hit rate / access count : %d / %d\n",
-                prof.d_cache_hit_count, prof.d_cache_access_count);
-                flush_dcache();
-            for (i = 0; i * cache_config.data_block < 16; i++) {
-                print_dcache(i);
-            }
-        }
-    }
+    bprintf("\nPipeline halted after %d cycles (at address 0x%08x)\n",prof->cycles,pc);
     // Dump registers and the first couple words of memory so we can see what's going on
     reg_dump();
     mem_dump_cute(0,16);
     // Print out logistics for profiling
-    printf("$# %-6s | %-6s | %-6s | %-6s | %-6s | %-6s | %-6s | %-6s | %-8s | File\n",
-        "Isize", "Dsize", "Iblock", "Dblock", "Dwrite", "Ihit %", "Dhit %", "CPI", "Cycles");
+    printf("$# %-6s | %-6s | %-6s | %-6s | %-6s | %-6s | %-6s | %-6s | %-8s | %-8s | File\n",
+        "Isize", "Dsize", "Iblock", "Dblock", "Dwrite", "Ihit %", "Dhit %", "CPI", "Cycles", "#Inst's");
     if (cache_config.mode != CACHE_DISABLE) {
-        printf("$# %6d | %6d | %6d | %6d | %6s | %6.2f | %6.2f | %6.3f | %8d | %s\n",
+        printf("$# %6d | %6d | %6d | %6d | %6s | %6.2f | %6.2f | %6.3f | %8d | %8d | %s\n",
             cache_config.inst_size, cache_config.data_size,
             cache_config.inst_block, cache_config.data_block,
             (cache_config.data_wpolicy==CACHE_WRITEBACK?"WB":"WT"),
-            100*((float)prof.i_cache_hit_count)/((float)prof.i_cache_access_count),
-            100*((float)prof.d_cache_hit_count)/((float)prof.d_cache_access_count),
-            ((float)cycles)/((float)prof.i_cache_access_count), cycles,
-            argv[argc-1]);
+            100*((float)prof->i_cache_hit_count)/((float)prof->i_cache_access_count),
+            100*((float)prof->d_cache_hit_count)/((float)prof->d_cache_access_count),
+            ((float)prof->cycles)/((float)prof->instruction_count), prof->cycles,
+            prof->instruction_count, argv[argc-1]);
     } else {
-        printf("$# %6d | %6d | %6d | %6d | %6s | %6.2f | %6.2f | %6.3f | %8d | %s\n",
+        printf("$# %6d | %6d | %6d | %6d | %6s | %6.2f | %6.2f | %6.3f | %8d | %8d | %s\n",
             0, 0, 0, 0, "N/A",
             0.0f/0.0f,0.0f/0.0f,
-            0.0f/0.0f, cycles, // @TODO fix CPI calculation when no cache
-            argv[argc-1]);
+            ((float)prof->cycles)/((float)prof->instruction_count), prof->cycles,
+            prof->instruction_count, argv[argc-1]);
     }
 
     // Close memory, and cleanup register files (we don't need to clean up registers)
     pipeline_destroy(&ifid, &idex, &exmem, &memwb);
     mem_close();
+    free(prof);
     return 0; // exit without errors
 }
 

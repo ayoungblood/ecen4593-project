@@ -4,6 +4,7 @@
 #include "hazard.h"
 
 extern int flags; // from util.c
+extern profile_t *prof;  //from util.c
 
 control_t *ifid_backup;
 control_t *idex_backup;
@@ -90,6 +91,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
             } else {
                 idex->PCSrc = false;
             }
+            prof->cycles++;
         } else if(idex->opCode == OPC_BEQ) {
             gprintf("\tRecalculating BEQ\n");
             if (idex->regRsValue == idex->regRtValue) { // Branch taken
@@ -97,6 +99,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
             } else {
                 idex->PCSrc = false;
             }
+            prof->cycles++;
         } else if (idex->opCode == OPC_BLTZ) {
             gprintf("\tRecalculating BLTZ\n");
             if ((int)idex->regRsValue < 0) { // Branch taken
@@ -104,6 +107,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
             } else{
                 idex->PCSrc = false;
             }
+            prof->cycles++;
         } else if (idex->opCode == OPC_BGTZ) {
             gprintf("\tRecalculating BGTZ\n");
             if ((int)idex->regRsValue > 0) { // Branch taken
@@ -111,6 +115,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
             } else {
                 idex->PCSrc = false;
             }
+            prof->cycles++;
         } else if (idex->opCode == OPC_BLEZ){
             gprintf("\tRecalculating BLEZ\n");
             if ((int)idex->regRsValue <= 0) {
@@ -118,9 +123,11 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
             } else {
                 idex->PCSrc = false;
             }
+            prof->cycles++;
         } else if ((idex->opCode == OPC_RTYPE) && (idex->funct == FNC_JR)) {
             gprintf("\tRecalculating JR\n");
             idex->pcNext = idex->regRsValue;
+            prof->cycles++;
         }
         if (idex->PCSrc) {
             gprintf("\tBranch will be taken\n");
@@ -144,9 +151,8 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
      * to the new calculated value and flush IFID. Jumps are also treated the
      * as branches, so IFID will be flushed for all jump instructions. */
     if (idex->jump || idex->PCSrc) {
-        // Jump or branch occured, flush ifid
+        // Jump or branch occured
         bprintf("\tBranching or Jumping: inserting nop and overriding pc\n");
-        //flush(ifid);
         *pc = idex->pcNext;
     } else if (stall) {
         // Stall the pipeline by not updating pc and flushing ifid
@@ -161,6 +167,14 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
         if (memwb->status == CACHE_MISS || ifid->status == CACHE_MISS) {
             gprintf("\tcache miss! Restoring the pipeline\n");
             restore(ifid, idex, exmem, memwb, pc);
+        } else {
+            if(!stall){
+                prof->instruction_count++;
+            }
+        }
+    } else {
+        if(!stall){
+            prof->instruction_count++;
         }
     }
     return 0;

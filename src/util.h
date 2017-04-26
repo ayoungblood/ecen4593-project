@@ -48,6 +48,7 @@
 
 int flags;
 
+
 typedef struct cpu_config_t {
     bool single_cycle;
     unsigned long mem_size;
@@ -86,6 +87,21 @@ typedef struct cache_config_t {
     cache_type_t    type;
     cache_wpolicy_t wpolicy;
 } cache_config_t;
+
+typedef struct PROFILE {
+    cache_status_t  i_cache_status;
+    cache_status_t  i_cache_status_prev;
+    uint32_t        i_cache_hit_count;
+    uint32_t        i_cache_access_count;
+    cache_status_t  d_cache_status;
+    cache_status_t  d_cache_status_prev;
+    uint32_t        d_cache_hit_count;
+    uint32_t        d_cache_access_count;
+    uint32_t        instruction_count;
+    uint32_t        cycles;
+} profile_t;
+
+profile_t *prof;
 
 void print_pipeline_register(control_t *reg);
 
