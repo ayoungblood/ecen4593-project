@@ -69,6 +69,7 @@ direct_cache_t * direct_cache_init(uint32_t num_blocks, uint32_t block_size){
     //Invalidate all data in the cache
     uint8_t j;
     for(i = 0; i < cache->num_blocks; i++){
+        cache->blocks[i].dirty = false;
         for(j = 0; j < cache->block_size; j++){
             cache->blocks[i].valid[j] = false;
         }

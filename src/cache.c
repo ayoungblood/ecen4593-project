@@ -224,6 +224,8 @@ cache_wpolicy_t get_write_policy(void){
 write_buffer_t *write_buffer_init(void) {
     write_buffer_t *wb = (write_buffer_t *)malloc(sizeof(write_buffer_t));
     wb->penalty_count = 0;
+    wb->writing = false;
+    wb->subsequent_writing = 0;
     wb->data = (word_t *)malloc(sizeof(word_t)*d_cache->block_size);
     return wb;
 }

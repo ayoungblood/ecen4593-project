@@ -186,7 +186,7 @@ int main(int argc, char *argv[]) {
         if (cache_config.data_enabled) {
             bprintf("Data cache hit rate / access count : %d / %d\n",
                 prof.d_cache_hit_count, prof.d_cache_access_count);
-            flush_dcache();
+                flush_dcache();
             for (i = 0; i * cache_config.data_block < 16; i++) {
                 print_dcache(i);
             }
