@@ -24,6 +24,7 @@
 int tests_run = 0;
 
 extern int flags;
+extern profile_t *prof;
 
 control_t * ifid;
 control_t * idex;
@@ -252,6 +253,7 @@ static char * all_tests() {
 
 int main(int argc, char **argv) {
     flags = MASK_SANITY;
+    prof = (profile_t*)malloc(sizeof(profile_t));
     char *result = all_tests();
     if (result != 0) {
         printf("%s\n", result);
@@ -259,5 +261,6 @@ int main(int argc, char **argv) {
         printf(__FILE__": ALL TESTS PASSED\n");
     }
     printf("Tests run: %d\n", tests_run);
+    free(prof);
     return result != 0;
 }
