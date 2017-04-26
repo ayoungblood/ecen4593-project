@@ -6,7 +6,7 @@
 for ISIZE in 128 64
 do
     # I/D cache block size = {4, 1}
-    for BLOCK in 4 1
+    for BLOCK in 16 4 1
     do
         # D write policy = {WT, WB}
         for DWRITE in 0 1
