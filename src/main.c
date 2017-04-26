@@ -70,7 +70,8 @@ int main(int argc, char *argv[]) {
     if (rv == -1) return 0;
     bprintf("CPU settings:\n");
     bprintf("\tArchitecture: %s\n",cpu_config.single_cycle?"single-cycle":"five-stage pipeline");
-    bprintf("\tMemory size: %lu words (%lu bytes, top = 0x%08lx)\n",cpu_config.mem_size>>2,cpu_config.mem_size,cpu_config.mem_size-1);
+    bprintf("\tMemory size: %lu words (%lu bytes, top = 0x%08lx)\n",
+        cpu_config.mem_size>>2,cpu_config.mem_size,cpu_config.mem_size-1);
     bprintf("Cache settings:\n");
     if (cache_config.mode == CACHE_SPLIT) {
         bprintf("\tData cache:\n");
@@ -98,7 +99,7 @@ int main(int argc, char *argv[]) {
      * Beginning the actual simulation                                        *
      * All initialization and state configuration happens below here          *
      **************************************************************************/
-    printf("Starting simulation with flags: 0x%04x\n", flags);
+    bprintf("Starting simulation with flags: 0x%04x\n", flags);
     // Initialize the register file
     reg_init();
     // Create an array to hold all the debug information
@@ -115,13 +116,13 @@ int main(int argc, char *argv[]) {
     }
     uint32_t word = 0;
     if (flags & MASK_ALTFORMAT) {
-        // set the program counter based on the fifth word of memory
+        // Set the program counter based on the fifth word of memory
         mem_read_w(5<<2, &word);
         pc = word * 4;
     }
-    //Logistic information
+    // Logistics initialization
     profile_t prof;
-    if(cache_config.mode != CACHE_DISABLE){
+    if (cache_config.mode != CACHE_DISABLE) {
         prof.i_cache_access_count = 0;
         prof.i_cache_hit_count = 0;
         prof.i_cache_status_prev = CACHE_HIT;
@@ -175,16 +176,18 @@ int main(int argc, char *argv[]) {
             if (interactive(lines) !=0) return 1;
         }
     }
-    printf("\nPipeline halted after %d cycles (address 0x%08x)\n",cycles,pc);
+    bprintf("\nPipeline halted after %d cycles (at address 0x%08x)\n",cycles,pc);
     // Print cache statistics
     if (cache_config.mode != CACHE_DISABLE) {
         if (cache_config.inst_enabled) {
-            printf("Instruction cache hit rate / access count : %d / %d\n", prof.i_cache_hit_count, prof.i_cache_access_count);
+            bprintf("Instruction cache hit rate / access count : %d / %d\n",
+                prof.i_cache_hit_count, prof.i_cache_access_count);
         }
         if (cache_config.data_enabled) {
-            printf("Data cache hit rate / access count : %d / %d\n", prof.d_cache_hit_count, prof.d_cache_access_count);
+            bprintf("Data cache hit rate / access count : %d / %d\n",
+                prof.d_cache_hit_count, prof.d_cache_access_count);
             flush_dcache();
-            for(i = 0; i * cache_config.data_block < 16; i++){
+            for (i = 0; i * cache_config.data_block < 16; i++) {
                 print_dcache(i);
             }
         }
@@ -192,6 +195,26 @@ int main(int argc, char *argv[]) {
     // Dump registers and the first couple words of memory so we can see what's going on
     reg_dump();
     mem_dump_cute(0,16);
+    // Print out logistics for profiling
+    printf("$# %-6s | %-6s | %-6s | %-6s | %-6s | %-6s | %-6s | %-6s | %-8s | File\n",
+        "Isize", "Dsize", "Iblock", "Dblock", "Dwrite", "Ihit %", "Dhit %", "CPI", "Cycles");
+    if (cache_config.mode != CACHE_DISABLE) {
+        printf("$# %6d | %6d | %6d | %6d | %6s | %6.2f | %6.2f | %6.3f | %8d | %s\n",
+            cache_config.inst_size, cache_config.data_size,
+            cache_config.inst_block, cache_config.data_block,
+            (cache_config.data_wpolicy==CACHE_WRITEBACK?"WB":"WT"),
+            100*((float)prof.i_cache_hit_count)/((float)prof.i_cache_access_count),
+            100*((float)prof.d_cache_hit_count)/((float)prof.d_cache_access_count),
+            ((float)cycles)/((float)prof.i_cache_access_count), cycles,
+            argv[argc-1]);
+    } else {
+        printf("$# %6d | %6d | %6d | %6d | %6s | %6.2f | %6.2f | %6.3f | %8d | %s\n",
+            0, 0, 0, 0, "N/A",
+            0.0f/0.0f,0.0f/0.0f,
+            0.0f/0.0f, cycles, // @TODO fix CPI calculation when no cache
+            argv[argc-1]);
+    }
+
     // Close memory, and cleanup register files (we don't need to clean up registers)
     pipeline_destroy(&ifid, &idex, &exmem, &memwb);
     mem_close();
@@ -212,7 +235,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
         static struct option long_options[] = {
             /* Simulator options */
             {"alternate",       no_argument,        0, 'a'},
-            {"color",           required_argument,  0, 'C'}, // (disabled,auto,force)
+            {"color",           required_argument,  0, 'c'}, // (disabled,auto,force)
             {"debug",           no_argument,        0, 'd'},
             {"help",            no_argument,        0, 'h'},
             {"interactive",     no_argument,        0, 'i'},
@@ -223,7 +246,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
             {"single-cycle",    no_argument,        0, 'g'},
             {"mem-size",        required_argument,  0, 'm'}, // 2^n, 0 <= n < 15
             /* Cache options */
-            {"cache-mode",      required_argument,  0, 'c'}, // (disabled,split,unified)
+            {"cache-mode",      required_argument,  0, 'C'}, // (disabled,split,unified)
             /* Split cache options */
             {"cache-data",      required_argument,  0, 'D'}, // (enabled,disabled)
             {"cache-dsize",     required_argument,  0, 'E'}, // 2^n, 0 < n <= 15
@@ -242,7 +265,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
             {"cache-write",     required_argument,  0, 'W'}, // (back,thru)
             {0, 0, 0, 0}
         };
-        c = getopt_long (argc, argv, "aC:dhiyVvc:gm:D:E:F:G:H:I:J:K:L:M:B:S:T:W:",long_options, &option_index);
+        c = getopt_long (argc, argv, "ac:dhiyVvgm:C:D:E:F:G:H:I:J:K:L:M:B:S:T:W:",long_options, &option_index);
         if (c == -1) break; // Detect the end of the options.
 
         switch (c) {
@@ -251,7 +274,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
                 flags |= MASK_ALTFORMAT;
                 bprintf("Alternate format enabled (flags = 0x%04x).\n",flags);
                 break;
-            case 'C': // --color
+            case 'c': // --color
                 if (!strcmp(optarg,"disabled") || !strcmp(optarg,"d")) {
                     flags &= ~MASK_COLOR;
                 } else if (!strcmp(optarg,"force") || !strcmp(optarg,"f")) {
@@ -281,7 +304,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
                         "   \t\t0x24420004, // addiu v0,v0,4\n" \
                         "   \tinstead of the the default, which expects lines like\n" \
                         "   \t\t400048:	0x24420004    addiu v0,v0,4\n" \
-                        "   "ANSI_BOLD"-C "ANSI_RUNDER"mode"ANSI_RBOLD", --color "ANSI_RUNDER"mode"ANSI_RESET"\n" \
+                        "   "ANSI_BOLD"-c "ANSI_RUNDER"mode"ANSI_RBOLD", --color "ANSI_RUNDER"mode"ANSI_RESET"\n" \
                         "   \tColorized output behaviour. "ANSI_UNDER"mode"ANSI_RESET" may be "ANSI_BOLD"disable"ANSI_RESET", which disables\n" \
                         "   \tcolorized output; "ANSI_BOLD"force"ANSI_RESET", which colorizes the output; or "ANSI_BOLD"auto"ANSI_RESET",\n" \
                         "   \twhich attempts to automatically detect whether to colorize.\n" \
@@ -305,7 +328,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
                         "   "ANSI_BOLD"--mem-size "ANSI_RUNDER"size"ANSI_RBOLD", -m "ANSI_RUNDER"size"ANSI_RESET"\n" \
                         "   \tSets the size of main program memory. Defaults to %d bytes.\n" \
                         "Cache configuration options:\n" \
-                        "   "ANSI_BOLD"--cache-mode "ANSI_RUNDER"mode"ANSI_RBOLD", -c "ANSI_RUNDER"mode"ANSI_RESET"\n" \
+                        "   "ANSI_BOLD"--cache-mode "ANSI_RUNDER"mode"ANSI_RBOLD", -C "ANSI_RUNDER"mode"ANSI_RESET"\n" \
                         "   \tSets the cache mode, where "ANSI_UNDER"mode"ANSI_RESET" must be ("ANSI_BOLD"disabled,split,unified"ANSI_RESET").\n" \
                         "   \t"ANSI_BOLD"disabled"ANSI_RESET" - turns off all caching.\n" \
                         "   \t"ANSI_BOLD"split"ANSI_RESET" - uses split caches; data and instruction caches are separate.\n" \
@@ -376,7 +399,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
                 bprintf("CPU$ memory size set to %ld.\n",cpu_cfg->mem_size);
                 break;
             /* Cache options */
-            case 'c': // --cache-mode
+            case 'C': // --cache-mode
                 if (!strcmp(optarg,"disabled") || !strcmp(optarg,"d")) {
                     cache_cfg->mode = CACHE_DISABLE;
                 } else if (!strcmp(optarg,"split") || !strcmp(optarg,"s")) {
@@ -639,7 +662,7 @@ int parse(FILE *fp, asm_line_t *lines, cpu_config_t cpu_cfg) {
         }
     }
     fclose(fp); // close the file
-    printf("Successfully extracted %d lines\n",count);
+    bprintf("Successfully extracted %d lines\n",count);
     return count;
 }
 // Breakpoint wrappers

@@ -7,6 +7,7 @@
 #include <stdio.h>
 
 #include "types.h"
+#include "util.h"
 
 // Initialize the registers
 void reg_init(void);

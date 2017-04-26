@@ -27,14 +27,14 @@ void mem_init(uint32_t size, uint32_t offset) {
 }
 // Display memory state (does _not_ dump the entire memory!)
 void mem_dump(void) {
-    printf("Memory statistics:\n");
-    printf("  Bytes - start: 0x%08x; end: 0x%08x\n",start,start + (length<<2) - 1);
-    printf("  Words - start: 0x%08x; end: 0x%08x\n",start,(start + ((length<<2)>>2) - 1));
-    printf("  Size: %d B (%d words)\n",(length<<2),length);
+    eprintf("Memory statistics:\n");
+    eprintf("  Bytes - start: 0x%08x; end: 0x%08x\n",start,start + (length<<2) - 1);
+    eprintf("  Words - start: 0x%08x; end: 0x%08x\n",start,(start + ((length<<2)>>2) - 1));
+    eprintf("  Size: %d B (%d words)\n",(length<<2),length);
     if (flags & MASK_DEBUG) {
-        printf("Printing first 80 words of memory:\n");
+        eprintf("Printing first 80 words of memory:\n");
         for (int i = 0; i < 16; ++i) {
-            printf("  0x%02x: %08x | 0x%02x: %08x | 0x%02x: %08x | 0x%02x: %08x | 0x%02x: %08x\n",
+            eprintf("  0x%02x: %08x | 0x%02x: %08x | 0x%02x: %08x | 0x%02x: %08x | 0x%02x: %08x\n",
                 i<<2,mem[i],
                 (i+16)<<2,mem[i+16],
                 (i+32)<<2,mem[i+32],
@@ -45,10 +45,10 @@ void mem_dump(void) {
 }
 // Display a small section of memory starting at an address
 void mem_dump_cute(uint32_t offset, uint32_t words) {
-    printf("Printing %d words of memory starting at 0x%08x:\n",words,offset);
+    eprintf("Printing %d words of memory starting at 0x%08x:\n",words,offset);
     offset = offset >> 2;
     for (uint32_t i = 0; i < words; ++i) {
-        printf("\t0x%08x: 0x%08x (0d%d)\n",
+        eprintf("\t0x%08x: 0x%08x (0d%d)\n",
             (offset+i)<<2,
             mem[(offset+i)],
             mem[(offset+i)]);

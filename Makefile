@@ -38,8 +38,10 @@ VERSION = $(shell git rev-parse --short HEAD)
 $(TARGET): $(OBJECTS)
 		$(CC) $(OBJECTS) -Wall $(LIBS) -o $@
 
+# Build the simulator
 all: $(TARGET)
 
+# Build and run unit tests plus cacheless runs of program1 and program2
 test: $(OBJECTS) all
 		$(CC) src/alu.o src/util.o -Wall $(LIBS) -o test/alu-test test/alu-test.c
 		$(CC) src/fetch.o src/util.o src/registers.o src/main_memory.o src/cache.o src/direct.o -Wall $(LIBS) -o test/fetch-test test/fetch-test.c
@@ -57,6 +59,19 @@ test: $(OBJECTS) all
 		test/pipeline-test
 		./sim -y -a asm/program1file.txt
 		./sim -y -a asm/program2file.txt
+
+# Partial run matrix
+run: $(TARGET)
+		@echo "#### Program 1"
+		@# No cache
+		@./$(TARGET) -ya asm/program1file.txt \
+			2>/dev/null
+		@echo "#### Program 2"
+		@# No cache
+		@./$(TARGET) -ya asm/program2file.txt \
+			2>/dev/null
+		@# With cache
+		@./matrix.sh asm/program2file.txt
 
 test-alu: $(OBJECTS)
 		$(CC) src/alu.o src/util.o -Wall $(LIBS) -o test/alu-test test/alu-test.c
