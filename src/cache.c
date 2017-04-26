@@ -254,6 +254,8 @@ void write_buffer_digest(void) {
                     write_buffer->writing = true;
                     write_buffer->penalty_count = 0;
                     write_buffer->subsequent_writing = 1;
+                } else {
+                    set_mem_status(MEM_IDLE);
                 }
             } else if (write_buffer->subsequent_writing && write_buffer->penalty_count == CACHE_WRITE_SUBSEQUENT_PENALTY) {
                 mem_write_w(write_buffer->address, &write_buffer->data[write_buffer->subsequent_writing]);
@@ -264,6 +266,8 @@ void write_buffer_digest(void) {
                     write_buffer->writing = true;
                     write_buffer->subsequent_writing++;
                     write_buffer->penalty_count = 0;
+                } else {
+                    set_mem_status(MEM_IDLE);
                 }
             }
         }

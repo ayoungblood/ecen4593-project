@@ -114,6 +114,9 @@ void direct_cache_digest(direct_cache_t *cache, memory_status_t proceed_conditio
                 info.address |= (1 << 2);
                 cache->subsequent_fetching = 1;
                 direct_cache_queue_mem_access(cache, info);
+            } else {
+                //Were done, relenquish memory
+                set_mem_status(MEM_IDLE);
             }
             return;
         }
@@ -133,6 +136,7 @@ void direct_cache_digest(direct_cache_t *cache, memory_status_t proceed_conditio
                 direct_cache_queue_mem_access(cache, info);
             } else if(cache->subsequent_fetching == (cache->block_size - 1)){
                 cache->subsequent_fetching = 0;
+                set_mem_status(MEM_IDLE);
             }
             return;
         }

@@ -15,9 +15,9 @@
 #include "direct.h"
 
 // Write to main memory penalty for first block written
-#define CACHE_WRITE_PENALTY 4
+#define CACHE_WRITE_PENALTY 6
 // If multiple lines are written back, penalty for each subsequent write
-#define CACHE_WRITE_SUBSEQUENT_PENALTY 1
+#define CACHE_WRITE_SUBSEQUENT_PENALTY 2
 // Write policy for the cache (EXACTLY ONE MUST BE DEFINED)
 
 memory_status_t get_mem_status(void);
