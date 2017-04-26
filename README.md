@@ -5,7 +5,7 @@
 MIPS simulator built for ECEN4593 Computer Organization.
 
 ## Installation
-Make sure you have gcc installed on your computer, then simply clone the repository and type `make`
+The project dependencies are a somewhat recent version of gcc, make, and bash. Simply clone the repository and type `make`
 
 ## Running the Simulator
 We have a make target, `make run`, which will run the simulation with all of the different cache combinations required for project.
