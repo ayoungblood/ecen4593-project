@@ -82,6 +82,13 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
         }
     }
 
+    //determine how much we need to increment the cycles for the branch forwarding hazard
+    //This is technically a hack, but is effectively the same as inserting the nops
+    int cycle_incr = 1;
+    if(exmem->memRead){
+        cycle_incr = 2;
+    }
+
     // Recheck the outcome of the branch if there was a forward that occured.
     if (forward) {
         if (idex->opCode == OPC_BNE) {
@@ -91,7 +98,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
             } else {
                 idex->PCSrc = false;
             }
-            prof->cycles++;
+            prof->cycles+=cycle_incr;
         } else if(idex->opCode == OPC_BEQ) {
             gprintf("\tRecalculating BEQ\n");
             if (idex->regRsValue == idex->regRtValue) { // Branch taken
@@ -99,7 +106,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
             } else {
                 idex->PCSrc = false;
             }
-            prof->cycles++;
+            prof->cycles+=cycle_incr;
         } else if (idex->opCode == OPC_BLTZ) {
             gprintf("\tRecalculating BLTZ\n");
             if ((int)idex->regRsValue < 0) { // Branch taken
@@ -107,7 +114,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
             } else{
                 idex->PCSrc = false;
             }
-            prof->cycles++;
+            prof->cycles+=cycle_incr;
         } else if (idex->opCode == OPC_BGTZ) {
             gprintf("\tRecalculating BGTZ\n");
             if ((int)idex->regRsValue > 0) { // Branch taken
@@ -115,7 +122,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
             } else {
                 idex->PCSrc = false;
             }
-            prof->cycles++;
+            prof->cycles+=cycle_incr;
         } else if (idex->opCode == OPC_BLEZ){
             gprintf("\tRecalculating BLEZ\n");
             if ((int)idex->regRsValue <= 0) {
@@ -123,11 +130,11 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
             } else {
                 idex->PCSrc = false;
             }
-            prof->cycles++;
+            prof->cycles+=cycle_incr;
         } else if ((idex->opCode == OPC_RTYPE) && (idex->funct == FNC_JR)) {
             gprintf("\tRecalculating JR\n");
             idex->pcNext = idex->regRsValue;
-            prof->cycles++;
+            prof->cycles+=cycle_incr;
         }
         if (idex->PCSrc) {
             gprintf("\tBranch will be taken\n");
