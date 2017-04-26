@@ -131,7 +131,7 @@ void direct_cache_digest(direct_cache_t *cache, memory_status_t proceed_conditio
             if(cache->subsequent_fetching < (cache->block_size - 1)){
                 //get the next word for the block
                 cache->subsequent_fetching++;
-                info.address &= ~(0xc);
+                info.address &= ~(cache->inner_index_mask);
                 info.address |= (cache->subsequent_fetching << 2);
                 direct_cache_queue_mem_access(cache, info);
             } else if(cache->subsequent_fetching == (cache->block_size - 1)){
