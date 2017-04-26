@@ -17,7 +17,7 @@ bool z;
 static char * test_register_init() {
     reg_init();
     reg_read(0,&a);
-    reg_dump();
+    // reg_dump();
     mu_assert(_FL "bad assert", a == 0);
     return 0;
 }

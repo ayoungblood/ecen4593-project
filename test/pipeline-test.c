@@ -51,21 +51,21 @@ cache_config_t cache_config = {
     .wpolicy        = CACHE_WRITETHROUGH,
 };
 
-void execute_pipeline(){
-    printf(ANSI_C_CYAN "\nPC:\n\t" ANSI_RESET "0x%08x\n", pc);
+void execute_pipeline() {
+    bcprintf(ANSI_C_CYAN,"PC:\n");
+    bprintf("\t0x%08x\n", pc);
     writeback(memwb);
     memory(exmem, memwb, &cache_config);
     execute(idex, exmem);
     decode(ifid, idex);
     fetch(ifid, &pc, &cache_config);
     hazard(ifid, idex, exmem, memwb, &pc, &cache_config);
-    printf("\n\n\n");
 }
 
-static char * test_basic_add(){
+static char * test_basic_add() {
     reg_init();
     pipeline_init(&ifid, &idex, &exmem, &memwb, &pc, 0);
-    //Load instructions
+    // Load instructions
     pc = 0x00000000;
     word_t data = 0x20110064;       //addi $s1, $zero, 100
     mem_write_w(pc, &data);
@@ -77,13 +77,13 @@ static char * test_basic_add(){
     mem_write_w(pc+12, &data);
     mem_write_w(pc+16, &data);
     mem_write_w(pc+20, &data);
-    //Execute pipeline six times
+    // Execute pipeline six times
     clock = 0;
-    for(clock = 0; clock <= 6; clock++){
+    for (clock = 0; clock <= 6; clock++) {
         execute_pipeline();
     }
-    //Check that the registers have expected values
-    reg_dump();
+    // Check that the registers have expected values
+    //reg_dump();
     reg_read(REG_S1, &data);
     mu_assert(_FL "$S1 does not equal 100!", data == 100);
     reg_read(REG_S2, &data);
@@ -95,10 +95,10 @@ static char * test_basic_add(){
     return 0;
 }
 
-static char * test_bne(){
+static char * test_bne() {
     reg_init();
     pipeline_init(&ifid, &idex, &exmem, &memwb, &pc, 0);
-    //Load instructions
+    // Load instructions
     pc = 0x00000000;
     word_t data = 0x20110064;       //addi $s1, $zero, 100
     mem_write_w(pc, &data);
@@ -117,13 +117,13 @@ static char * test_bne(){
     mem_write_w(pc+28, &data);
     mem_write_w(pc+32, &data);
     mem_write_w(pc+36, &data);
-    //Execute pipeline six times
+    // Execute pipeline six times
     clock = 0;
-    for(clock = 0; clock <= 9; clock++){
+    for (clock = 0; clock <= 9; clock++) {
         execute_pipeline();
     }
-    //Check that the registers have expected values
-    reg_dump();
+    // Check that the registers have expected values
+    //reg_dump();
     reg_read(REG_S1, &data);
     mu_assert(_FL "$S1 does not equal 100!", data == 100);
     reg_read(REG_S2, &data);
@@ -138,10 +138,10 @@ static char * test_bne(){
     return 0;
 }
 
-static char * test_beq(){
+static char * test_beq() {
     reg_init();
     pipeline_init(&ifid, &idex, &exmem, &memwb, &pc, 0);
-    //Load instructions
+    // Load instructions
     pc = 0x00000000;
     word_t data = 0x20110064;       //addi $s1, $zero, 100
     mem_write_w(pc, &data);
@@ -159,13 +159,13 @@ static char * test_beq(){
     mem_write_w(pc+24, &data);
     mem_write_w(pc+28, &data);
     mem_write_w(pc+32, &data);
-    //Execute pipeline six times
+    // Execute pipeline six times
     clock = 0;
-    for(clock = 0; clock <= 9; clock++){
+    for (clock = 0; clock <= 9; clock++) {
         execute_pipeline();
     }
-    //Check that the registers have expected values
-    reg_dump();
+    //C heck that the registers have expected values
+    // reg_dump();
     reg_read(REG_S1, &data);
     mu_assert(_FL "$S1 does not equal 100!", data == 100);
     reg_read(REG_S2, &data);
@@ -175,12 +175,11 @@ static char * test_beq(){
     reg_read(REG_T0, &data);
     mu_assert(_FL "Incorrect instruction executed: $T0 = -20", data != -20);
 
-
     pipeline_destroy(&ifid, &idex, &exmem, &memwb);
     return 0;
 }
 
-static char * test_load_dependency(){
+static char * test_load_dependency() {
     //0x20100800        addi $s0, $zero, 2048
     //0x2011000a        addi $s1, $zero, 10
     //0xae110000        sw $s1, 0($s0)
@@ -192,7 +191,7 @@ static char * test_load_dependency(){
     //0x0253a020        add $s4, $s2, $s3
     reg_init();
     pipeline_init(&ifid, &idex, &exmem, &memwb, &pc, 0);
-    //Load instructions
+    // Load instructions
     pc = 0x00000000;
     word_t data = 0x20100800;       //addi $s0, $zero, 2048
     mem_write_w(pc, &data);
@@ -217,13 +216,13 @@ static char * test_load_dependency(){
     mem_write_w(pc+40, &data);
     mem_write_w(pc+44, &data);
     mem_write_w(pc+48, &data);
-    //Execute pipeline six times
+    // Execute pipeline six times
     clock = 0;
-    for(clock = 0; clock <= 13; clock++){
+    for (clock = 0; clock <= 13; clock++) {
         execute_pipeline();
     }
-    //Check that the registers have expected values
-    reg_dump();
+    // Check that the registers have expected values
+    // reg_dump();
     reg_read(REG_S0, &data);
     mu_assert(_FL "$S0 does not equal 2048!", data == 2048);
     reg_read(REG_S1, &data);
@@ -240,12 +239,10 @@ static char * test_load_dependency(){
 }
 
 static char * all_tests() {
-    //Pipeline initialization
+    // Pipeline initialization
     reg_init();
-    uint64_t size = 0x3000;
-    uint64_t offs = 0x00;
-    mem_init(size,offs);
-    //Tests
+    mem_init(0x3000,0x0);
+    // Tests
     mu_run_test(test_basic_add);
     mu_run_test(test_bne);
     mu_run_test(test_beq);
@@ -254,7 +251,7 @@ static char * all_tests() {
 }
 
 int main(int argc, char **argv) {
-    flags = MASK_DEBUG | MASK_VERBOSE | MASK_SANITY;
+    flags = MASK_SANITY;
     char *result = all_tests();
     if (result != 0) {
         printf("%s\n", result);

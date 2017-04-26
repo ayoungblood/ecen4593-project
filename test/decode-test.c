@@ -336,7 +336,7 @@ static char * all_tests() {
 }
 
 int main(int argc, char **argv) {
-    flags = MASK_DEBUG | MASK_VERBOSE | MASK_SANITY;
+    flags = MASK_SANITY;
     char *result = all_tests();
     if (result != 0) {
         printf("%s\n", result);
