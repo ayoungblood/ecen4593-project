@@ -718,9 +718,9 @@ int interactive(asm_line_t* lines) {
     asm_line_t line;
 PROMPT: // LOL gotos
     cprintf(ANSI_C_GREEN, "(interactive @ %d cycles) > ", prof->cycles);
-    system ("/bin/stty raw"); // set terminal to raw/unbuffered
+    rv = system ("/bin/stty raw"); // set terminal to raw/unbuffered
     char c = getchar();
-    system ("/bin/stty sane"); // set back to sane
+    rv = system ("/bin/stty sane"); // set back to sane
     printf("%c\n",c);
     switch(c) {
         case 'a': // add a breakpoint
