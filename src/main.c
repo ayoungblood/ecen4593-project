@@ -96,6 +96,13 @@ int main(int argc, char *argv[]) {
     } else {
         bprintf("\tAll caching disabled\n");
     }
+    /* Warn on unsupported features */
+    if (cache_config.mode == CACHE_UNIFIED) {
+        cprintf(ANSI_C_YELLOW,"Unified cache mode not yet supported! May produce unexpected results.\n");
+    }
+    if (cache_config.type == CACHE_SA2 || cache_config.data_type == CACHE_SA2 || cache_config.inst_type == CACHE_SA2) {
+        cprintf(ANSI_C_YELLOW,"Set associative cache type not yet supported! May produce unexpected results.\n");
+    }
 
     /**************************************************************************
      * Beginning the actual simulation                                        *
@@ -181,15 +188,16 @@ int main(int argc, char *argv[]) {
         }
     }
     bprintf("\nPipeline halted after %d cycles (at address 0x%08x)\n",prof->cycles,pc);
-    // Dump registers and the first couple words of memory so we can see what's going on
+    // Flush data cache, if enabled, so we can see memory values
     if(cache_config.mode != CACHE_DISABLE && cache_config.data_enabled){
         flush_dcache();
     }
+    // Dump registers and the first couple words of memory so we can see what's going on
     reg_dump();
     mem_dump_cute(0,16);
     // Print out logistics for profiling
     printf("$# %-6s | %-6s | %-6s | %-6s | %-6s | %-6s | %-6s | %-6s | %-8s | %-8s | File\n",
-        "Isize", "Dsize", "Iblock", "Dblock", "Dwrite", "Ihit %", "Dhit %", "CPI", "Cycles", "#Inst's");
+        "Isize", "Dsize", "Iblock", "Dblock", "Dwrite", "Ihit %", "Dhit %", "CPI", "Cycles", "Icount");
     if (cache_config.mode != CACHE_DISABLE) {
         printf("$# %6d | %6d | %6d | %6d | %6s | %6.2f | %6.2f | %6.3f | %8d | %8d | %s\n",
             cache_config.inst_size, cache_config.data_size,
@@ -200,9 +208,8 @@ int main(int argc, char *argv[]) {
             ((float)prof->cycles)/((float)prof->instruction_count), prof->cycles,
             prof->instruction_count, argv[argc-1]);
     } else {
-        printf("$# %6d | %6d | %6d | %6d | %6s | %6.2f | %6.2f | %6.3f | %8d | %8d | %s\n",
-            0, 0, 0, 0, "N/A",
-            0.0f/0.0f,0.0f/0.0f,
+        printf("$# %6s | %6s | %6s | %6s | %6s | %6s | %6s | %6.3f | %8d | %8d | %s\n",
+            "n/a", "n/a", "n/a", "n/a", "n/a", "n/a", "n/a",
             ((float)prof->cycles)/((float)prof->instruction_count), prof->cycles,
             prof->instruction_count, argv[argc-1]);
     }

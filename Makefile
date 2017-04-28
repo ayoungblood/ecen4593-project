@@ -67,7 +67,7 @@ run: $(TARGET)
 		@./$(TARGET) -ya asm/program1file.txt \
 			2>/dev/null
 		@# With cache
-		@./matrix.sh asm/program1file.txt \
+		@./matrix.sh asm/program1file.txt
 		@echo "#### Program 2"
 		@# No cache
 		@./$(TARGET) -ya asm/program2file.txt \
