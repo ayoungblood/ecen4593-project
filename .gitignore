@@ -10,6 +10,9 @@ test/fetch-test
 test/main-memory-test
 test/pipeline-test
 
+# Debug logs
+asm/*.dump
+
 # Object files
 *.o
 *.ko

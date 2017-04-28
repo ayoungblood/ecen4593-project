@@ -835,7 +835,9 @@ PROMPT: // LOL gotos
             rv = scanf("%d",&temp); getchar(); --temp;
             if (rv != 1) goto PROMPT;
             char output_filename[80];
-            rv = sprintf(output_filename, "%s@%d.dump", filename, cycles);
+            rv = sprintf(output_filename, "%s-%s.db=%d@%d.dump",
+                filename, CACHE_MODE_STRINGS[cache_config.mode],
+                cache_config.data_block, cycles);
             FILE *output_fp = fopen(output_filename,"w");
             if (NULL == output_fp) {
                 cprintf(ANSI_C_RED,"Something is horribly wrong\n");
