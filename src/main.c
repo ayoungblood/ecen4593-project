@@ -181,7 +181,8 @@ int main(int argc, char *argv[]) {
         }
         prof->cycles++;
         // Check for a magic halt number (beq zero zero -1 or jr zero)
-        if (ifid->instr == 0x1000ffff || ifid->instr == 0x00000008 || pc == 0) break;
+        // if (ifid->instr == 0x1000ffff || ifid->instr == 0x00000008 || pc == 0) break;
+        if (pc ==0) break;
         // Breakpoint and interactive stuff
         breakpoint_check(pc);
         if (flags & MASK_INTERACTIVE) { // Run interactive step
