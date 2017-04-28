@@ -109,6 +109,25 @@ Here is the usage and option information, with a brief explanation of each optio
             back - uses a writeback policy.
             thru - uses a writethrough policy.
 
+At the end of each simulation run, statistics will be printed. This includes, in order:
+
+- Instruction cache size (Isize)
+- Data cache size (Dsize)
+- Instruction cache block size (Iblock)
+- Data cache block size (Dblock)
+- Data cache write policy (Dwrite)
+- Instruction cache hit rate (Ihit)
+- Data cache hit rate (Dhit)
+- Overall clocks per instruction (CPI)
+- Total cycles (Cycles)
+- Total instructions executed (Icount)
+- The file that was simulated (File)
+
+An example of statistics output is shown below:
+
+    $# Isize  | Dsize  | Iblock | Dblock | Dwrite | Ihit % | Dhit % | CPI    | Cycles   | Icount   | File
+    $#   1024 |   1024 |      4 |      4 |     WT |  99.99 |  89.68 |  1.949 |   924029 |   474140 | asm/program1file.txt
+
 ## Interactive Mode
 
 The simulator can be run with interactive mode, which allows the user to step through one clock cycle at a time through the program. This mode is most helpful when `-dvy` are also included in the arguments to the program so the debug output can be seen. Once in interactive mode, a help prompt can be displayed by typing `?`. Available functionality includes breakpoints, dumping registers and memory addresses, dumping cache blocks or the write buffer, and showing disassembly.
