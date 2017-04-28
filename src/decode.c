@@ -231,7 +231,9 @@ int decode(control_t *ifid , control_t *idex) {
     // Don't think i need to bitmask the address since in theory it shouldn't be
     //"signed"
     if (idex->jump && (idex->opCode != OPC_RTYPE)) {
-        idex->regRtValue = idex->pcNext; // RA value goes into ALU, gets added to zero to set RA
+        // RA value goes into ALU, gets added to zero to set RA (for JAL)
+        idex->regRtValue = idex->pcNext + 4;
+        // Update pcNext with jump address
         idex->pcNext = ( idex->pcNext & 0xF0000000 ) | idex->address;
     } else if (idex->jump && (idex->opCode == OPC_RTYPE)) {
         // This is a jr instruction, pc comes from rs
