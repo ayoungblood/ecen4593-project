@@ -181,6 +181,9 @@ int main(int argc, char *argv[]) {
     }
     bprintf("\nPipeline halted after %d cycles (at address 0x%08x)\n",prof->cycles,pc);
     // Dump registers and the first couple words of memory so we can see what's going on
+    if(cache_config.mode != CACHE_DISABLE && cache_config.data_enabled){
+        flush_dcache();
+    }
     reg_dump();
     mem_dump_cute(0,16);
     // Print out logistics for profiling
@@ -713,7 +716,7 @@ int interactive(asm_line_t* lines) {
     int temp, rv;
     asm_line_t line;
 PROMPT: // LOL gotos
-    cprintf(ANSI_C_GREEN, "(interactive) > ", NULL);
+    cprintf(ANSI_C_GREEN, "(interactive @ %d cycles) > ", prof->cycles);
     system ("/bin/stty raw"); // set terminal to raw/unbuffered
     char c = getchar();
     system ("/bin/stty sane"); // set back to sane
