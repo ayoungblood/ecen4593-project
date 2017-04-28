@@ -15,6 +15,13 @@ pc_t pc_backup;
 int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb, pc_t *pc, cache_config_t *cache_cfg) {
     bool forward = false;
     pc_backup = *pc;
+    cache_status_t status = CACHE_NO_ACCESS;
+    if (cache_cfg->mode != CACHE_DISABLE && (cache_cfg->inst_enabled || cache_cfg->data_enabled)) {
+        if (memwb->status == CACHE_MISS || ifid->status == CACHE_MISS) {
+            status = CACHE_MISS;
+        }
+    }
+
 
     gcprintf(ANSI_C_CYAN, "HAZARD:\n");
 
@@ -98,7 +105,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
             } else {
                 idex->PCSrc = false;
             }
-            prof->cycles+=cycle_incr;
+            prof->cycles = (status == CACHE_MISS) ? prof->cycles : prof->cycles + cycle_incr;
         } else if(idex->opCode == OPC_BEQ) {
             gprintf("\tRecalculating BEQ\n");
             if (idex->regRsValue == idex->regRtValue) { // Branch taken
@@ -106,7 +113,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
             } else {
                 idex->PCSrc = false;
             }
-            prof->cycles+=cycle_incr;
+            prof->cycles = (status == CACHE_MISS) ? prof->cycles : prof->cycles + cycle_incr;
         } else if (idex->opCode == OPC_BLTZ) {
             gprintf("\tRecalculating BLTZ\n");
             if ((int)idex->regRsValue < 0) { // Branch taken
@@ -114,7 +121,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
             } else{
                 idex->PCSrc = false;
             }
-            prof->cycles+=cycle_incr;
+            prof->cycles = (status == CACHE_MISS) ? prof->cycles : prof->cycles + cycle_incr;
         } else if (idex->opCode == OPC_BGTZ) {
             gprintf("\tRecalculating BGTZ\n");
             if ((int)idex->regRsValue > 0) { // Branch taken
@@ -122,7 +129,7 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
             } else {
                 idex->PCSrc = false;
             }
-            prof->cycles+=cycle_incr;
+            prof->cycles = (status == CACHE_MISS) ? prof->cycles : prof->cycles + cycle_incr;
         } else if (idex->opCode == OPC_BLEZ){
             gprintf("\tRecalculating BLEZ\n");
             if ((int)idex->regRsValue <= 0) {
@@ -130,11 +137,11 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
             } else {
                 idex->PCSrc = false;
             }
-            prof->cycles+=cycle_incr;
+            prof->cycles = (status == CACHE_MISS) ? prof->cycles : prof->cycles + cycle_incr;
         } else if ((idex->opCode == OPC_RTYPE) && (idex->funct == FNC_JR)) {
             gprintf("\tRecalculating JR\n");
             idex->pcNext = idex->regRsValue;
-            prof->cycles+=cycle_incr;
+            prof->cycles = (status == CACHE_MISS) ? prof->cycles : prof->cycles + cycle_incr;
         }
         if (idex->PCSrc) {
             gprintf("\tBranch will be taken\n");

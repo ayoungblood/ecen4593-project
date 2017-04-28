@@ -135,6 +135,7 @@ int main(int argc, char *argv[]) {
         prof->d_cache_access_count = 0;
         prof->instruction_count = 0;
         prof->cycles = 0;
+        prof->debug = 0;
     }
 
     // Run the simulation

@@ -47,6 +47,7 @@ typedef struct WRITE_BUFFER {
 write_buffer_t *write_buffer_init(void);
 void write_buffer_destroy(write_buffer_t *wb);
 void write_buffer_digest(void);
+cache_status_t write_buffer_get_status(void);
 cache_status_t write_buffer_enqueue(cache_access_t info);
 
 cache_wpolicy_t get_write_policy(void);

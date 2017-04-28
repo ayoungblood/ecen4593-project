@@ -99,6 +99,7 @@ typedef struct PROFILE {
     uint32_t        d_cache_access_count;
     uint32_t        instruction_count;
     uint32_t        cycles;
+    uint32_t        debug;
 } profile_t;
 
 profile_t *prof;

@@ -5,6 +5,7 @@
 #include "fetch.h"
 
 extern int flags; // from util.c
+extern profile_t *prof;
 
 void fetch(control_t *ifid, pc_t *pc, cache_config_t *cache_cfg) {
     // Read the instruction at the current program counter

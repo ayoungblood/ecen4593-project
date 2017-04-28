@@ -276,6 +276,14 @@ void write_buffer_digest(void) {
     }
 }
 
+cache_status_t write_buffer_get_status(void){
+    if(write_buffer->writing){
+        return CACHE_MISS;
+    } else {
+        return CACHE_HIT;
+    }
+}
+
 cache_status_t write_buffer_enqueue(cache_access_t info){
     if (write_buffer == NULL) {
         cprintf(ANSI_C_RED, "write_buffer_enqueue: buffer is not initialized\n", NULL);

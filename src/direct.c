@@ -194,6 +194,7 @@ cache_status_t direct_cache_read_w(direct_cache_t *cache, uint32_t *address, uin
                 }
                 cache_access_t write_info;
                 uint32_t write_address = (cache->blocks[info.index].tag << (2 + cache->index_size + cache->inner_index_size)) | (info.index << (2 + cache->inner_index_size)) | (info.inner_index << 2);
+                gprintf("\tdirect_cache_read_w:calculated write_address: 0x%08x\n", write_address);
                 direct_cache_get_tag_and_index(&write_info, cache, &write_address);
                 status = write_buffer_enqueue(write_info);
                 //assert(0);
@@ -217,20 +218,25 @@ cache_status_t direct_cache_write_w(direct_cache_t *cache, uint32_t *address, ui
     direct_cache_get_tag_and_index(&info, cache, address);
     info.data = *data;
     if(cache->blocks[info.index].valid[info.inner_index] == true && cache->blocks[info.index].tag == info.tag){
-        status = CACHE_HIT;
-        cache->blocks[info.index].data[info.inner_index] = *data;
-        cache->blocks[info.index].tag = info.tag;
-        cache->blocks[info.index].dirty = true;
         if (get_write_policy() == CACHE_WRITETHROUGH){
-            status = write_buffer_enqueue(info);
+            status = write_buffer_get_status();
             if(status == CACHE_MISS){
                 if(flags & MASK_DEBUG){
                     printf("\tdirect_cache_write_w: Write buffer is full. Cannot fill cache without losing data.\n");
                 }
                 //The write buffer is full! Don't fill the block
                 return CACHE_MISS;
+            } else {
+                cache->blocks[info.index].data[info.inner_index] = *data;
+                cache->blocks[info.index].tag = info.tag;
+                write_buffer_enqueue(info);
+                return CACHE_HIT;
             }
         }
+        status = CACHE_HIT;
+        cache->blocks[info.index].data[info.inner_index] = *data;
+        cache->blocks[info.index].tag = info.tag;
+        cache->blocks[info.index].dirty = true;
     } else {
         //The processor is writing to a place in memory that isnt in the cache
         //The transaction becomes a READ MODIFY WRITE
