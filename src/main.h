@@ -51,7 +51,7 @@ int arguments(int argc, char **argv, FILE** source_fp,
 
 int parse(FILE *fp, asm_line_t *lines, cpu_config_t cpu_cfg);
 
-int interactive(asm_line_t *lines);
+int interactive(asm_line_t *lines, uint32_t cycles, char *filename);
 
 // Breakpoint wrappers
 int breakpoint_get_active(void);

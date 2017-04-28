@@ -186,7 +186,7 @@ int main(int argc, char *argv[]) {
         // Breakpoint and interactive stuff
         breakpoint_check(pc);
         if (flags & MASK_INTERACTIVE) { // Run interactive step
-            if (interactive(lines) !=0) return 1;
+            if (interactive(lines,prof->cycles,argv[argc-1]) !=0) return 1;
         }
     }
     cprintf(ANSI_C_MAGENTA,"\nHalted simulation at pc = 0x%08x after %d cycles\n",pc,prof->cycles);
@@ -721,9 +721,9 @@ void breakpoint_check(pc_t current_pc) {
     }
 }
 // Provides a crude interactive debugger for the simulator
-int interactive(asm_line_t* lines) {
+int interactive(asm_line_t* lines, uint32_t cycles, char *filename) {
     uint32_t i_addr = 0, i_data;
-    int temp, rv;
+    int temp, rv, i;
     asm_line_t line;
 PROMPT: // LOL gotos
     cprintf(ANSI_C_GREEN, "(interactive @ %d cycles) > ", prof->cycles);
@@ -734,9 +734,9 @@ PROMPT: // LOL gotos
     switch(c) {
         case 'a': // add a breakpoint
             if (breakpoint_get_active() >= BREAKPOINT_MAX) {
-                cprintf(ANSI_C_GREEN, "Cannot add breakpoint, active breakpoint limit reached.\n", NULL);
+                cprintf(ANSI_C_GREEN, "Cannot add breakpoint, active breakpoint limit reached.\n");
             } else {
-                cprintf(ANSI_C_GREEN, "breakpoint address: ", NULL);
+                cprintf(ANSI_C_GREEN, "breakpoint address: ");
                 rv = scanf("%x",&i_addr); getchar();
                 if (rv != 1) goto PROMPT;
                 if (i_addr < mem_start() || i_addr > mem_end()) {
@@ -748,16 +748,16 @@ PROMPT: // LOL gotos
             goto PROMPT;
         case 'b': // list breakpoints
             if (breakpoint_get_active() == 0) {
-                cprintf(ANSI_C_GREEN, "No breakpoints active.\n", NULL);
+                cprintf(ANSI_C_GREEN, "No breakpoints active.\n");
             } else {
                 breakpoint_dump();
             }
             goto PROMPT;
         case 'c': // clear a breakpoint
             if (breakpoint_get_active() == 0) {
-                cprintf(ANSI_C_GREEN, "No breakpoints active.\n", NULL);
+                cprintf(ANSI_C_GREEN, "No breakpoints active.\n");
             } else {
-                cprintf(ANSI_C_GREEN, "breakpoint number to clear: ", NULL);
+                cprintf(ANSI_C_GREEN, "breakpoint number to clear: ");
                 rv = scanf("%d",&temp); getchar();
                 if (rv != 1) goto PROMPT;
                 if (temp < BREAKPOINT_MAX) breakpoint_delete(temp);
@@ -768,7 +768,7 @@ PROMPT: // LOL gotos
             cprintf(ANSI_C_GREEN, "Interactive stepping disabled. Running until breakpoint (if set).\n", NULL);
             break;
         case 'l': // print the original disassembly for a given address
-            cprintf(ANSI_C_GREEN, "input address: ", NULL);
+            cprintf(ANSI_C_GREEN, "input address: ");
             rv = scanf("%x",&i_addr); getchar();
             if (rv != 1) goto PROMPT;
             line = lines[(i_addr>>2)-(mem_start()>>2)];
@@ -781,7 +781,7 @@ PROMPT: // LOL gotos
             }
             goto PROMPT;
         case 'm': // view a word of memory
-            cprintf(ANSI_C_GREEN, "memory address: ", NULL);
+            cprintf(ANSI_C_GREEN, "memory address: ");
             rv = scanf("%x",&i_addr); getchar();
             if (rv != 1) goto PROMPT;
             if (i_addr < mem_start() || i_addr > mem_end()) {
@@ -792,7 +792,7 @@ PROMPT: // LOL gotos
             printf("mem[0x%08x]: 0x%08x (0d%d)\n",i_addr,i_data,i_data);
             goto PROMPT;
         case 'o': // view a region of memory
-            cprintf(ANSI_C_GREEN,"memory address: ", NULL);
+            cprintf(ANSI_C_GREEN,"memory address: ");
             rv = scanf("%x",&i_addr); getchar();
             if (rv != 1) goto PROMPT;
             if (i_addr < mem_start() || i_addr > mem_end()) {
@@ -809,22 +809,48 @@ PROMPT: // LOL gotos
             reg_dump();
             goto PROMPT;
         case 'x': // exit
-            cprintf(ANSI_C_GREEN, "Simulation halted in interactive mode.\n", NULL);
+            cprintf(ANSI_C_GREEN, "Simulation halted in interactive mode.\n");
             return 1;
         case 'D': // print data cache block
-            cprintf(ANSI_C_GREEN,"dcache block: ", NULL);
+            cprintf(ANSI_C_GREEN,"dcache block: ");
             rv = scanf("%d",&temp); getchar();
             if (rv != 1) goto PROMPT;
             print_dcache(temp);
             goto PROMPT;
+        case 'F': // flush the data cache memory
+            flush_dcache();
+            cprintf(ANSI_C_GREEN, "dcache flushed\n");
+            goto PROMPT;
         case 'I': // print instruction cache block
-            cprintf(ANSI_C_GREEN,"icache block: ", NULL);
+            cprintf(ANSI_C_GREEN,"icache block: ");
             rv = scanf("%d",&temp); getchar();
             if (rv != 1) goto PROMPT;
             print_icache(temp);
             goto PROMPT;
         case 'W': // print write buffer
             print_write_buffer();
+            goto PROMPT;
+        case '#': // dump memory to file
+            cprintf(ANSI_C_GREEN,"words to dump: ");
+            rv = scanf("%d",&temp); getchar(); --temp;
+            if (rv != 1) goto PROMPT;
+            char output_filename[80];
+            rv = sprintf(output_filename, "%s@%d.dump", filename, cycles);
+            FILE *output_fp = fopen(output_filename,"w");
+            if (NULL == output_fp) {
+                cprintf(ANSI_C_RED,"Something is horribly wrong\n");
+                goto PROMPT;
+            }
+            rv = flags & MASK_DEBUG; // abusing rv
+            flags &= ~rv;
+            for (i = mem_start(); i <= (int)mem_start()+temp; ++i) {
+                mem_read_w(i<<2,&i_data);
+                fprintf(output_fp,"%08x:%08x\n",i,i_data);
+            }
+            flags |= rv;
+            fclose(output_fp);
+            cprintf(ANSI_C_GREEN,"Memory from 0x%x - 0x%x dumped to %s\n",
+                mem_start(), mem_start()+temp, output_filename);
             goto PROMPT;
         case '?': // help
             printf("Available interactive commands: \n" \
@@ -837,13 +863,16 @@ PROMPT: // LOL gotos
                 "\to: print 11 words of memory surrounding a given memory address\n" \
                 "\ts: single-step the pipeline\n" \
                 "\tr: dump registers\n" \
-                "\tx: exit simulation run\n");
+                "\tx: exit simulation run\n" \
+                "\t#: dump memory to a file\n");
             if (cache_config.mode != CACHE_DISABLE) {
                 printf( \
                     "\tD: print an dcache block\n" \
+                    "\tF: flush the dcache\n" \
                     "\tI: print a icache block\n" \
                     "\tW: print the cache write buffer\n");
             }
+
             goto PROMPT;
         default:
             printf("Unrecognized interactive command \"%c\", press \"?\" for help.\n", c);
