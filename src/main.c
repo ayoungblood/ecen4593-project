@@ -300,12 +300,12 @@ int arguments(int argc, char **argv, FILE** source_fp,
                         "  One, and only one, assembly file must be provided for simulation.\n\n" \
                         "General simulator options:\n" \
                         "   "ANSI_BOLD"-a, --alternate"ANSI_RESET"\n" \
-                        "   \tAlterate assembly format, expects lines like\n" \
+                        "   \tAlternate assembly format, expects lines like\n" \
                         "   \t\t0x24420004, // addiu v0,v0,4\n" \
                         "   \tinstead of the the default, which expects lines like\n" \
                         "   \t\t400048:	0x24420004    addiu v0,v0,4\n" \
                         "   "ANSI_BOLD"-c "ANSI_RUNDER"mode"ANSI_RBOLD", --color "ANSI_RUNDER"mode"ANSI_RESET"\n" \
-                        "   \tColorized output behaviour. "ANSI_UNDER"mode"ANSI_RESET" may be "ANSI_BOLD"disable"ANSI_RESET", which disables\n" \
+                        "   \tColorized output behavior. "ANSI_UNDER"mode"ANSI_RESET" may be "ANSI_BOLD"disable"ANSI_RESET", which disables\n" \
                         "   \tcolorized output; "ANSI_BOLD"force"ANSI_RESET", which colorizes the output; or "ANSI_BOLD"auto"ANSI_RESET",\n" \
                         "   \twhich attempts to automatically detect whether to colorize.\n" \
                         "   "ANSI_BOLD"--debug, -d"ANSI_RESET"\n" \

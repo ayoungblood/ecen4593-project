@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 
 # Simple run matrix script
+# Takes an assembly source file and runs it with
+# several different cache configurations
+# Usage:
+#   ./matrix.sh <file>
 
 # I/D cache size = {{128,256}, {64,1024}}
 for ISIZE in 128 64

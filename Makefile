@@ -60,7 +60,7 @@ test: $(OBJECTS) all
 		./sim -y -a asm/program1file.txt
 		./sim -y -a asm/program2file.txt
 
-# Partial run matrix
+# Run matrix on program 1 and 2
 run: $(TARGET)
 		@echo "#### Program 1"
 		@# No cache
@@ -75,6 +75,7 @@ run: $(TARGET)
 		@# With cache
 		@./matrix.sh asm/program2file.txt
 
+# Unit test targets
 test-alu: $(OBJECTS)
 		$(CC) src/alu.o src/util.o -Wall $(LIBS) -o test/alu-test test/alu-test.c
 		test/alu-test

@@ -4,51 +4,69 @@
 
 MIPS simulator built for ECEN4593 Computer Organization.
 
-## Installation
-The project dependencies are a somewhat recent version of gcc, make, and bash. Simply clone the repository and type `make`
+## Installation and Dependencies
+
+The best way to get the simulator is via `git clone`. Alternatively, download the zip archive from Github and unpack.
+
+**Via git**
+
+    git clone https://github.com/ayoungblood/ecen4593-project.git
+    make
+
+**Via ZIP download**
+
+    wget https://github.com/ayoungblood/ecen4593-project/archive/master.zip
+    unzip master
+    cd ecen4593-project-master/
+    make
+
+**Dependencies**
+
+The project dependencies are `gcc` (a somewhat recent version), `make`, and `bash`.
 
 ## Running the Simulator
-We have a make target, `make run`, which will run the simulation with all of the different cache combinations required for project.
 
-If you wish to run one program and see the first 16 memory locations after the program finishes, type `./sim -a asm/program1file.txt`, where the last argument is the location of the program file.
+`make run` will run the simulation on program 1 and program 2 with all of the different cache combinations required for project. `make run` uses `matrix.sh` to iterate through all the cache configuration combinations. To run these combinations on a different file, simply use `matrix.sh <file>`.
 
-A list of all possible commands can be seen by typing `./sim --help`. Here are some possible run configurations:
-- `./sim -aidvy -C s -D 0 -K 4 -H b asm/program2file.txt` runs program 2 with a split cache, but the data cache is disabled. The block size for the instruction cache is 4, and the write policy is set to *write back*. The `-i` indicates that the program will go into *interactive* mode, which allows the user to step through each clock cycle seeing the debug output of each pipeline stage. See the Interactive Mode section for more information
+If you wish to run one program and see the first 16 memory locations after the program finishes, type `./sim -a asm/program1file.txt`, where the last argument is the location of the program file, and `-a` specifies the assembly format used in program 1 and program 2.
+
+Usage and a listing of available options can be seen by typing `./sim --help`. Here are some possible run configurations:
+- `./sim -aidvy -C s -D 0 -K 4 -H b asm/program2file.txt` runs program 2 with a split cache, but the data cache disabled. The block size for the instruction cache is 4 words, and the write policy is set to *write back*. The `-i` indicates that the program will go into *interactive* mode, which allows the user to step through each clock cycle seeing the debug output of each pipeline stage. See the **Interactive Mode** section for more information
 - `./sim -a -C s -E 128 -K 16 asm/program1file.txt` runs program 1 with a split cache, data cache size of 128 bytes, and an instruction cache block size of 16.  
 
-Here is a list of all of the options and a breif explanation of what they do
+Here is the usage and option information, with a brief explanation of each option.
 
     Usage: sim [OPTION]... FILE[.s,.txt]
         or: sim [--help|-h]
         or: sim [--version|-V]
       Run sim on an assembly source file, simulating a MIPS CPU execution of FILE,
-    or with [--help|h], display this usage information and exit,
-    or with [--version|-V], display the version and exit.
-    One, and only one, assembly file must be provided for simulation.
+      or with [--help|h], display this usage information and exit,
+      or with [--version|-V], display the version and exit.
+      One, and only one, assembly file must be provided for simulation.
 
     General simulator options:
-    -a, --alternate
-        Alterate assembly format, expects lines like
-                0x24420004, // addiu v0,v0,4
-        instead of the the default, which expects lines like
-                400048: 0x24420004    addiu v0,v0,4
-    -c mode, --color mode
-        Colorized output behaviour. mode may be disable, which disables
-        colorized output; force, which colorizes the output; or auto,
-        which attempts to automatically detect whether to colorize.
-    --debug, -d
-        Enables debugging output.
-    --help, -h
-        Prints this usage information and exits.
-    --interactive, -i
-        Enables an interactive debugger for step-by-step and breakpoint-
-        based debugging.
-    --sanity, -y
-        Enables internal sanity checking with a slight speed penalty.
-    --version, -V
-        Prints simulator version information.
-    --verbose, -v
-        Enable verbose output.
+        -a, --alternate
+            Alternate assembly format, expects lines like
+                    0x24420004, // addiu v0,v0,4
+            instead of the the default, which expects lines like
+                    400048: 0x24420004    addiu v0,v0,4
+        -c mode, --color mode
+            Colorized output behavior. mode may be disable, which disables
+            colorized output; force, which colorizes the output; or auto,
+            which attempts to automatically detect whether to colorize.
+        --debug, -d
+            Enables debugging output.
+        --help, -h
+            Prints this usage information and exits.
+        --interactive, -i
+            Enables an interactive debugger for step-by-step and breakpoint-
+            based debugging.
+        --sanity, -y
+            Enables internal sanity checking with a slight speed penalty.
+        --version, -V
+            Prints simulator version information.
+        --verbose, -v
+            Enable verbose output.
     CPU configuration options:
         --single-cycle, -g
             Models a single-cycle CPU, where each instruction takes one cycle.
@@ -92,17 +110,29 @@ Here is a list of all of the options and a breif explanation of what they do
             thru - uses a writethrough policy.
 
 ## Interactive Mode
-The simulator can be run with interactive mode, which allows the user to step through one clock cycle at a time through the program. This mode is most helpful when -dvy are also included in the arguments to the program so the debug output can be seen. Once in interactive mode, a help prompt can be displayed by typing '?'. From here, you could add a breakpoint at a memory address, which allows you to continue the program until the instruction at that memory address is fetched. Here is a list of the commands available in interactive mode
-- a: add breakpoint at a memory address
-- b: list breakpoints
-- c: clear a breakpoint by breakpoint index
-- d: disable interactive mode
-- l: print the original disassembly for a given memory address
-- m: print a word in memory for a given memory address
-- o: print 11 words of memory surrounding a given memory address
-- s: singe step the pipeline
-- r: print out the pipeline registers
-- x: exit simulation
-- D: print a block in the data cache
-- I: print a block in the instruction cache
-- W: print out the write buffer
+
+The simulator can be run with interactive mode, which allows the user to step through one clock cycle at a time through the program. This mode is most helpful when `-dvy` are also included in the arguments to the program so the debug output can be seen. Once in interactive mode, a help prompt can be displayed by typing `?`. Available functionality includes breakpoints, dumping registers and memory addresses, dumping cache blocks or the write buffer, and showing disassembly.
+
+Available interactive mode commands:
+
+- `a`: add breakpoint at a memory address
+- `b`: list breakpoints
+- `c`: clear a breakpoint by breakpoint index
+- `d`: disable interactive mode
+- `l`: print the original disassembly for a given memory address
+- `m`: print a word in memory for a given memory address
+- `o`: print 11 words of memory surrounding a given memory address
+- `s`: singe step the pipeline
+- `r`: print out the pipeline registers
+- `x`: exit simulation
+- `D`: print a block in the data cache
+- `I`: print a block in the instruction cache
+- `W`: print out the write buffer
+
+## Supported Environments
+
+The simulator has been built and run with the following environments:
+
+* Red Hat Linux 6.3 (RHEL 6.3, Santiago), gcc version 4.4.6 20120305 (Red Hat 4.4.6-4) (GCC)
+* Mac OS X 10.11 (10.11.6, El Capitan), Apple LLVM version 8.0.0 (clang-800.0.42.1)
+* Ubuntu 16.0.4 (16.0.4.1 LTS, Xenial), gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.4)
