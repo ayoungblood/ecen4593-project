@@ -37,7 +37,7 @@ control_t* exmem = NULL; // EX/MEM pipeline register
 control_t* memwb = NULL; // MEM/WB pipeline register
 pc_t pc = 0;             // Program counter
 
-
+/* Breakpoint state */
 #define BREAKPOINT_MAX 8
 uint32_t breakpoints_address[BREAKPOINT_MAX] = {0}; // the address of a breakpoint
 uint8_t breakpoints_status[BREAKPOINT_MAX] = {0}; // breakpoint status, 0: disabled, 1:enabled
@@ -70,6 +70,7 @@ int main(int argc, char *argv[]) {
     int rv = arguments(argc,argv,&source_fp,&cpu_config,&cache_config);
     if (rv !=  0) return rv;
     if (rv == -1) return 0;
+    /* Display CPU and cache configuration */
     bprintf("CPU settings:\n");
     bprintf("\tArchitecture: %s\n",cpu_config.single_cycle?"single-cycle":"five-stage pipeline");
     bprintf("\tMemory size: %lu words (%lu bytes, top = 0x%08lx)\n",
@@ -108,7 +109,6 @@ int main(int argc, char *argv[]) {
      * Beginning the actual simulation                                        *
      * All initialization and state configuration happens below here          *
      **************************************************************************/
-    bprintf("Starting simulation with flags: 0x%04x\n", flags);
     // Initialize the register file
     reg_init();
     // Create an array to hold all the debug information
@@ -146,6 +146,7 @@ int main(int argc, char *argv[]) {
     }
 
     // Run the simulation
+    cprintf(ANSI_C_MAGENTA,"\nStarting simulation at pc = 0x%08x with flags = 0x%04x\n", pc, flags);
     while (1) {
         // Run a pipeline cycle
         backup(ifid, idex, exmem, memwb, &pc);
@@ -187,13 +188,13 @@ int main(int argc, char *argv[]) {
             if (interactive(lines) !=0) return 1;
         }
     }
-    bprintf("\nPipeline halted after %d cycles (at address 0x%08x)\n",prof->cycles,pc);
+    cprintf(ANSI_C_MAGENTA,"\nHalted simulation at pc = 0x%08x after %d cycles\n",pc,prof->cycles);
     // Flush data cache, if enabled, so we can see memory values
     if(cache_config.mode != CACHE_DISABLE && cache_config.data_enabled){
         flush_dcache();
     }
     // Dump registers and the first couple words of memory so we can see what's going on
-    reg_dump();
+    if (flags & MASK_DEBUG) reg_dump();
     mem_dump_cute(0,16);
     // Print out logistics for profiling
     printf("$# %-6s | %-6s | %-6s | %-6s | %-6s | %-6s | %-6s | %-6s | %-8s | %-8s | File\n",
