@@ -28,6 +28,11 @@ void fetch(control_t *ifid, pc_t *pc, cache_config_t *cache_cfg) {
         mem_read_w(*pc, &(ifid->instr));
     }
 
+    /*if(ifid->instr == 0x8c430000){
+        prof->debug++;
+        printf("%d\n", prof->debug);
+    }*/
+
     // Break the instruction into the specific fields
     ifid->opCode =  ( ifid->instr & OP_MASK ) >> OP_SHIFT;
     ifid->regRs =   ( ifid->instr & RS_MASK ) >> RS_SHIFT;

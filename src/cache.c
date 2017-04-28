@@ -238,6 +238,15 @@ void write_buffer_destroy(write_buffer_t *wb) {
     free(wb);
 }
 
+uint32_t write_buffer_get_address(void){
+    if(write_buffer->writing == false){
+        //We should never be writing to this memory address
+        return 0xffffffff;
+    } else {
+        return write_buffer->address;
+    }
+}
+
 void write_buffer_digest(void) {
     //word_t temp;
     if (write_buffer->writing) {

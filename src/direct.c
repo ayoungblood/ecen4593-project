@@ -227,6 +227,12 @@ cache_status_t direct_cache_write_w(direct_cache_t *cache, uint32_t *address, ui
                 //The write buffer is full! Don't fill the block
                 return CACHE_MISS;
             } else {
+                for(uint32_t i = 0; i < cache->block_size; i++){
+                    if(cache->blocks[info.index].valid[i] == false){
+                        gprintf("\tWhole block isnt valid yet...\n");
+                        return CACHE_MISS;
+                    }
+                }
                 cache->blocks[info.index].data[info.inner_index] = *data;
                 cache->blocks[info.index].tag = info.tag;
                 write_buffer_enqueue(info);
@@ -265,6 +271,15 @@ void direct_cache_queue_mem_access(direct_cache_t *cache, cache_access_t info){
         cache->target_address = info.address;
     }
     cache->penalty_count = 0;
+    if(write_buffer_get_status() == CACHE_MISS){
+        //There is data to be written to in the write buffer
+        uint32_t wb_address = write_buffer_get_address();
+        if((wb_address & (cache->tag_mask | cache->index_mask)) == (info.address & (cache->tag_mask | cache->index_mask))){
+            //The data in the write buffer need to be written to memory before we can read it
+            gprintf("\tdirect_cache_queue_mem_access: Data in the write buffer matches the requested address.\n");
+            set_mem_status(MEM_WRITING);
+        }
+    }
     if(flags & MASK_DEBUG && cache->block_size > 1){
         printf("\tdirect_cache_queue_mem_access: Actual requested address will be 0x%08x\n", cache->target_address);
     }
