@@ -324,7 +324,7 @@ cache_status_t write_buffer_enqueue(cache_access_t info){
             }
         } else {
             write_buffer->address = info.address;
-            write_buffer->data[0] = d_cache->blocks[info.index].data[0];
+            write_buffer->data[0] = d_cache->blocks[info.index].data[info.inner_index];
         }
         write_buffer->writing = true;
         write_buffer->penalty_count = 0;
