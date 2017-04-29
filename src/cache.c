@@ -259,7 +259,7 @@ void write_buffer_digest(void) {
                 mem_write_w(write_buffer->address, &write_buffer->data[write_buffer->subsequent_writing]);
                 write_buffer->writing = false;
                 write_buffer->penalty_count = 0;
-                if(write_buffer->subsequent_writing != (d_cache->block_size - 1)){
+                if(write_buffer->subsequent_writing != (d_cache->block_size - 1) && (get_write_policy() == CACHE_WRITEBACK)){
                     //enqueue the next data address
                     write_buffer->address+=4;
                     write_buffer->writing = true;
@@ -317,9 +317,14 @@ cache_status_t write_buffer_enqueue(cache_access_t info){
         if (flags & MASK_DEBUG) {
             printf("\twrite_buffer_enqueue: filling write buffer with block index %d and tag 0x%08x\n", info.index, info.tag);
         }
-        write_buffer->address = (info.address & (d_cache->tag_mask | d_cache->index_mask));
-        for (i = 0; i < d_cache->block_size; i++) {
-            write_buffer->data[i] = d_cache->blocks[info.index].data[i];
+        if(get_write_policy() == CACHE_WRITEBACK){
+            write_buffer->address = (info.address & (d_cache->tag_mask | d_cache->index_mask));
+            for (i = 0; i < d_cache->block_size; i++) {
+                write_buffer->data[i] = d_cache->blocks[info.index].data[i];
+            }
+        } else {
+            write_buffer->address = info.address;
+            write_buffer->data[0] = d_cache->blocks[info.index].data[0];
         }
         write_buffer->writing = true;
         write_buffer->penalty_count = 0;
