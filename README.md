@@ -144,7 +144,9 @@ Available interactive mode commands:
 - `s`: singe step the pipeline
 - `r`: print out the pipeline registers
 - `x`: exit simulation
+- `#`: dump memory to a file
 - `D`: print a block in the data cache
+- `F`: flush the data cache
 - `I`: print a block in the instruction cache
 - `W`: print out the write buffer
 
@@ -155,3 +157,4 @@ The simulator has been built and run with the following environments:
 * Red Hat Linux 6.3 (RHEL 6.3, Santiago), gcc version 4.4.6 20120305 (Red Hat 4.4.6-4) (GCC)
 * Mac OS X 10.11 (10.11.6, El Capitan), Apple LLVM version 8.0.0 (clang-800.0.42.1)
 * Ubuntu 16.0.4 (16.0.4.1 LTS, Xenial), gcc version 5.4.0 20160609 (Ubuntu 5.4.0-6ubuntu1~16.04.4)
+* Ubuntu 14.04 (14.04.5 LTS, Trusty), gcc (Ubuntu 4.8.4-2ubuntu1~14.04.3) 4.8.4
