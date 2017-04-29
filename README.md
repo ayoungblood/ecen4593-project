@@ -26,15 +26,17 @@ The project dependencies are `gcc` (a somewhat recent version), `make`, and `bas
 
 ## Running the Simulator
 
-`make run` will run the simulation on program 1 and program 2 with all of the different cache combinations required for project. `make run` uses `matrix.sh` to iterate through all the cache configuration combinations. To run these combinations on a different file, simply use `matrix.sh <file>`.
+`make run` will run the simulation on program 1 and program 2 with all of the different cache combinations required for project. `make run` uses `matrix1.sh` and `matrix2.sh` to iterate through all the cache configuration combinations for the respective programs. These scripts can also be used to run a combination matrix on a different file, for instance with `./matrix2.sh <program3file>`.
 
 If you wish to run one program and see the first 16 memory locations after the program finishes, type `./sim -a asm/program1file.txt`, where the last argument is the location of the program file, and `-a` specifies the assembly format used in program 1 and program 2.
 
 Usage and a listing of available options can be seen by typing `./sim --help`. Here are some possible run configurations:
+
 - `./sim -aidvy -C s -D 0 -K 4 -H b asm/program2file.txt` runs program 2 with a split cache, but the data cache disabled. The block size for the instruction cache is 4 words, and the write policy is set to *write back*. The `-i` indicates that the program will go into *interactive* mode, which allows the user to step through each clock cycle seeing the debug output of each pipeline stage. See the **Interactive Mode** section for more information
+
 - `./sim -a -C s -E 128 -K 16 asm/program1file.txt` runs program 1 with a split cache, data cache size of 128 bytes, and an instruction cache block size of 16.  
 
-Here is the usage and option information, with a brief explanation of each option.
+Here is the usage and option information, with a brief explanation of each option. For options that take text keys are arguments, the text keys can be abbreviated to a single letter when unique. For instance, `-C split` is equivalent to `-C s`.
 
     Usage: sim [OPTION]... FILE[.s,.txt]
         or: sim [--help|-h]
