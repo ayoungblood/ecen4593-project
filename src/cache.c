@@ -311,8 +311,8 @@ cache_status_t write_buffer_enqueue(cache_access_t info){
             if (d_cache->blocks[info.index].valid[i] == false) {
                 if (flags & MASK_DEBUG) {
                     printf("\tEntire block is not valid. Waiting until block is valid before proceeding.\n");
-                    return CACHE_MISS;
                 }
+                return CACHE_MISS;
             }
         }
         if (flags & MASK_DEBUG) {
