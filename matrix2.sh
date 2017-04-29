@@ -4,12 +4,12 @@
 # Takes an assembly source file and runs it with
 # several different cache configurations
 # Usage:
-#   ./matrix.sh <file>
+#   ./matrix2.sh <file>
 
 # I/D cache size = {{64,512},{128,256},{256,128}}
 for ISIZE in 64 128 256
 do
-    # I/D cache block size = {4, 1}
+    # I/D cache block size = {16, 4, 1}
     for BLOCK in 16 4 1
     do
         # D write policy = {WT, WB}

@@ -7,6 +7,7 @@
 
 #include "util.h"
 #include "types.h"
+#include "registers.h"
 
 /*To be called after the execution of a clock cycle. Unit will forward any data
 that will prevent a data hazard, insert nops into the pipeline if forwarding

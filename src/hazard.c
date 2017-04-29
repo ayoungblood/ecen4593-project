@@ -153,10 +153,12 @@ int hazard(control_t *ifid, control_t *idex, control_t *exmem, control_t *memwb,
      * of the load, then detect it, stall the pipeline, and flush ifid to become nop */
     if (idex->memRead && ((idex->regRt == ifid->regRs) || (idex->regRt == ifid->regRt)) &&
         !(ifid->opCode == OPC_J || ifid->opCode == OPC_JAL)) {
-        // Stall the pipeline, data dependency after a load
-        bprintf("\tFound dependency on load result: stalling pipeline\n");
-        stall = true;
-        flush(ifid);
+            if (!(idex->regRt == REG_ZERO)) { // Data dependency after a load to $zero is ignored
+            // Stall the pipeline, data dependency after a load
+            bprintf("\tFound dependency on load result: stalling pipeline\n");
+            stall = true;
+            flush(ifid);
+        }
     }
 
     /* Updating the Prgram Counter

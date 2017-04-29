@@ -345,6 +345,11 @@ void flush_dcache(void){
             }
         }
     }
+    printf("Flushing write buffer...\n");
+    while (write_buffer->writing) {
+        set_mem_status(MEM_WRITING);
+        write_buffer_digest();
+    }
 }
 
 void print_icache(int block) {
