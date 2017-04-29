@@ -5,6 +5,7 @@
 #include "memory.h"
 
 extern int flags; // from util.c
+extern profile_t *prof;
 
 void memory(control_t * exmem, control_t * memwb, cache_config_t *cache_cfg) {
     if(flags & MASK_DEBUG){

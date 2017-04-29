@@ -5,6 +5,7 @@
 #include "cache.h"
 
 extern int flags; // from util.c
+extern profile_t *prof;
 
 direct_cache_t *d_cache;
 direct_cache_t *i_cache;

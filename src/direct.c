@@ -197,7 +197,6 @@ cache_status_t direct_cache_read_w(direct_cache_t *cache, uint32_t *address, uin
                 gprintf("\tdirect_cache_read_w:calculated write_address: 0x%08x\n", write_address);
                 direct_cache_get_tag_and_index(&write_info, cache, &write_address);
                 status = write_buffer_enqueue(write_info);
-                //assert(0);
                 if(status == CACHE_MISS){
                     if(flags & MASK_DEBUG){
                         printf("\tdirect_cache_read_w: write buffer is full. \n");
