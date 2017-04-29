@@ -335,18 +335,18 @@ cache_status_t write_buffer_enqueue(cache_access_t info){
 }
 
 void flush_dcache(void){
-    printf("Flushing cache...\n");
+    eprintf("Flushing cache...\n");
     uint32_t address;
     for (uint32_t i = 0; i < d_cache->num_blocks; i++) {
         if (d_cache->blocks[i].dirty) {
             for (uint32_t j = 0; j < d_cache->block_size; j++) {
                 address = (d_cache->blocks[i].tag << (2 + d_cache->index_size + d_cache->inner_index_size)) | (i << (2 + d_cache->inner_index_size)) | (j << 2);
-                printf("\tWriting 0x%08x (0d%d) to 0x%08x\n", d_cache->blocks[i].data[j], d_cache->blocks[i].data[j], address);
+                eprintf("\tWriting 0x%08x (0d%d) to 0x%08x\n", d_cache->blocks[i].data[j], d_cache->blocks[i].data[j], address);
                 mem_write_w(address, &(d_cache->blocks[i].data[j]));
             }
         }
     }
-    printf("Flushing write buffer...\n");
+    eprintf("Flushing write buffer...\n");
     while (write_buffer->writing) {
         set_mem_status(MEM_WRITING);
         write_buffer_digest();
@@ -370,9 +370,9 @@ void print_write_buffer(void) {
         cprintf(ANSI_C_RED, "write_buffer_enqueue: buffer is not initialized\n", NULL);
         assert(0);
     }
-    printf("Writing: %d, Penalty Count: %d, Subsequent Writing: %d\n", write_buffer->writing, write_buffer->penalty_count, write_buffer->subsequent_writing);
-    printf("Address: 0x%08x\n", write_buffer->address);
-    printf("Data: \t0x%08x\n", write_buffer->data[0]);
+    eprintf("Writing: %d, Penalty Count: %d, Subsequent Writing: %d\n", write_buffer->writing, write_buffer->penalty_count, write_buffer->subsequent_writing);
+    eprintf("Address: 0x%08x\n", write_buffer->address);
+    eprintf("Data: \t0x%08x\n", write_buffer->data[0]);
     for (uint32_t i = 1; i < d_cache->block_size; i++) {
         printf("\t0x%08x\n", write_buffer->data[i]);
     }
