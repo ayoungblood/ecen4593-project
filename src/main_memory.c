@@ -48,7 +48,7 @@ void mem_dump_cute(uint32_t offset, uint32_t words) {
     eprintf("Printing %d words of memory starting at 0x%08x:\n",words,offset);
     offset = offset >> 2;
     for (uint32_t i = 0; i < words; ++i) {
-        eprintf("\t0x%08x: 0x%08x (0d%d)\n",
+        printf("\t0x%08x: 0x%08x (0d%d)\n",
             (offset+i)<<2,
             mem[(offset+i)],
             mem[(offset+i)]);

@@ -65,13 +65,13 @@ run: $(TARGET)
 		@echo "#### Program 1"
 		@# No cache
 		@./$(TARGET) -ya asm/program1file.txt \
-			2>/dev/null
+			2>/dev/null | grep "\$\#"
 		@# With cache
 		@./matrix1.sh asm/program1file.txt
 		@echo "#### Program 2"
 		@# No cache
 		@./$(TARGET) -ya asm/program2file.txt \
-			2>/dev/null
+			2>/dev/null | grep "\$\#"
 		@# With cache
 		@./matrix2.sh asm/program2file.txt
 

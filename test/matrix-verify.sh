@@ -39,7 +39,7 @@ function check1()
 # Program 1 with no cache
 FILE="../asm/program1file.txt"
 echo "#### Program 1 ($FILE)"
-../sim -ya $FILE 2> $FILE.output
+../sim -ya $FILE 2>/dev/null | tee $FILE.output | grep "\$\#"
 check1
 
 for ISIZE in 128 64; do
@@ -50,7 +50,7 @@ for ISIZE in 128 64; do
             [[ $ISIZE -eq 128 ]] && DSIZE="256" || DSIZE="1024"
             [[ $DWRITE -eq 0 ]] && WP="thru" || WP="back"
             ../sim -ya -C s -J $ISIZE -E $DSIZE -F $BLOCK -K $BLOCK -H $WP $FILE \
-                2> $FILE.output | grep "\$\#" | grep -v "\$\# Isize"
+                2>/dev/null | tee $FILE.output | grep "\$\#" | grep -v "\$\# Isize"
             check1
         done
     done
@@ -88,7 +88,7 @@ function check2()
 # Program 2 with no cache
 FILE="../asm/program2file.txt"
 echo "#### Program 2 ($FILE)"
-../sim -ya $FILE 2> $FILE.output
+../sim -ya $FILE 2>/dev/null | tee $FILE.output | grep "\$\#"
 
 for ISIZE in 64 128 256; do
     # I/D cache block size = {16, 4, 1}
@@ -99,7 +99,7 @@ for ISIZE in 64 128 256; do
             [[ $ISIZE -eq 256 ]] && DSIZE="128"
             [[ $DWRITE -eq 0 ]] && WP="thru" || WP="back"
             ../sim -ya -C s -J $ISIZE -E $DSIZE -F $BLOCK -K $BLOCK -H $WP $FILE \
-                2> $FILE.output | grep "\$\#" | grep -v "\$\# Isize"
+                2>/dev/null | tee $FILE.output | grep "\$\#" | grep -v "\$\# Isize"
             check2
         done
     done

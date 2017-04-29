@@ -197,7 +197,7 @@ int main(int argc, char *argv[]) {
     }
     // Dump registers and the first couple words of memory so we can see what's going on
     if (flags & MASK_DEBUG) reg_dump();
-    mem_dump_cute(0,16);
+    mem_dump_cute(0,10);
     // Print out logistics for profiling
     printf("$# %-6s | %-6s | %-6s | %-6s | %-6s | %-6s | %-6s | %-6s | %-8s | %-8s | File\n",
         "Isize", "Dsize", "Iblock", "Dblock", "Dwrite", "Ihit %", "Dhit %", "CPI", "Cycles", "Icount");
