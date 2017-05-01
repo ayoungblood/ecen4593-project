@@ -28,7 +28,13 @@ LIBS =
 HEADERS = $(wildcard src/*.h)
 OBJECTS = $(patsubst %.c, %.o, $(wildcard src/*.c))
 
+# Set the version string from the git commit tag, unless we can't
+HAVE_GIT := $(shell command -v git 2>/dev/null)
+ifdef HAVE_GIT
 VERSION = $(shell git rev-parse --short HEAD)
+else
+VERSION = "0.0.0"
+endif
 
 # Build all the object files
 %.o: %.c $(HEADERS)
